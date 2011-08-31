@@ -21,7 +21,7 @@ public class RXTXRobotExample {
             if (!t.equals("exit"))
             {
                 r.sendRaw(t);
-                System.out.println(r.readAnalogPins());
+                System.out.println(r.getAnalogPins());
             }
         }
         while(!t.equals("exit"));
