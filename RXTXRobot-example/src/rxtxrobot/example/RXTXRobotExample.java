@@ -11,7 +11,7 @@ public class RXTXRobotExample {
 
     public static void main (String [] args)
     {
-        RXTXRobot r = new RXTXRobot("COM3",true);
+        RXTXRobot r = new RXTXRobot("/dev/ttyUSB0",true);
         Scanner s = new Scanner(System.in);
         String t = "";
         do
@@ -21,9 +21,11 @@ public class RXTXRobotExample {
             if (!t.equals("exit"))
             {
                 r.sendRaw(t);
-                System.out.println(r.getAnalogPins());
             }
         }
         while(!t.equals("exit"));
+        System.out.println("Closing...");
+        r.close();
+        System.out.println("Done");
     }
 }
