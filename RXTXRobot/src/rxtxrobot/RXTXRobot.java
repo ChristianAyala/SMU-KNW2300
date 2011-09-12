@@ -10,6 +10,9 @@ public class RXTXRobot
     private InputStream in;
     private byte[] buffer;
     private String lastResponse;
+    private SerialPort serialPort;
+    private CommPort commPort;
+    private CommPortIdentifier portIdentifier;
     public RXTXRobot(String p)
     {
         port = p;
@@ -35,17 +38,17 @@ public class RXTXRobot
     {
         try
         {
-            CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(port);
+            portIdentifier = CommPortIdentifier.getPortIdentifier(port);
             if (portIdentifier.isCurrentlyOwned())
             {
                 System.err.println("Error: Port is currently in use");
             }
             else
             {
-                    CommPort commPort = portIdentifier.open("RXRobot",2000);
+                    commPort = portIdentifier.open("RXRobot",2000);
                     if ( commPort instanceof SerialPort )
                     {
-                        SerialPort serialPort = (SerialPort) commPort;
+                        serialPort = (SerialPort) commPort;
                         serialPort.setSerialPortParams(9600,SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.PARITY_NONE);
                         debug("Sleeping and resetting...");
                         Thread.sleep(3000);
@@ -76,6 +79,13 @@ public class RXTXRobot
             System.err.println("Could not assign Input and Output streams (IOException). Error: " + e.getMessage());
         }
     }
+    public void close()
+    {
+        if (serialPort != null)
+            serialPort.close();
+        if (commPort != null)
+            commPort.close();
+    }
     private void debug(String s)
     {
         if (verbose)
@@ -89,12 +99,12 @@ public class RXTXRobot
             if (out != null || in != null)
             {
                 out.write((s+"\r\n").getBytes());
-                if (verbose)
+                /*if (verbose)
                 {
                     sleep(2000);
                     in.read(buffer, 0, Math.min(in.available(), buffer.length));
                     lastResponse = new String(buffer);
-                }
+                }*/
             }
         }
         catch(IOException e)
