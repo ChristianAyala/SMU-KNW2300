@@ -4,6 +4,13 @@ import java.io.*;
 
 public class RXTXRobot
 {
+    /* Constants */
+    final public static int SERVO1 = 1;
+    final public static int SERVO2 = 0;
+    final public static int MOTOR1 = 2;
+    final public static int MOTOR2 = 3;
+    
+    /* Private variables */
     private String port;
     private boolean verbose;
     private OutputStream out;
@@ -99,12 +106,12 @@ public class RXTXRobot
             if (out != null || in != null)
             {
                 out.write((s+"\r\n").getBytes());
-                /*if (verbose)
+                if (verbose)
                 {
-                    sleep(2000);
+                    sleep(200);
                     in.read(buffer, 0, Math.min(in.available(), buffer.length));
                     lastResponse = new String(buffer);
-                }*/
+                }
             }
         }
         catch(IOException e)
@@ -134,9 +141,9 @@ public class RXTXRobot
             debug("Reading Analog Pins...");
             sendRaw("r a");
             in.read(buffer, 0, Math.min(in.available(), buffer.length));
-            String t = new String(buffer);
-            debug("Received response: " + t);
-            return t;
+            lastResponse = new String(buffer);
+            debug("Received response: " + lastResponse);
+            return lastResponse;
         }
         catch(IOException e)
         {
@@ -148,12 +155,12 @@ public class RXTXRobot
     {
         try
         {
-            debug("Reading Analog Pins...");
+            debug("Reading Digital Pins...");
             sendRaw("r d");
             in.read(buffer, 0, Math.min(in.available(), buffer.length));
-            String t = new String(buffer);
-            debug("Received response: " + t);
-            return t;
+            lastResponse = new String(buffer);
+            debug("Received response: " + lastResponse);
+            return lastResponse;
         }
         catch(IOException e)
         {
@@ -173,6 +180,11 @@ public class RXTXRobot
     }
     public void moveServo(int servo, int position)
     {
+        if (servo != RXTXRobot.SERVO1 && servo != RXTXRobot.SERVO2)
+        {
+            System.err.println("ERROR: moveServo: Invalid servo argument");
+            return;
+        }
         debug("Moving servo " + servo + " to position " + position);
         if (position <= 0 || position >= 180)
             System.err.println("ERROR: moveServo position must be greater than 0 and less than 180.  You supplied " + position + ", which is invalid.");
@@ -199,11 +211,21 @@ public class RXTXRobot
     }
     public void runMotor(int motor, int speed, int time)
     {
+        if (motor != RXTXRobot.MOTOR1 && motor != RXTXRobot.MOTOR2)
+        {
+            System.err.println("ERROR: runMotor was not given a correct motor argument");
+            return;
+        }
         debug("Running motor " + motor + " at speed " + speed + " for time of " + time);
         sendRaw("d " + motor + " "  + speed + " " + time);
     }
     public void runMotor(int motor1, int speed1, int motor2, int speed2, int time)
     {
+        if ((motor1 != RXTXRobot.MOTOR1 && motor1 != RXTXRobot.MOTOR2) || (motor2 != RXTXRobot.MOTOR1 && motor2 != RXTXRobot.MOTOR2))
+        {
+            System.err.println("ERROR: runMotor was not given a correct motor argument");
+            return;
+        }
         debug("Running two motors, motor " + motor1 + " at speed " + speed1 + " and motor " + motor2 + " at speed " + speed2 + " for time of " + time);
         sendRaw("D " + motor1 + " " + speed1 +" " + motor2 + " " + speed2 + " " + time);
     }
