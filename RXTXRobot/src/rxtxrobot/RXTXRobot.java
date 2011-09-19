@@ -21,7 +21,7 @@
  *     +runMotor(int motor_1, int speed_1, [int motor_2, int speed_2], int time)
  * 
  *   private:
- *     -init()
+ *     -connect()
  *     -debug(String str)
  */
 
@@ -52,23 +52,23 @@ public class RXTXRobot
         port = p;
         verbose = false;
         buffer = new byte[1024];
-        init();
+        connect();
     }
     public RXTXRobot(String p, boolean v)
     {
         port = p;
         verbose = v;
         buffer = new byte[1024];
-        init();
+        connect();
     }
     public RXTXRobot(String p, boolean v, int bufferSize)
     {
         port = p;
         verbose = v;
         buffer = new byte[bufferSize];
-        init();
+        connect();
     }
-    private void init()
+    private void connect()
     {
         try
         {
