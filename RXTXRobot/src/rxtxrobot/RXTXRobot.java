@@ -7,6 +7,8 @@
  * 
  *   public:
  *     +RXTXRobot(String port, [boolean verbose, [int bufferSize]])
+ *     +connect()
+ *     +isConnected()
  *     +close()
  *     +sendRaw(String str)
  *     +getLastResponse()
@@ -23,7 +25,6 @@
  *     +runMotor(int motor_1, int speed_1, [int motor_2, int speed_2], int time)
  * 
  *   private:
- *     -connect()
  *     -debug(String str)
  */
 
@@ -71,7 +72,7 @@ public class RXTXRobot
         buffer = new byte[bufferSize];
         connect();
     }
-    private void connect()
+    public void connect()
     {
         try
         {
@@ -115,6 +116,10 @@ public class RXTXRobot
         {
             System.err.println("Could not assign Input and Output streams (IOException). Error: " + e.getMessage());
         }
+    }
+    public boolean isConnected()
+    {
+        return serialPort != null && commPort != null;
     }
     public void close()
     {
