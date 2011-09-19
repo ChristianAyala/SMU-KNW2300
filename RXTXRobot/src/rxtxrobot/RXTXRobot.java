@@ -201,8 +201,8 @@ public class RXTXRobot
     {
         String pins = this.getDigitalPins();
         String[] split = pins.trim().split("\\s+");
-        if (index >=split.length-1 || index<0)
-            System.err.println("ERROR: getDigitalPin was given an index that is not within the range of 0 to "+(split.length-2)+" (inclusive)");
+        if (index >=RXTXRobot.NUM_DIGITAL_PINS || index<0)
+            System.err.println("ERROR: getDigitalPin was given an index that is not within the range of 0 to "+(RXTXRobot.NUM_DIGITAL_PINS-1)+" (inclusive)");
         else
             return Integer.parseInt(split[index+1]);
         return -1;
