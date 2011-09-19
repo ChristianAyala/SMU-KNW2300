@@ -197,6 +197,16 @@ public class RXTXRobot
         }
         return "";
     }
+    public int getDigitalPin(int index)
+    {
+        String pins = this.getDigitalPins();
+        String[] split = pins.trim().split("\\s+");
+        if (index >=split.length-1 || index<0)
+            System.err.println("ERROR: getDigitalPin was given an index that is not within the range of 0 to "+(split.length-2)+" (inclusive)");
+        else
+            return Integer.parseInt(split[index+1]);
+        return -1;
+    }
     public void setAnalogPin(int pin, int value)
     {
         debug("Setting Analog Pin " + pin + " to " + value);
