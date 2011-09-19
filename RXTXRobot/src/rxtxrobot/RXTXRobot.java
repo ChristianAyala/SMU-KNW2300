@@ -36,7 +36,7 @@ public class RXTXRobot
     final public static int SERVO2 = 0;
     final public static int MOTOR1 = 2;
     final public static int MOTOR2 = 3;
-    
+    final public static int NUM_DIGITAL_PINS = 12;
     /* Private variables */
     private String port;
     private boolean verbose;
@@ -167,6 +167,7 @@ public class RXTXRobot
         {
             debug("Reading Analog Pins...");
             sendRaw("r a");
+            sleep(200);
             in.read(buffer, 0, Math.min(in.available(), buffer.length));
             lastResponse = new String(buffer);
             debug("Received response: " + lastResponse);
@@ -184,6 +185,7 @@ public class RXTXRobot
         {
             debug("Reading Digital Pins...");
             sendRaw("r d");
+            sleep(200);
             in.read(buffer, 0, Math.min(in.available(), buffer.length));
             lastResponse = new String(buffer);
             debug("Received response: " + lastResponse);
