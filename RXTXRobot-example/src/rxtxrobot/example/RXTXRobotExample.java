@@ -5,18 +5,16 @@
 package rxtxrobot.example;
 
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import rxtxrobot.RXTXRobot;
 
 public class RXTXRobotExample {
 
-    public static void main (String [] args)
+    public static void main (String [] args) throws InterruptedException
     {
         RXTXRobot r = new RXTXRobot("/dev/ttyUSB0",true);
-        /*Scanner s = new Scanner(System.in);
+        Scanner s = new Scanner(System.in);
         String t = "";
-        do
+        /*do
         {
             System.out.print("Input: ");
             t = s.nextLine();
@@ -26,15 +24,58 @@ public class RXTXRobotExample {
                 System.out.println("Response -->"+r.getLastResponse());
             }
         }
-        while(!t.equals("exit"));*/
+        while(!t.equals("exit"));
+        r.close();*//*
         System.out.println("Moving forward...");
-        r.runMotor(RXTXRobot.MOTOR1,2000,RXTXRobot.MOTOR2,2000,1000);
-        r.sleep(3000);
-        System.out.append("Moving backwards....");
-        r.runMotor(RXTXRobot.MOTOR1,-2000,RXTXRobot.MOTOR2,-2000,1000);
-        r.sleep(2000);
-        System.out.println("Closing...");
+        //r.runMotor(RXTXRobot.MOTOR1,500,RXTXRobot.MOTOR2,500,1000);
+        //r.sleep(2000);
+        //System.out.append("Moving backwards....");
+        //r.runMotor(RXTXRobot.MOTOR1,-500,RXTXRobot.MOTOR2,-500,1000);
+        //r.sleep(2000);
+        //System.out.println("Closing...");
+        r.moveServo(RXTXRobot.SERVO1,50);
+        r.sleep(500);
+        r.moveServo(RXTXRobot.SERVO2,50);
+        r.sleep(500);
+        r.moveBothServos(90,90);
+        r.sleep(500);
         r.close();
-        System.out.println("Done");
+        System.out.println("Done");*/
+        System.out.println("Connected...");
+        Thread.sleep(1000);
+        System.out.println("Reading digital pins: ");
+        String[] a = r.getDigitalPins().trim().split("\\s+");
+        System.out.print("Size: "+a.length+"; ");
+        for (int x=0;x<a.length;++x)
+            System.out.print(a[x]+",");
+        System.out.println();
+        int temp = 3;
+        for (int x=0;x<RXTXRobot.NUM_DIGITAL_PINS;++x)
+        {
+            if ((temp = r.getDigitalPin(x))==-1)
+            {
+                System.out.println("FINISHED");
+                break;
+            }
+            System.out.println("Digital Pin #"+x+" was "+temp);
+        }
+        System.out.println("\nAnalog Pins:");
+        a = r.getAnalogPins().trim().split("\\s+");
+         System.out.print("Size: "+a.length+"; ");
+        for (int x=0;x<a.length;++x)
+            System.out.print(a[x]+",");
+        System.out.println();
+        temp = -1;
+        for (int x=0;x<RXTXRobot.NUM_ANALOG_PINS;++x)
+        {
+            if ((temp = r.getAnalogPin(x))==-1)
+            {
+                System.out.println("FINISHED");
+                break;
+            }
+            System.out.println("Analog Pin #"+x+" was "+temp);
+        }
+        System.out.println("\nClosing...");
+        r.close();
     }
 }
