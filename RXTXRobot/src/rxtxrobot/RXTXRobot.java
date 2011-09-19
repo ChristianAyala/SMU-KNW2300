@@ -37,6 +37,7 @@ public class RXTXRobot
     final public static int MOTOR1 = 2;
     final public static int MOTOR2 = 3;
     final public static int NUM_DIGITAL_PINS = 12;
+    final public static int NUM_ANALOG_PINS = 6;
     /* Private variables */
     private String port;
     private boolean verbose;
@@ -137,7 +138,7 @@ public class RXTXRobot
                 {
                     sleep(200);
                     in.read(buffer, 0, Math.min(in.available(), buffer.length));
-                    lastResponse = new String(buffer);
+                    lastResponse = (new String(buffer)).trim();
                 }
             }
         }
@@ -169,7 +170,7 @@ public class RXTXRobot
             sendRaw("r a");
             sleep(200);
             in.read(buffer, 0, Math.min(in.available(), buffer.length));
-            lastResponse = new String(buffer);
+            lastResponse = (new String(buffer)).trim();
             debug("Received response: " + lastResponse);
             return lastResponse;
         }
@@ -187,7 +188,7 @@ public class RXTXRobot
             sendRaw("r d");
             sleep(200);
             in.read(buffer, 0, Math.min(in.available(), buffer.length));
-            lastResponse = new String(buffer);
+            lastResponse = (new String(buffer)).trim();
             debug("Received response: " + lastResponse);
             return lastResponse;
         }
@@ -200,9 +201,19 @@ public class RXTXRobot
     public int getDigitalPin(int index)
     {
         String pins = this.getDigitalPins();
-        String[] split = pins.trim().split("\\s+");
+        String[] split = pins.split("\\s+");
         if (index >=RXTXRobot.NUM_DIGITAL_PINS || index<0)
             System.err.println("ERROR: getDigitalPin was given an index that is not within the range of 0 to "+(RXTXRobot.NUM_DIGITAL_PINS-1)+" (inclusive)");
+        else
+            return Integer.parseInt(split[index+1]);
+        return -1;
+    }
+    public int getAnalogPin(int index)
+    {
+        String pins = this.getAnalogPins();
+        String[] split = pins.split("\\s+");
+        if (index >=RXTXRobot.NUM_ANALOG_PINS || index<0)
+            System.err.println("ERROR: getAnalogPin was given an index that is not within the range of 0 to "+(RXTXRobot.NUM_ANALOG_PINS-1)+" (inclusive)");
         else
             return Integer.parseInt(split[index+1]);
         return -1;
