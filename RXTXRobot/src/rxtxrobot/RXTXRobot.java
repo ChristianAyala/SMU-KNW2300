@@ -72,7 +72,7 @@ public class RXTXRobot
         buffer = new byte[bufferSize];
         connect();
     }
-    public void connect()
+    public final void connect()
     {
         try
         {
@@ -117,11 +117,11 @@ public class RXTXRobot
             System.err.println("Could not assign Input and Output streams (IOException). Error: " + e.getMessage());
         }
     }
-    public boolean isConnected()
+    public final boolean isConnected()
     {
         return serialPort != null && commPort != null;
     }
-    public void close()
+    public final void close()
     {
         if (serialPort != null)
             serialPort.close();
