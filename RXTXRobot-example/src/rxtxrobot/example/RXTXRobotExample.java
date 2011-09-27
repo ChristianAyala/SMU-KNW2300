@@ -11,7 +11,12 @@ public class RXTXRobotExample {
 
     public static void main (String [] args) throws InterruptedException
     {
-        RXTXRobot r = new RXTXRobot("/dev/ttyUSB0",true);
+        RXTXRobot r = new RXTXRobot("/dev/ttyUSB0",false);
+        if (!r.isConnected())
+        {
+            System.out.println("Error connecting");
+            System.exit(0);
+        }
         Scanner s = new Scanner(System.in);
         String t = "";
         /*do
@@ -40,7 +45,7 @@ public class RXTXRobotExample {
         r.moveBothServos(90,90);
         r.sleep(500);
         r.close();
-        System.out.println("Done");*/
+        System.out.println("Done");*
         System.out.println("Connected...");
         Thread.sleep(1000);
         System.out.println("Reading digital pins: ");
@@ -75,7 +80,20 @@ public class RXTXRobotExample {
             }
             System.out.println("Analog Pin #"+x+" was "+temp);
         }
-        System.out.println("\nClosing...");
+        System.out.println("\nClosing...");*
+        System.out.println("Starting analog pin reading...");
+        for (int x=0;x<100;++x)
+        {
+            System.out.println("Pin 0: "+r.getAnalogPin(0)+"     ");
+            r.sleep(200);
+            System.out.print("\r");
+        }
+        System.out.println("Stopping...");*/
+        r.moveServo(RXTXRobot.SERVO1,179);
+        r.sleep(1000);
+        r.moveServo(RXTXRobot.SERVO1,1);
+        r.sleep(1000);
+        r.moveServo(RXTXRobot.SERVO1,90);
         r.close();
     }
 }
