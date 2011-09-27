@@ -65,13 +65,6 @@ public class RXTXRobot
         buffer = new byte[1024];
         connect();
     }
-    public RXTXRobot(String p, boolean v, int bufferSize)
-    {
-        port = p;
-        verbose = v;
-        buffer = new byte[bufferSize];
-        connect();
-    }
     public final void connect()
     {
         try
