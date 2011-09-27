@@ -50,7 +50,6 @@ public class RXTXRobot
     private String lastResponse;
     private SerialPort serialPort;
     private CommPort commPort;
-    private CommPortIdentifier portIdentifier;
     public RXTXRobot(String p)
     {
         port = p;
@@ -69,7 +68,7 @@ public class RXTXRobot
     {
         try
         {
-            portIdentifier = CommPortIdentifier.getPortIdentifier(port);
+            CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(port);
             if (portIdentifier.isCurrentlyOwned())
             {
                 System.err.println("Error: Port is currently in use");
