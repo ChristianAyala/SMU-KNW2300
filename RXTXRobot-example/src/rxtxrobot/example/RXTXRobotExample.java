@@ -89,11 +89,14 @@ public class RXTXRobotExample {
             System.out.print("\r");
         }
         System.out.println("Stopping...");*/
-        r.moveServo(RXTXRobot.SERVO1,179);
-        r.sleep(1000);
-        r.moveServo(RXTXRobot.SERVO1,1);
-        r.sleep(1000);
-        r.moveServo(RXTXRobot.SERVO1,90);
+        int one,two;
+        for (int x=0;x<10000;++x)
+        {
+            one = r.getAnalogPin(0);
+            //two = r.getAnalogPin(1);
+            System.out.println("\nPin 0: " + one);
+            r.sleep(100);
+        }
         r.close();
     }
 }
