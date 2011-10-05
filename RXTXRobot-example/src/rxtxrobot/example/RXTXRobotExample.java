@@ -88,7 +88,7 @@ public class RXTXRobotExample {
             r.sleep(200);
             System.out.print("\r");
         }
-        System.out.println("Stopping...");*/
+        System.out.println("Stopping...");*
         int one,two;
         for (int x=0;x<10000;++x)
         {
@@ -97,6 +97,10 @@ public class RXTXRobotExample {
             System.out.println("\nPin 0: " + one);
             r.sleep(100);
         }
+        r.close();*/
+        r.sleep(1000);
+        r.sendToLabView("s");
+        r.sleep(2000);
         r.close();
     }
 }

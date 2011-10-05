@@ -31,6 +31,7 @@
 package rxtxrobot;
 import gnu.io.*;
 import java.io.*;
+import java.util.Arrays;
 
 public class RXTXRobot
 {
@@ -145,6 +146,29 @@ public class RXTXRobot
         {
             System.err.println("Cannot write command (IOException)! Error: " + e.getMessage());
         }
+    }
+    public String sendToLabView(String s)
+    {
+        debug("Sending command: " + s);
+        try
+        {
+            if (out != null || in != null)
+            {
+                byte[] temp = new byte[1024];
+                out.write((s).getBytes());
+                sleep(800);
+                in.read(temp, 0, Math.min(in.available(), temp.length));
+                lastResponse = new String(temp);
+                if (verbose)
+                    System.out.println("XBee Response: " + new String(temp));
+                return lastResponse;
+            }
+        }
+        catch(IOException e)
+        {
+            System.err.println("Cannot write command (IOException)! Error: " + e.getMessage());
+        }
+        return "Error";
     }
     public String getLastResponse()
     {
