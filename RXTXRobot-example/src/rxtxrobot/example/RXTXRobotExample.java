@@ -12,13 +12,13 @@ public class RXTXRobotExample {
     public static void main (String [] args) throws InterruptedException
     {
         RXTXRobot r = new RXTXRobot("/dev/ttyUSB0",false);
-        if (!r.isConnected())
+        /*if (!r.isConnected())
         {
             System.out.println("Error connecting");
             System.exit(0);
         }
         Scanner s = new Scanner(System.in);
-        String t = "";
+        String t = "";*/
         /*do
         {
             System.out.print("Input: ");
@@ -98,9 +98,9 @@ public class RXTXRobotExample {
             r.sleep(100);
         }
         r.close();*/
-        r.sleep(1000);
-        r.sendToLabView("s");
-        r.sleep(2000);
-        r.close();
+        //r.sleep(1000);
+        System.out.println(r.sendToLabView("s"));
+        //r.sleep(2000);
+        //r.close();
     }
 }
