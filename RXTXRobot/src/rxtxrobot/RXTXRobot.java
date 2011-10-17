@@ -31,7 +31,6 @@
 package rxtxrobot;
 import gnu.io.*;
 import java.io.*;
-import java.util.Arrays;
 
 public class RXTXRobot
 {
@@ -147,28 +146,32 @@ public class RXTXRobot
             System.err.println("Cannot write command (IOException)! Error: " + e.getMessage());
         }
     }
-    public String sendToLabView(String s)
+    public Coord sendToLabView(String s)
     {
         debug("Sending command: " + s);
         try
         {
             if (out != null || in != null)
             {
-                byte[] temp = new byte[1024];
+                buffer = new byte[1024];
                 out.write((s).getBytes());
                 sleep(800);
-                in.read(temp, 0, Math.min(in.available(), temp.length));
-                lastResponse = new String(temp);
+                in.read(buffer, 0, Math.min(in.available(), buffer.length));
+                lastResponse = new String(buffer);
                 if (verbose)
-                    System.out.println("XBee Response: " + new String(temp));
-                return lastResponse;
+                    System.out.println("XBee Response: " + lastResponse);
+                lastResponse = lastResponse.substring(lastResponse.indexOf("[")+1, lastResponse.indexOf("]"));
+                String[] parts = lastResponse.split(",");
+                if (verbose)
+                    System.out.println("Creating Coord with x="+parts[0]+", y="+parts[1]+", z="+parts[2]);
+                return new Coord(Integer.parseInt(parts[0]),Integer.parseInt(parts[1]),Integer.parseInt(parts[2]));
             }
         }
-        catch(IOException e)
+        catch(Exception e)
         {
-            System.err.println("Cannot write command (IOException)! Error: " + e.getMessage());
+            System.err.println("A generic error occurred: Error: " + e.getMessage());
         }
-        return "Error";
+        return null;
     }
     public String getLastResponse()
     {
