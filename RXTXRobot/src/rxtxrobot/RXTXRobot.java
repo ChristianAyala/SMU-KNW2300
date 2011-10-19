@@ -522,7 +522,7 @@ public class RXTXRobot
         }
         debug("Moving stepper " + stepper + " " + steps + " steps");
         sendRaw("p " + stepper + " " + steps);
-        sleep(steps/30);
+        sleep((int)(steps*60*1000*((24.0/100))/(24*30)));
     }
     /**
      * 
