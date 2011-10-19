@@ -195,6 +195,8 @@ public class RXTXRobot
      */
     public final void close()
     {
+        sleep(300);
+        this.moveBothServos(90,90);
         if (serialPort != null)
             serialPort.close();
         if (commPort != null)
@@ -256,24 +258,23 @@ public class RXTXRobot
      * @param s String command that gets sent to lab view
      * @return the response from labview in string form
      */
-     public Coord sendToLabView(String s)
+     public Coord readFromLabView()
     {
-        debug("Sending command: " + s);
+        String command = "s";
+        debug("Sending command: " + command);
         try
         {
             if (out != null || in != null)
             {
                 buffer = new byte[1024];
-                out.write((s).getBytes());
+                out.write((command).getBytes());
                 sleep(800);
                 in.read(buffer, 0, Math.min(in.available(), buffer.length));
                 lastResponse = new String(buffer);
-                if (verbose)
-                    System.out.println("XBee Response: " + lastResponse);
+                debug("XBee Response: " + lastResponse);
                 lastResponse = lastResponse.substring(lastResponse.indexOf("[")+1, lastResponse.indexOf("]"));
                 String[] parts = lastResponse.split(",");
-                if (verbose)
-                    System.out.println("Creating Coord with x="+parts[0]+", y="+parts[1]+", z="+parts[2]);
+                debug("Creating Coord with x="+parts[0]+", y="+parts[1]+", z="+parts[2]);
                 return new Coord(Integer.parseInt(parts[0]),Integer.parseInt(parts[1]),Integer.parseInt(parts[2]));
             }
         }
