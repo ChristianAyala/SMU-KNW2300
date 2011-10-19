@@ -547,10 +547,10 @@ public class RXTXRobot
         debug("Moving steppers " + stepper1 + " and " + stepper2 + " to positions " + steps1 + " and " + steps2);
         sendRaw("P " + stepper1 + " " + steps1 + " " + stepper2 + " " + steps2);
         if(steps1 > steps2){
-            sleep(steps1/30);
+            sleep((int)(steps1*60*1000*((24.0/100))/(24*30)));
         }
         else{
-            sleep(steps2/30);
+            sleep((int)(steps2*60*1000*((24.0/100))/(24*30)));
         }
     }
     /**
