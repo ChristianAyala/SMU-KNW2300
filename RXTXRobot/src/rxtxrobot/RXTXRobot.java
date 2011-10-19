@@ -238,6 +238,7 @@ public class RXTXRobot
                 out.write((s+"\r\n").getBytes());
                 if (verbose)
                 {
+                    buffer = new byte[1024];
                     sleep(200);
                     in.read(buffer, 0, Math.min(in.available(), buffer.length));
                     lastResponse = (new String(buffer)).trim();
