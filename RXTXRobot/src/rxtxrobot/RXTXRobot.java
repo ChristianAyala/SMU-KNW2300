@@ -267,6 +267,7 @@ public class RXTXRobot
         {
             if (out != null || in != null)
             {
+                
                 buffer = new byte[1024];
                 out.write((command).getBytes());
                 sleep(800);
@@ -276,12 +277,13 @@ public class RXTXRobot
                 lastResponse = lastResponse.substring(lastResponse.indexOf("[")+1, lastResponse.indexOf("]"));
                 String[] parts = lastResponse.split(",");
                 debug("Creating Coord with x="+parts[0]+", y="+parts[1]+", z="+parts[2]);
-                return new Coord(Integer.parseInt(parts[0]),Integer.parseInt(parts[1]),Integer.parseInt(parts[2]));
+                return new Coord(Double.parseDouble(parts[0]),Double.parseDouble(parts[1]),Double.parseDouble(parts[2]));
             }
         }
         catch(Exception e)
         {
             System.err.println("A generic error occurred: Error: " + e.getMessage());
+            return null;
         }
         return null;
     }
