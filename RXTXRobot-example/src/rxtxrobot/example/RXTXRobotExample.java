@@ -6,14 +6,23 @@ public class RXTXRobotExample {
 
     public static void main (String [] args) throws InterruptedException
     {
-        RXTXRobot r = new RXTXRobot("/dev/ttyUSB0");
+        RXTXRobot r = new RXTXRobot("/dev/ttyUSB0",true);
         if (!r.isConnected())
         {
             System.out.println("Error connecting");
             System.exit(0);
         }
-        Coord c = r.readFromLabView();
-        System.out.println("Recieved a coordinate of: " + c.getX() + ", " + c.getY() + ", " + c.getZ());
+        for (int x=0;x<5;++x)
+        {
+            System.out.println("Trial 1");
+            Coord c = r.readFromLabView();
+            if (c != null)
+                System.out.println("Recieved a coordinate of: " + c.getX() + ", " + c.getY() + ", " + c.getZ());
+            else
+                System.out.println("Didn't receive a coordinate object");
+            r.sleep(500);
+        }
+        r.close();
         /*
         Scanner s = new Scanner(System.in);
         String t = "";
