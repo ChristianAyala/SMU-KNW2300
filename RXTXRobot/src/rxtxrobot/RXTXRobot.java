@@ -2,7 +2,7 @@ package rxtxrobot;
 
 /*  RXTXRobot API package
  *   
- *  All the methods in this package are asyncronous.  Therefore, if you move a motor for a certain amount
+ *  All the methods in this package are asyncronous, unless otherwise noted.  Therefore, if you move a motor for a certain amount
  *  of time, be sure to either Thread.sleep (or use the RXTXRobot.sleep method) or account for the execution
  *  time in your implementation
  * 
@@ -66,11 +66,11 @@ public class RXTXRobot
      */
     //final public static int STEPPER2 = 1;
     /**
-     * The maximum number of digital pins that can be read from the arduino
+     * The maximum number of digital pins that can be read from the arduino (0&nbsp;&le;&nbsp;pins&nbsp;&lt;&nbsp;NUM_DIGITAL_PINS)
      */
     final public static int NUM_DIGITAL_PINS = 12;
     /**
-     * The maximum number of analog pins that can be read from the arduino
+     * The maximum number of analog pins that can be read from the arduino (0&nbsp;&le;&nbsp;pins&nbsp;&lt;&nbsp;NUM_ANALOG_PINS)
      */
     final public static int NUM_ANALOG_PINS = 6;
     /* Private variables */
@@ -82,47 +82,54 @@ public class RXTXRobot
     private String lastResponse;
     private SerialPort serialPort;
     private CommPort commPort;
+    private final int bufferSize = 1024;
     /**
-     * Accepts a port number.
+     * Accepts a port name.
      * 
-     * Accepts a port number, Sets the verbose
-     * value to false and buffer size to 1024 by default. 
+     * Accepts a port name and sets the verbose debugging
+     * to false. 
      * 
-     * @param p Port number the arduino/xbee is connected to
+     * <br /><br />The port name will be:<br />
+     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Windows:</b> "COM3" (or "COM4" or "COM5", check device manager to see)<br />
+     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Mac/Linux:</b> "/dev/ttyACM0"
+     * 
+     * @param port Port name the Arduino/XBee is connected to.
      */
-    public RXTXRobot(String p)
+    public RXTXRobot(String port)
     {
-        port = p;
+        this.port = port;
         verbose = false;
-        buffer = new byte[1024];
+        buffer = new byte[bufferSize];
         connect();
     }
     /**
-     * Accepts a port number and boolean value to turn on/off verbose messaging.
+     * Accepts a port name and verbose debugging boolean.
      * 
-     * Accepts a port number and boolean value to turn on/off verbose messaging,
-     * Sets the buffer size to 1024 by default.
+     * <br /><br />The port name will be:<br />
+     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Windows:</b> "COM3" (or "COM4" or "COM5", check device manager to see)<br />
+     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Mac/Linux:</b> "/dev/ttyACM0"
      * 
-     * @param p Port number the arduino/xbee is connected to
-     * @param v Boolean value that allows for descriptive messaging
+     * @param port Port name the Arduino/XBee is connected to
+     * @param verbose Boolean value that allows for descriptive debugging messages
      */
-    public RXTXRobot(String p, boolean v)
+    public RXTXRobot(String port, boolean verbose)
     {
-        port = p;
-        verbose = v;
-        buffer = new byte[1024];
+        this.port = port;
+        this.verbose = verbose;
+        buffer = new byte[bufferSize];
         connect();
     }
     /**
      * 
-     * Attempts to connect to the arduino board.
+     * Attempts to connect to the Arduino/XBee.
      * 
-     * This method identifies the port that is currently being used by the arduino 
-     * and makes a serial connection to the arduino if the port is not already in use.
+     * This method identifies the port that is currently being used by the Arduino/XBee 
+     * and makes a serial connection to the Arduino if the port is not already in use.
      * If there is an error in connecting, then a different error message will be 
-     * displayed to the user for each case. Also opens up the input and output streams
-     * so that they can be used.
+     * displayed to the user for each case.
      * 
+     * This function does not terminate runtime if an error is discovered.  See the
+     * function {@link isConnected()} to test for an active connection.
      * 
      */
     public final void connect()
@@ -151,34 +158,57 @@ public class RXTXRobot
         }
         catch(NoSuchPortException e)
         {
-            System.err.println("Invalid port (NoSuchPortException). Error: " + e.getMessage());
+            System.err.println("Invalid port (NoSuchPortException). Check to make sure that the correct port is set at the objects initialization.");
+            if (verbose)
+            {
+                System.err.println("Error Message: " + e.getMessage()+"\n\nError StackTrace:\n");
+                e.printStackTrace();
+            }
         }
         catch(PortInUseException e)
         {
-            System.err.println("Port is already being used by a different application (PortInUseException). Error: " + e.getMessage());
+            System.err.println("Port is already being used by a different application (PortInUseException). Did you stop a previously running instance of this program?");
+            if (verbose)
+            {
+                System.err.println("Error Message: " + e.getMessage()+"\n\nError StackTrace:\n");
+                e.printStackTrace();
+            }
         }
         catch(UnsupportedCommOperationException e)
         {
-            System.err.println("Comm Operation is unsupported (UnsupportedCommOperationException). Error: " + e.getMessage());
+            System.err.println("Comm Operation is unsupported (UnsupportedCommOperationException).  This error shouldn't really happen, ever.  If you see this, ask a TA for assistance");
+            if (verbose)
+            {
+                System.err.println("Error Message: " + e.getMessage()+"\n\nError StackTrace:\n");
+                e.printStackTrace();
+            }
         }
         catch(InterruptedException e)
         {
-            System.err.println("Thread was interrupted (InterruptedException). Error: " + e.getMessage());
+            System.err.println("Thread was interrupted (InterruptedException).  Something stopped the Thread from executing (early termination of program?).  If you meant to terminate the program, ignore this error.");
+            if (verbose)
+            {
+                System.err.println("Error Message: " + e.getMessage()+"\n\nError StackTrace:\n");
+                e.printStackTrace();
+            }
         }
         catch(IOException e)
         {
-            System.err.println("Could not assign Input and Output streams (IOException). Error: " + e.getMessage());
+            System.err.println("Could not assign Input and Output streams (IOException).  This should never happen, unless on rare instances.  Try unplugging and replugging in the Arduino/XBee again, then re-run the program.  If that doesn't fix the problem, get a TA for assistance");
+            if (verbose)
+            {
+                System.err.println("Error Message: " + e.getMessage()+"\n\nError StackTrace:\n");
+                e.printStackTrace();
+            }
         }
     }
     /**
      * 
-     * Checks if the arduino is connected.
+     * Checks if the RXTXRobot object is connected to the Arduino/XBee.
      * 
-     * Returns true if the serial port and comm port are not null which means that 
-     * the arduino is connected. Returns false if the serial port or comm port are null
-     * which means that the arduino is not connected.
+     * Returns true if the RXTXRobot object is successfully connected to the Arduino/XBee.  Returns false otherwise.
      * 
-     * @return true/false value that specifies if you are connected to the arduino
+     * @return true/false value that specifies if the RXTXRobot object is connected to the Arduino/XBee
      */
     public final boolean isConnected()
     {
@@ -186,16 +216,16 @@ public class RXTXRobot
     }
     /**
      * 
-     * Closes the connection to the arduino.
+     * Closes the connection to the Arduino/XBee.
      * 
-     * This method closes the serial connection and comm connection so that 
-     * connection to the arduino is severed. This should be done before the program is 
-     * exited/completed.
+     * This method closes the serial connection to the Arduino/XBee.  It deletes the mutual exclusion lock
+     * file which is important, so this should be done before the program is terminated.
      * 
      */
     public final void close()
     {
         sleep(300);
+        debug("Resetting servos to position of 90 degrees for next run's use");
         this.moveBothServos(90,90);
         if (serialPort != null)
             serialPort.close();
@@ -219,26 +249,24 @@ public class RXTXRobot
     }
     /**
      * 
-     * Sends the string in param s to the arduino to be executed.
+     * Sends a string to the Arduino to be executed.
      * 
-     * If the output streams and input streams are open (a serial connection is present)
-     * then it sends the string s to the arduino to be executed.  If verbose is true then 
-     * the response from the arduino is read into lastResponse. If there is an IO exception
-     * because writing cannot be done then an error is printed to the user.
+     * If a serial connection is present, then it sends the string s to the Arduino to be executed.
+     * If verbose is true then the response from the Arduino is read into lastResponse. 
      * 
-     * @param s The command sent to the arduino 
+     * @param str The command sent to the Arduino 
      */
-    public void sendRaw(String s)
+    public void sendRaw(String str)
     {
-        debug("Sending command: " + s);
+        debug("Sending command: " + str);
         try
         {
-            if (out != null || in != null)
+            if (out != null && in != null && isConnected())
             {
-                out.write((s+"\r\n").getBytes());
+                out.write((str+"\r\n").getBytes());
                 if (verbose)
                 {
-                    buffer = new byte[1024];
+                    buffer = new byte[bufferSize];
                     sleep(200);
                     in.read(buffer, 0, Math.min(in.available(), buffer.length));
                     lastResponse = (new String(buffer)).trim();
@@ -247,28 +275,29 @@ public class RXTXRobot
         }
         catch(IOException e)
         {
-            System.err.println("Cannot write command (IOException)! Error: " + e.getMessage());
+            System.err.println("Could not use Input and Output streams (IOException).  This should never happen, unless on rare instances.  Try unplugging and replugging in the Arduino/XBee again, then re-run the program.  If that doesn't fix the problem, get a TA for assistance");
+            if (verbose)
+            {
+                System.err.println("Error Message: " + e.getMessage()+"\n\nError StackTrace:\n");
+                e.printStackTrace();
+            }
         }
     }
     /**
+     * Reads the Wii remote data from LabView.
      * 
-     * Sends a command to labview to get the current LED values.
-     * 
-     * 
-     * 
-     * @param s String command that gets sent to lab view
-     * @return the response from labview in string form
+     * @return The response from LabView in a {@link Coord} object or null on error.
      */
-     public Coord readFromLabView()
+    public Coord readFromLabView()
     {
         String command = "s";
         debug("Sending command: " + command);
         try
         {
-            if (out != null || in != null)
+            if (out != null && in != null && isConnected())
             {
                 
-                buffer = new byte[1024];
+                buffer = new byte[bufferSize];
                 out.write((command).getBytes());
                 sleep(800);
                 in.read(buffer, 0, Math.min(in.available(), buffer.length));
@@ -283,15 +312,16 @@ public class RXTXRobot
         catch(Exception e)
         {
             System.err.println("A generic error occurred: Error: " + e.getMessage());
-            return null;
         }
         return null;
     }
     /**
      * 
-     * Returns the last response sent from the arduino.
+     * Returns the last response sent from the Arduino.
      * 
-     * @return the last response sent from the arduino
+     * <br /><br /><b>This should only be relied on when verbose mode is set.</b>
+     * 
+     * @return The last response sent from the Arduino.
      */
     public String getLastResponse()
     {
@@ -301,11 +331,11 @@ public class RXTXRobot
      * 
      * Allows the robot to sleep for time length measured in milliseconds.
      * 
-     * Uses the Thread.sleep() function to put the robot to sleep for the specified
-     * number of milliseconds. Throws an exception if the thread is interrupted during 
-     * this process. (1000 milliseconds = 1 second)
+     * Uses a standard Thread.sleep() function to pause execution of the program for the 
+     * specified milliseconds. Displays an error if the thread is interrupted during 
+     * this process, but does not throw an Exception. (1000 milliseconds = 1 second)
      * 
-     * @param length the amount of time in milliseconds
+     * @param length The amount of time in milliseconds
      */
     public void sleep(int length)
     {
@@ -320,26 +350,34 @@ public class RXTXRobot
     }
     /**
      * 
-     * Returns the 6 analog pin values from the arduino in String form.
+     * Returns the 6 analog pin values from the Arduino in String form. <br /><br />
      * 
-     * Sends the command "r a" to the arduino to read the current analog pin values (6).
-     * The values are put into last response which is then returned to where the method
-     * was called. An error is displayed to the user if there is an error in reading 
-     * the values from the arduino; in this case nothing is returned.
+     * Each pin's value is returned in one string, separated by a space.  Therefore,
+     * the format of the string is:<br /><br />
      * 
-     * @return the output of the 6 analog pins in string form
+     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>0_pin 1_pin 2_pin 3_pin 4_pin 5_pin</i><br /><br />
+     * 
+     * Where #_pin is an integer containing the pin's current value.  The string is
+     * stored into lastResponse for future reference if needed.  An error is displayed to
+     * the user if an Exception is internally thrown, but execution does not stop.
+     * 
+     * @return The output of the 6 analog pins in string form or an empty String on error.
      */
     public String getAnalogPins()
     {
         try
         {
-            debug("Reading Analog Pins...");
-            sendRaw("r a");
-            sleep(200);
-            in.read(buffer, 0, Math.min(in.available(), buffer.length));
-            lastResponse = (new String(buffer)).trim();
-            debug("Received response: " + lastResponse);
-            return lastResponse;
+            if (out != null && in != null && isConnected())
+            {
+                buffer = new byte[bufferSize];
+                debug("Reading Analog Pins...");
+                sendRaw("r a");
+                sleep(200);
+                in.read(buffer, 0, Math.min(in.available(), buffer.length));
+                lastResponse = (new String(buffer)).trim();
+                debug("Received response: " + lastResponse);
+                return lastResponse;
+            }
         }
         catch(IOException e)
         {
@@ -348,27 +386,34 @@ public class RXTXRobot
         return "";
     }
     /**
+     * Returns the 12 digital pin values from the Arduino in String form. <br /><br />
      * 
-     * Returns the 12 digital pin values from the arduino.
+     * Each pin's value is returned in one string, separated by a space.  Therefore,
+     * the format of the string is:<br /><br />
      * 
-     * Sends the command "r d" to the arduino to read the current digital pin values (12).
-     * The values are put into last response which is then returned to where the method was
-     * called. An error is displayed to the user if there is an error in reading the values
-     * from the arduino; in this case nothing is returned.
+     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>0_pin 1_pin 2_pin 3_pin ... 11_pin</i><br /><br />
      * 
-     * @return the output of the 12 digital pins in string form
+     * Where #_pin is an integer containing the pin's current value.  The string is
+     * stored into lastResponse for future reference if needed.  An error is displayed to
+     * the user if an Exception is internally thrown, but execution does not stop.
+     * 
+     * @return The output of the 12 digital pins in string form or an empty String on error.
      */
     public String getDigitalPins()
     {
         try
         {
-            debug("Reading Digital Pins...");
-            sendRaw("r d");
-            sleep(200);
-            in.read(buffer, 0, Math.min(in.available(), buffer.length));
-            lastResponse = (new String(buffer)).trim();
-            debug("Received response: " + lastResponse);
-            return lastResponse;
+            if (out != null && in != null && isConnected())
+            {
+                buffer = new byte[bufferSize];
+                debug("Reading Digital Pins...");
+                sendRaw("r d");
+                sleep(200);
+                in.read(buffer, 0, Math.min(in.available(), buffer.length));
+                lastResponse = (new String(buffer)).trim();
+                debug("Received response: " + lastResponse);
+                return lastResponse;
+            }
         }
         catch(IOException e)
         {
@@ -377,19 +422,12 @@ public class RXTXRobot
         return "";
     }
     /**
+     * Returns the value of the digital pin specified by index.
+     * <br /><br />
+     * <b>Index must be: 0 &le; index &lt; {@link NUM_DIGITAL_PINS}</b>
      * 
-     * Returns the value of the digital pin specified by the index param.
-     * 
-     * Calls the {@link getDigitalPins()} method to get the values for all of the arduino
-     * digital pins. It converts the String to an array of Strings with one of the pin values
-     * in each position of the array. The index of an element within the array corresponds to the pin number
-     * on the arduino board. If the index is inside the bounds of the array then the value at that 
-     * position is parsed into an int which is then returned to where the method was called.
-     * If the position was not within the bounds of the array then an error message is displayed to
-     * the user and a -1 value is returned.
-     * 
-     * @param index the pin number that you want to read from
-     * @return the value of the specified pin number
+     * @param index The pin number that you want to read from
+     * @return The value of the specified pin number or -1 on error.
      */
     public int getDigitalPin(int index)
     {
@@ -402,19 +440,12 @@ public class RXTXRobot
         return -1;
     }
     /**
+     * Returns the value of the analog pin specified by index.
+     * <br /><br />
+     * <b>Index must be: 0 &le; index &lt; {@link NUM_ANALOG_PINS}</b>
      * 
-     * Returns the value of the analog pin number specified by the index param.
-     * 
-     * Calls the {@link getAnalogPins()} method to get the values for all of the arduino
-     * analog pins. It converts the String to an array of Strings with one of the pin
-     * values in each position of the array. The index of an element within the array corresponds 
-     * to the pin number on the arduino board. If the index is inside the bounds of the array then the 
-     * value at that position is parsed into an int which is then returned to where the meothd was called. 
-     * If the position is not within the bounds of the array then an error message is displayed to 
-     * the user and a -1 value is returned.
-     * 
-     * @param index the pint number that you want to read from
-     * @return the value of the specified pin number
+     * @param index The pin number that you want to read from
+     * @return The value of the specified pin number or -1 on error.
      */
     public int getAnalogPin(int index)
     {
@@ -428,13 +459,13 @@ public class RXTXRobot
     }
     /**
      * 
-     * Allows you to set the value of the specified analog pin.
+     * Sets the value of the specified analog pin.
      * 
-     * Sends a command to the arduino to set the value of a specified
-     * analog pin to the value the user passes the method.
+     * Sets the specified analog pin to the specified value.
+     * <br /><br /><b>Index must be: 0 &le; index &lt; {@link NUM_ANALOG_PINS}</b>
      * 
-     * @param pin the analog pin number that you would like to access
-     * @param value the value that you would like to set the specified pin to
+     * @param pin The analog pin number to set.
+     * @param value The value that you would like to set the pin to.
      */
     public void setAnalogPin(int pin, int value)
     {
@@ -443,13 +474,13 @@ public class RXTXRobot
     }
     /**
      * 
-     * Allows you to set the value of the digital pin.
+     * Sets the value of the digital pin.
      * 
-     * Sends a command to the arduino to stt the value of a specified
-     * digital pin to the value the user passes the method.
+     * Sets the specified digital pin to the specified value.
+     * <br /><br /><b>Index must be: 0 &le; index &lt; {@link NUM_DIGITAL_PINS}</b>
      * 
-     * @param pin the analog pin number that you would like to access
-     * @param value the value that you would like to set the specified pin to
+     * @param pin The analog pin number to set.
+     * @param value The value that you would like to set the pin to.
      */
     public void setDigitalPin(int pin, int value)
     {
@@ -461,20 +492,18 @@ public class RXTXRobot
      * Moves the specified servo to the specified angular position.
      * 
      * Accepts either RXTXRobot.SERVO1 or RXTXRobot.SERVO2 and an angular position between 0 and 180 exclusive.
-     * If the parameters are acceptable values then the command will be sent to the arduino to move the servo specified
-     * the specified number of degrees.  If the servo passed is not RXTXRobot.SERVO1 or RXTXRobot.SERVO2
-     * then an error message will be displayed to the user and the command will not be passed to the arduino.
-     * If the angular position is not between 0 and 180 then an error message will be displayed to the user 
-     * and the command will not be passed to the arduino.
+     * <br /><br />
+     * The servo starts at 90 degrees, so a number &lt; 90 will turn it one way, and a number &gt; 90 will turn
+     * it the other way.  An error message will be displayed on error.
      * 
-     * @param servo the servo motor that you would like to move: RXTXRobot.SERVO1 or RXTXRobot.SERVO2.
-     * @param position the position (in degrees) where you want the servo to turn to: 0 < position > 180.
+     * @param servo The servo motor that you would like to move: RXTXRobot.SERVO1 or RXTXRobot.SERVO2.
+     * @param position The position (in degrees) where you want the servo to turn to: 0 &lt; position &lt; 180.
      */
     public void moveServo(int servo, int position)
     {
         if (servo != RXTXRobot.SERVO1 && servo != RXTXRobot.SERVO2)
         {
-            System.err.println("ERROR: moveServo: Invalid servo argument");
+            System.err.println("ERROR: moveServo: Invalid servo argument (RXTXRobot.SERVO1 or RXTXRobot.SERVO2");
             return;
         }
         debug("Moving servo " + servo + " to position " + position);
@@ -487,14 +516,15 @@ public class RXTXRobot
      * 
      * Moves both servos simultaneously to the desired positions.
      * 
-     * Accepts to angular positions between 0 and 180 exclusive and moves the servo 
+     * Accepts two angular positions between 0 and 180 exclusive and moves the servo 
      * motors to the corresponding angular position. SERVO1 moves pos1 degrees and 
-     * SERVO2 moves pos2 degrees.  If either pos1 or pos2 is not between 0 and 180
-     * then an error message will be displayed to the user and the command will not 
-     * be sent.
+     * SERVO2 moves pos2 degrees.
+     * <br /><br />
+     * The servos start at 90 degrees, so a number &lt; 90 will turn it one way, and a number &gt; 90 will turn
+     * it the other way.  An error message will be displayed on error.
      * 
-     * @param pos1 the angular position of servo 1
-     * @param pos2 the angular position of servo 2
+     * @param pos1 The angular position of RXTXRobot.SERVO1
+     * @param pos2 The angular position of RXTXRobot.SERVO2
      */
     public void moveBothServos(int pos1, int pos2)
     {
@@ -506,21 +536,23 @@ public class RXTXRobot
     }
     /**
      * 
-     * Move one of the stepper motors a specified number of steps.
+     * Move the stepper motor a specified number of steps (<b>Blocking method</b>).
      * 
-     * Accepts a stepper motor (M1 and M2 on the ardiuno board) and a number of steps
-     * that the stepper motor should turn.  The command will be sent to the arduino to 
-     * turn the specified motor the specified number of steps. Negative steps will go
-     * counter clockwise and positive steps will rotate the motor clockwise. 
-     * One step = 15 degrees. i.e. 24 steps for one full revolution
+     * Accepts a stepper motor (M1 and M2 on the Ardiuno board) and a number of steps
+     * that the stepper motor should turn.  Negative steps will rotate
+     * counter-clockwise and positive steps will rotate clockwise.<br /><br />
      * 
-     * @param stepper the stepper motor that you want to move
-     * @param steps the number of steps you want the motor to move
+     * One step = 15 degrees. (<i>IE: 24 steps for one full revolution</i>)<br /><br />
+     * 
+     * <b>Note: This method is a blocking method.</b>
+     * 
+     * @param stepper The stepper motor that you want to move ({@link RXTXRobot.STEPPER1})
+     * @param steps The number of steps you want the motor to move
      */
     public void moveStepper(int stepper, int steps)
     {
         if(stepper != RXTXRobot.STEPPER1){
-            System.err.println("ERROR: moveStepper was not given the correct stepper argument");
+            System.err.println("ERROR: moveStepper was not given the correct stepper argument (RXTXRobot.STEPPER1)");
             return;
         }
         debug("Moving stepper " + stepper + " " + steps + " steps");
@@ -529,46 +561,22 @@ public class RXTXRobot
     }
     /**
      * 
-     * Move both stepper motors a specified number of steps.
-     * 
-     * Accepts both stepper motors (M1 or M2 on the arduino board) and a specified number of steps for each motor. 
-     * The command will be sent to the arduino to turn each motor the specified number of steps simultaneously. 
-     * Negative steps will go counter clockwise and positive steps will rotate the motor clockwise.
-     * One step = 15 degrees. i.e. 24 steps for one full revolution
-     * 
-     * @param stepper1 stepper motor 1
-     * @param steps1 the number of steps motor 1 should move
-     * @param stepper2 stepper motor 2 
-     * @param steps2 the number of steps motor 2 should move
-     */
-    public void moveStepper(int stepper1, int steps1, int stepper2, int steps2)
-    {
-        
-        //if((stepper1 != RXTXRobot.STEPPER1 && stepper2 != RXTXRobot.STEPPER2) || (stepper2 != RXTXRobot.STEPPER1 && stepper1 != RXTXRobot.STEPPER2) ){
-        //    System.out.println("ERROR: moveStepper was not given a correct stepper argument");
-        //}
-        debug("Moving steppers " + stepper1 + " and " + stepper2 + " to positions " + steps1 + " and " + steps2);
-        sendRaw("P " + stepper1 + " " + steps1 + " " + stepper2 + " " + steps2);
-        if(steps1 > steps2){
-            sleep((int)(steps1*60*1000*((24.0/100))/(24*30)));
-        }
-        else{
-            sleep((int)(steps2*60*1000*((24.0/100))/(24*30)));
-        }
-    }
-    /**
-     * 
-     * Runs the specified motor the specified speed for the specified time.
+     * Runs a DC motor at a specific speed for a specific time. (<b>Potential blocking method</b>)
      *   
      * Accepts a DC motor, either RXTXRobot.MOTOR1 or RXTXRobot.MOTOR2, the speed 
-     * that the motor should run at, and the time with which the motor should run. If the
-     * parameters are acceptable values then the command to run the motors will be sent
-     * to the arduino. If the incorrect motor is passed to the function then an error message will be 
-     * displayed to the user and the command will not be sent.
+     * that the motor should run at (arbitrary units), and the time with which the motor should run (in milliseconds).
+     * <br /><br />
+     * If speed is negative, the motor will run in reverse.
+     * <br /><br />
+     * If time is 0, the motor will run infinitely until another call to that motor is made, even if the Java program terminates.
      * 
-     * @param motor the DC motor you want to run: RXTXRobot.MOTOR1 or RXTXRobot.MOTOR2
-     * @param speed the speed that the motor should run at
-     * @param time the amount of time the motor should run in milliseconds
+     * <br /><br />An error message will display on error.<br /><br />
+     * 
+     * <b>Note: This method is a blocking method <u>unless</u> time = 0</b>
+     * 
+     * @param motor The DC motor you want to run: RXTXRobot.MOTOR1 or RXTXRobot.MOTOR2
+     * @param speed The speed that the motor should run at (arbitrary units)
+     * @param time The number of milliseconds the motor should run (0 for infinite)
      */
     public void runMotor(int motor, int speed, int time)
     {
@@ -583,20 +591,25 @@ public class RXTXRobot
     }
     /**
      * 
-     * Runs both DC motors at uniquely specified speeds for a specified amount of time.
+     * Runs both DC motors at different speeds for the same amount of time. (<b>Potential blocking method</b>)
+     *   
+     * Accepts a DC motor, either RXTXRobot.MOTOR1 or RXTXRobot.MOTOR2, the speed 
+     * in which that motor should run (arbitrary units), accepts another DC motor, the speed in which
+     * that motor should run, and the time with which both motors should run (in milliseconds).
+     * <br /><br />
+     * If speed is negative for either motor, that motor will run in reverse.
+     * <br /><br />
+     * If time is 0, the motors will run infinitely until another call to both specific motors is made, even if the Java program terminates.
      * 
-     * Accepts both DC motors, either RXTXRobot.MOTOR1 or RXTXRobot.MOTOR2, the speeds 
-     * for each motor and the amount of time that the motors should run for. If the parameters
-     * are acceptable values then the command will be sent for both motors to run simultaneously.
-     * If the incorrect motor is passed to the function then an error message will be displayed to the user
-     * and the command will not be sent.
-     *  
+     * <br /><br />An error message will display on error.<br /><br />
      * 
-     * @param motor1 the first DC motor: MOTOR1 or MOTOR2
-     * @param speed1 the speed that the first DC motor should run at
-     * @param motor2 the second DC motor: MOTOR1 or MOTOR2
-     * @param speed2 the speed that the second DC motor should run at
-     * @param time the amount of time that the DC motors should run
+     * <b>Note: This method is a blocking method <u>unless</u> time = 0</b>
+     * 
+     * @param motor1 The first DC motor: RXTXRobot.MOTOR1 or RXTXRobot.MOTOR2
+     * @param speed1 The speed that the first DC motor should run at
+     * @param motor2 The second DC motor: RXTXRobot.MOTOR1 or RXTXRobot.MOTOR2
+     * @param speed2 The speed that the second DC motor should run at
+     * @param time The amount of time that the DC motors should run
      */
     public void runMotor(int motor1, int speed1, int motor2, int speed2, int time)
     {
