@@ -74,6 +74,7 @@ public class RXTXRobot
     private String lastResponse;
     private SerialPort serialPort;
     private CommPort commPort;
+    private boolean errorFlag = false;
     final private static int bufferSize = 1024;
     /**
      * Accepts a port name.
@@ -248,6 +249,7 @@ public class RXTXRobot
      */
     public void sendRaw(String str)
     {
+        errorFlag = false;
         debug("Sending command: " + str);
         try
         {
@@ -262,9 +264,12 @@ public class RXTXRobot
                     lastResponse = (new String(buffer)).trim();
                 }
             }
+            else
+                errorFlag = true;
         }
         catch(IOException e)
         {
+            errorFlag = true;
             System.err.println("Could not use Input and Output streams (IOException).  This should never happen, unless on rare instances.  Try unplugging and replugging in the Arduino/XBee again, then re-run the program.  If that doesn't fix the problem, get a TA for assistance");
             if (verbose)
             {
@@ -547,7 +552,8 @@ public class RXTXRobot
         }
         debug("Moving stepper " + stepper + " " + steps + " steps");
         sendRaw("p " + stepper + " " + steps);
-        sleep((int)(steps*60*1000*((24.0/100))/(24*30)));
+        if (errorFlag == false)
+            sleep((int)(steps*60*1000*((24.0/100))/(24*30)));
     }
     /**
      * 
@@ -577,7 +583,8 @@ public class RXTXRobot
         }
         debug("Running motor " + motor + " at speed " + speed + " for time of " + time);
         sendRaw("d " + motor + " "  + speed + " " + time);
-        sleep(time);
+        if (errorFlag == false)
+            sleep(time);
     }
     /**
      * 
@@ -610,6 +617,7 @@ public class RXTXRobot
         }
         debug("Running two motors, motor " + motor1 + " at speed " + speed1 + " and motor " + motor2 + " at speed " + speed2 + " for time of " + time);
         sendRaw("D " + motor1 + " " + speed1 +" " + motor2 + " " + speed2 + " " + time);
-        sleep(time);
+        if (errorFlag == false)
+            sleep(time);
     }
 }
