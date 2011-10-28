@@ -2,13 +2,11 @@ package rxtxrobot;
 
 /*  RXTXRobot API package
  *   
- *  All the methods in this package are asyncronous, unless otherwise noted.  Therefore, if you move a motor for a certain amount
- *  of time, be sure to either Thread.sleep (or use the RXTXRobot.sleep method) or account for the execution
- *  time in your implementation
+ *  All the methods in this package are asyncronous, unless otherwise noted.
  * 
  * 
  *   public:
- *     +RXTXRobot(String port, [boolean verbose, [int bufferSize]])
+ *     +RXTXRobot(String port, [boolean verbose])
  *     +connect()
  *     +isConnected()
  *     +close()
@@ -23,19 +21,17 @@ package rxtxrobot;
  *     +setDigitalPin(int pin, int value)
  *     +moveServo(int servo, int position)
  *     +moveBothServos(int position_1, int position_2)
- *     +moveStepper(int stepper_1, int steps_1, [int stepper_2, int steps_2])
+ *     +moveStepper(int stepper, int steps)
  *     +runMotor(int motor_1, int speed_1, [int motor_2, int speed_2], int time)
  * 
  *   private:
  *     -debug(String str)
  */
 
-//package rxtxrobot;
 import gnu.io.*;
 import java.io.*;
 
 /**
- * 
  * @author Chris King
  */
 public class RXTXRobot
@@ -50,27 +46,23 @@ public class RXTXRobot
      */
     final public static int SERVO2 = 0;
     /**
-     * Refers to the the M3 DC motor on the arduino
+     * Refers to the the M3 DC motor on the Arduino
      */
     final public static int MOTOR1 = 2;
     /**
-     * Refers to the M4 DC motor on the arduino
+     * Refers to the M4 DC motor on the Arduino
      */
     final public static int MOTOR2 = 3;
     /**
-     * Refers to the M1/M2 Stepper motor on the arduino
+     * Refers to the M1/M2 Stepper motor on the Arduino
      */
     final public static int STEPPER1 = 0;
     /**
-     *
-     */
-    //final public static int STEPPER2 = 1;
-    /**
-     * The maximum number of digital pins that can be read from the arduino (0&nbsp;&le;&nbsp;pins&nbsp;&lt;&nbsp;NUM_DIGITAL_PINS)
+     * The maximum number of digital pins that can be read from the Arduino (0&nbsp;&le;&nbsp;pins&nbsp;&lt;&nbsp;NUM_DIGITAL_PINS)
      */
     final public static int NUM_DIGITAL_PINS = 12;
     /**
-     * The maximum number of analog pins that can be read from the arduino (0&nbsp;&le;&nbsp;pins&nbsp;&lt;&nbsp;NUM_ANALOG_PINS)
+     * The maximum number of analog pins that can be read from the Arduino (0&nbsp;&le;&nbsp;pins&nbsp;&lt;&nbsp;NUM_ANALOG_PINS)
      */
     final public static int NUM_ANALOG_PINS = 6;
     /* Private variables */
@@ -82,7 +74,7 @@ public class RXTXRobot
     private String lastResponse;
     private SerialPort serialPort;
     private CommPort commPort;
-    private final int bufferSize = 1024;
+    final private static int bufferSize = 1024;
     /**
      * Accepts a port name.
      * 
@@ -99,7 +91,6 @@ public class RXTXRobot
     {
         this.port = port;
         verbose = false;
-        buffer = new byte[bufferSize];
         connect();
     }
     /**
@@ -116,7 +107,6 @@ public class RXTXRobot
     {
         this.port = port;
         this.verbose = verbose;
-        buffer = new byte[bufferSize];
         connect();
     }
     /**
