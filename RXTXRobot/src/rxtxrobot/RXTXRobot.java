@@ -576,6 +576,10 @@ public class RXTXRobot
      */
     public void runMotor(int motor, int speed, int time)
     {
+        if (time < 0)
+        {
+            System.err.println("ERROR: runMotor was not given a time that is >=0");
+        }
         if (motor != RXTXRobot.MOTOR1 && motor != RXTXRobot.MOTOR2)
         {
             System.err.println("ERROR: runMotor was not given a correct motor argument");
@@ -610,6 +614,10 @@ public class RXTXRobot
      */
     public void runMotor(int motor1, int speed1, int motor2, int speed2, int time)
     {
+        if (time < 0)
+        {
+            System.err.println("ERROR: runMotor was not given a time that is >=0");
+        }
         if ((motor1 != RXTXRobot.MOTOR1 && motor1 != RXTXRobot.MOTOR2) || (motor2 != RXTXRobot.MOTOR1 && motor2 != RXTXRobot.MOTOR2))
         {
             System.err.println("ERROR: runMotor was not given a correct motor argument");
