@@ -125,73 +125,78 @@ public class RXTXRobot
      */
     public final void connect()
     {
-        try
+        if (!isConnected())
         {
-            CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(port);
-            if (portIdentifier.isCurrentlyOwned())
+            try
             {
-                System.err.println("Error: Port is currently in use");
+                CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(port);
+                if (portIdentifier.isCurrentlyOwned())
+                {
+                    System.err.println("Error: Port is currently in use");
+                }
+                else
+                {
+                        commPort = portIdentifier.open("RXRobot",2000);
+                        if ( commPort instanceof SerialPort )
+                        {
+                            serialPort = (SerialPort) commPort;
+                            serialPort.setSerialPortParams(9600,SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.PARITY_NONE);
+                            debug("Sleeping and resetting...");
+                            Thread.sleep(3000);
+                            debug("Waking up...");
+                            in = serialPort.getInputStream();
+                            out = serialPort.getOutputStream();
+                        }
+                }
             }
-            else
+            catch(NoSuchPortException e)
             {
-                    commPort = portIdentifier.open("RXRobot",2000);
-                    if ( commPort instanceof SerialPort )
-                    {
-                        serialPort = (SerialPort) commPort;
-                        serialPort.setSerialPortParams(9600,SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.PARITY_NONE);
-                        debug("Sleeping and resetting...");
-                        Thread.sleep(3000);
-                        debug("Waking up...");
-                        in = serialPort.getInputStream();
-                        out = serialPort.getOutputStream();
-                    }
+                System.err.println("Invalid port (NoSuchPortException). Check to make sure that the correct port is set at the objects initialization.");
+                if (verbose)
+                {
+                    System.err.println("Error Message: " + e.getMessage()+"\n\nError StackTrace:\n");
+                    e.printStackTrace();
+                }
+            }
+            catch(PortInUseException e)
+            {
+                System.err.println("Port is already being used by a different application (PortInUseException). Did you stop a previously running instance of this program?");
+                if (verbose)
+                {
+                    System.err.println("Error Message: " + e.getMessage()+"\n\nError StackTrace:\n");
+                    e.printStackTrace();
+                }
+            }
+            catch(UnsupportedCommOperationException e)
+            {
+                System.err.println("Comm Operation is unsupported (UnsupportedCommOperationException).  This error shouldn't really happen, ever.  If you see this, ask a TA for assistance");
+                if (verbose)
+                {
+                    System.err.println("Error Message: " + e.getMessage()+"\n\nError StackTrace:\n");
+                    e.printStackTrace();
+                }
+            }
+            catch(InterruptedException e)
+            {
+                System.err.println("Thread was interrupted (InterruptedException).  Something stopped the Thread from executing (early termination of program?).  If you meant to terminate the program, ignore this error.");
+                if (verbose)
+                {
+                    System.err.println("Error Message: " + e.getMessage()+"\n\nError StackTrace:\n");
+                    e.printStackTrace();
+                }
+            }
+            catch(IOException e)
+            {
+                System.err.println("Could not assign Input and Output streams (IOException).  This should never happen, unless on rare instances.  Try unplugging and replugging in the Arduino/XBee again, then re-run the program.  If that doesn't fix the problem, get a TA for assistance");
+                if (verbose)
+                {
+                    System.err.println("Error Message: " + e.getMessage()+"\n\nError StackTrace:\n");
+                    e.printStackTrace();
+                }
             }
         }
-        catch(NoSuchPortException e)
-        {
-            System.err.println("Invalid port (NoSuchPortException). Check to make sure that the correct port is set at the objects initialization.");
-            if (verbose)
-            {
-                System.err.println("Error Message: " + e.getMessage()+"\n\nError StackTrace:\n");
-                e.printStackTrace();
-            }
-        }
-        catch(PortInUseException e)
-        {
-            System.err.println("Port is already being used by a different application (PortInUseException). Did you stop a previously running instance of this program?");
-            if (verbose)
-            {
-                System.err.println("Error Message: " + e.getMessage()+"\n\nError StackTrace:\n");
-                e.printStackTrace();
-            }
-        }
-        catch(UnsupportedCommOperationException e)
-        {
-            System.err.println("Comm Operation is unsupported (UnsupportedCommOperationException).  This error shouldn't really happen, ever.  If you see this, ask a TA for assistance");
-            if (verbose)
-            {
-                System.err.println("Error Message: " + e.getMessage()+"\n\nError StackTrace:\n");
-                e.printStackTrace();
-            }
-        }
-        catch(InterruptedException e)
-        {
-            System.err.println("Thread was interrupted (InterruptedException).  Something stopped the Thread from executing (early termination of program?).  If you meant to terminate the program, ignore this error.");
-            if (verbose)
-            {
-                System.err.println("Error Message: " + e.getMessage()+"\n\nError StackTrace:\n");
-                e.printStackTrace();
-            }
-        }
-        catch(IOException e)
-        {
-            System.err.println("Could not assign Input and Output streams (IOException).  This should never happen, unless on rare instances.  Try unplugging and replugging in the Arduino/XBee again, then re-run the program.  If that doesn't fix the problem, get a TA for assistance");
-            if (verbose)
-            {
-                System.err.println("Error Message: " + e.getMessage()+"\n\nError StackTrace:\n");
-                e.printStackTrace();
-            }
-        }
+        else
+            System.err.println("connect() - RXTXRobot is already connected.");
     }
     /**
      * 
