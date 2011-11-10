@@ -6,13 +6,17 @@ public class RXTXRobotExample {
 
     public static void main (String [] args) throws InterruptedException
     {
-        RXTXRobot r = new RXTXRobot("/dev/ttyUSB0",true);
+        RXTXRobot r = new RXTXRobot("/dev/ttyUSB1",true);
         if (!r.isConnected())
         {
             System.out.println("Error connecting");
             System.exit(0);
         }
-        for (int x=0;x<5;++x)
+        //for (int x=0;x<10;++x)
+          //  r.readFromLabView();
+        r.moveServo(RXTXRobot.SERVO1,20);
+        r.close();
+        /*for (int x=0;x<5;++x)
         {
             System.out.println("Trial 1");
             Coord c = r.readFromLabView();
@@ -107,6 +111,6 @@ public class RXTXRobotExample {
         r.close();*/
         //r.sleep(1000);
         //r.sleep(2000);
-        //r.close();
+        //r.close();*/
     }
 }
