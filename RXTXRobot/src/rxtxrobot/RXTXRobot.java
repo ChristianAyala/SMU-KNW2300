@@ -83,7 +83,7 @@ public class RXTXRobot
     private byte errorFlag = 0;
     final private static int bufferSize = 1024;
     /**
-     * Accepts the arduino port, and the labview port
+     * Accepts the arduino port, and the labview port.
      * 
      * Accepts a port name for the Arduino, a port name for LabView, and sets the verbose debugging
      * to false. 
