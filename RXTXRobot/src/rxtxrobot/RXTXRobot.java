@@ -66,53 +66,74 @@ public class RXTXRobot
      */
     final public static int NUM_ANALOG_PINS = 6;
     /* Private variables */
-    private String port;
+    private String arduino_port;
+    private String labview_port;
     private boolean verbose;
-    private OutputStream out;
-    private InputStream in;
+    private OutputStream a_out;
+    private InputStream a_in;
+    private OutputStream l_out;
+    private InputStream l_in;
     private byte[] buffer;
     private String lastResponse;
-    private SerialPort serialPort;
-    private CommPort commPort;
+    private SerialPort a_serialPort;
+    private SerialPort l_serialPort;
+    private CommPort a_commPort;
+    private CommPort l_commPort;
+    private int stepsPerRotation;
     private boolean errorFlag = false;
     final private static int bufferSize = 1024;
     /**
-     * Accepts a port name.
+     * Accepts the arduino port, and the labview port
      * 
-     * Accepts a port name and sets the verbose debugging
+     * Accepts a port name for the Arduino, a port name for LabView, and sets the verbose debugging
      * to false. 
      * 
      * <br /><br />The port name will be:<br />
      * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Windows:</b> "COM3" (or "COM4" or "COM5", check device manager to see)<br />
      * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Mac/Linux:</b> "/dev/ttyACM0"
      * 
-     * @param port Port name the Arduino/XBee is connected to.
+     * @param arduino_port Port name the Arduino/XBee is connected to.
+     * @param labview_port Port name the LabView/XBee is connected to.
      */
-    public RXTXRobot(String port)
+    public RXTXRobot(String arduino_port, String labview_port)
     {
-        this.port = port;
-        verbose = false;
+        this.arduino_port = arduino_port;
+        this.labview_port = labview_port;
+        this.stepsPerRotation = -1;
+        this.verbose = false;
         connect();
     }
     /**
-     * Accepts a port name and verbose debugging boolean.
+     * Accepts the arduino port, and the labview port, and verbose debugging boolean.
      * 
      * <br /><br />The port name will be:<br />
      * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Windows:</b> "COM3" (or "COM4" or "COM5", check device manager to see)<br />
      * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Mac/Linux:</b> "/dev/ttyACM0"
      * 
-     * @param port Port name the Arduino/XBee is connected to
+     * @param arduino_port Port name the Arduino/XBee is connected to
+     * @param labview_port Port name the LabView/XBee is connected to
      * @param verbose Boolean value that allows for descriptive debugging messages
      */
-    public RXTXRobot(String port, boolean verbose)
+    public RXTXRobot(String arduino_port, String labview_port, boolean verbose)
     {
-        this.port = port;
+        this.arduino_port = arduino_port;
+        this.labview_port = labview_port;
         this.verbose = verbose;
+        this.stepsPerRotation = -1;
+        connect();
+    }
+    // Secret constructor
+    public RXTXRobot(String arduino_port, String labview_port, boolean verbose, int spr)
+    {
+        this.arduino_port = arduino_port;
+        this.labview_port = labview_port;
+        this.verbose = verbose;
+        this.stepsPerRotation = spr;
         connect();
     }
     /**
      * 
-     * Attempts to connect to the Arduino/XBee.
+     * Attempts to connect to the Arduino/XBee and the LabView/XBee
      * 
      * This method identifies the port that is currently being used by the Arduino/XBee 
      * and makes a serial connection to the Arduino if the port is not already in use.
@@ -129,23 +150,33 @@ public class RXTXRobot
         {
             try
             {
-                CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(port);
-                if (portIdentifier.isCurrentlyOwned())
+                CommPortIdentifier a_portIdentifier = CommPortIdentifier.getPortIdentifier(arduino_port);
+                CommPortIdentifier l_portIdentifier = CommPortIdentifier.getPortIdentifier(labview_port);
+                if (a_portIdentifier.isCurrentlyOwned())
                 {
-                    System.err.println("Error: Port is currently in use");
+                    System.err.println("Error: Arduino port is currently in use ("+arduino_port+")");
+                }
+                else if (l_portIdentifier.isCurrentlyOwned())
+                {
+                    System.err.println("Error: Labview port is currently in use ("+labview_port+")");
                 }
                 else
                 {
-                        commPort = portIdentifier.open("RXRobot",2000);
-                        if ( commPort instanceof SerialPort )
+                        a_commPort = a_portIdentifier.open("RXTXRobot",2000);
+                        l_commPort = l_portIdentifier.open("LabView",2000);
+                        if ( a_commPort instanceof SerialPort && l_commPort instanceof SerialPort )
                         {
-                            serialPort = (SerialPort) commPort;
-                            serialPort.setSerialPortParams(9600,SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.PARITY_NONE);
+                            a_serialPort = (SerialPort) a_commPort;
+                            l_serialPort = (SerialPort) l_commPort;
+                            a_serialPort.setSerialPortParams(9600,SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.PARITY_NONE);
+                            l_serialPort.setSerialPortParams(9600,SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.PARITY_NONE);
                             debug("Sleeping and resetting...");
                             Thread.sleep(3000);
                             debug("Waking up...");
-                            in = serialPort.getInputStream();
-                            out = serialPort.getOutputStream();
+                            a_in = a_serialPort.getInputStream();
+                            a_out = a_serialPort.getOutputStream();
+                            l_in = l_serialPort.getInputStream();
+                            l_out = l_serialPort.getOutputStream();
                         }
                 }
             }
@@ -200,21 +231,21 @@ public class RXTXRobot
     }
     /**
      * 
-     * Checks if the RXTXRobot object is connected to the Arduino/XBee.
+     * Checks if the RXTXRobot object is connected to the Arduino/XBee AND LabView/XBee
      * 
-     * Returns true if the RXTXRobot object is successfully connected to the Arduino/XBee.  Returns false otherwise.
+     * Returns true if the RXTXRobot object is successfully connected to the Arduino/XBee and LabView/XBee.  Returns false otherwise.
      * 
-     * @return true/false value that specifies if the RXTXRobot object is connected to the Arduino/XBee
+     * @return true/false value that specifies if the RXTXRobot object is connected to the Arduino/XBee and LabView/XBee
      */
     public final boolean isConnected()
     {
-        return serialPort != null && commPort != null;
+        return a_serialPort != null && a_commPort != null && l_serialPort != null && l_commPort != null;
     }
     /**
      * 
-     * Closes the connection to the Arduino/XBee.
+     * Closes the connection to the Arduino/XBee and LabView/XBee.
      * 
-     * This method closes the serial connection to the Arduino/XBee.  It deletes the mutual exclusion lock
+     * This method closes the serial connection to the Arduino/XBee and LabView/XBee.  It deletes the mutual exclusion lock
      * file which is important, so this should be done before the program is terminated.
      * 
      */
@@ -223,10 +254,14 @@ public class RXTXRobot
         sleep(300);
         debug("Resetting servos to position of 90 degrees for next run's use");
         this.moveBothServos(90,90);
-        if (serialPort != null)
-            serialPort.close();
-        if (commPort != null)
-            commPort.close();
+        if (a_serialPort != null)
+            a_serialPort.close();
+        if (a_commPort != null)
+            a_commPort.close();
+        if (l_serialPort != null)
+            l_serialPort.close();
+        if (l_commPort != null)
+            l_commPort.close();
     }
     
     /**
@@ -258,14 +293,14 @@ public class RXTXRobot
         debug("Sending command: " + str);
         try
         {
-            if (out != null && in != null && isConnected())
+            if (a_out != null && a_in != null && isConnected())
             {
-                out.write((str+"\r\n").getBytes());
+                a_out.write((str+"\r\n").getBytes());
                 if (verbose)
                 {
                     buffer = new byte[bufferSize];
                     sleep(200);
-                    in.read(buffer, 0, Math.min(in.available(), buffer.length));
+                    a_in.read(buffer, 0, Math.min(a_in.available(), buffer.length));
                     lastResponse = (new String(buffer)).trim();
                 }
             }
@@ -294,20 +329,30 @@ public class RXTXRobot
         debug("Sending command: " + command);
         try
         {
-            if (out != null && in != null && isConnected())
+            if (l_out != null && l_in != null && isConnected())
             {
                 
                 buffer = new byte[bufferSize];
-                out.write((command).getBytes());
+                l_out.write((command).getBytes());
                 sleep(800);
-                in.read(buffer, 0, Math.min(in.available(), buffer.length));
+                l_in.read(buffer, 0, Math.min(l_in.available(), buffer.length));
                 lastResponse = new String(buffer);
                 debug("XBee Response: " + lastResponse);
                 lastResponse = lastResponse.substring(lastResponse.indexOf("[")+1, lastResponse.indexOf("]"));
+                if (lastResponse.indexOf(",")==-1)
+                {
+                    System.err.println("No response from LabView.  Returning a null object");
+                    return null;
+                }
                 String[] parts = lastResponse.split(",");
                 debug("Creating Coord with x="+parts[0]+", y="+parts[1]+", z="+parts[2]);
                 return new Coord(Double.parseDouble(parts[0]),Double.parseDouble(parts[1]),Double.parseDouble(parts[2]));
             }
+        }
+        catch(NumberFormatException e)
+        {
+            debug("Labview returned: " + lastResponse + " and determined it not to be a number.");
+            return null;
         }
         catch(Exception e)
         {
@@ -367,13 +412,13 @@ public class RXTXRobot
     {
         try
         {
-            if (out != null && in != null && isConnected())
+            if (a_out != null && a_in != null && isConnected())
             {
                 buffer = new byte[bufferSize];
                 debug("Reading Analog Pins...");
                 sendRaw("r a");
                 sleep(200);
-                in.read(buffer, 0, Math.min(in.available(), buffer.length));
+                a_in.read(buffer, 0, Math.min(a_in.available(), buffer.length));
                 lastResponse = (new String(buffer)).trim();
                 debug("Received response: " + lastResponse);
                 return lastResponse;
@@ -403,13 +448,13 @@ public class RXTXRobot
     {
         try
         {
-            if (out != null && in != null && isConnected())
+            if (a_out != null && a_in != null && isConnected())
             {
                 buffer = new byte[bufferSize];
                 debug("Reading Digital Pins...");
                 sendRaw("r d");
                 sleep(200);
-                in.read(buffer, 0, Math.min(in.available(), buffer.length));
+                a_in.read(buffer, 0, Math.min(a_in.available(), buffer.length));
                 lastResponse = (new String(buffer)).trim();
                 debug("Received response: " + lastResponse);
                 return lastResponse;
@@ -558,7 +603,12 @@ public class RXTXRobot
         debug("Moving stepper " + stepper + " " + steps + " steps");
         sendRaw("p " + stepper + " " + steps);
         if (errorFlag == false)
-            sleep((int)(steps*60*1000*((24.0/100))/(24*30)));
+        {
+            if(stepsPerRotation == -1)
+                sleep((int)(steps*60*1000*((24.0/100))/(24*30))); // Old sleep method
+            else
+                sleep((int)((steps*60000)/(30*stepsPerRotation))); // steps * (1 rot/# steps) * (1 min / 30 rot) * (60 sec / 1 min) * (1000 ms / 1 sec)
+        }
     }
     /**
      * 
