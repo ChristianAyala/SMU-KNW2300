@@ -6,7 +6,7 @@ public class RXTXRobotExample {
 
     public static void main (String [] args) throws InterruptedException
     {
-        RXTXRobot r = new RXTXRobot("/dev/ttyUSB1",true);
+        RXTXRobot r = new RXTXRobot("/dev/ttyUSB1","",true);
         if (!r.isConnected())
         {
             System.out.println("Error connecting");
