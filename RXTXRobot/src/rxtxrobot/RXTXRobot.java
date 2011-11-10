@@ -80,7 +80,7 @@ public class RXTXRobot
     private CommPort a_commPort;
     private CommPort l_commPort;
     private int stepsPerRotation;
-    private boolean errorFlag = false;
+    private byte errorFlag = 0;
     final private static int bufferSize = 1024;
     /**
      * Accepts the arduino port, and the labview port
@@ -289,14 +289,15 @@ public class RXTXRobot
      */
     public void sendRaw(String str)
     {
-        errorFlag = false;
+        if (errorFlag != 2)
+            errorFlag = 0;
         debug("Sending command: " + str);
         try
         {
             if (a_out != null && a_in != null && isConnected())
             {
                 a_out.write((str+"\r\n").getBytes());
-                if (verbose)
+                if (verbose && errorFlag != 2)
                 {
                     buffer = new byte[bufferSize];
                     sleep(200);
@@ -305,11 +306,11 @@ public class RXTXRobot
                 }
             }
             else
-                errorFlag = true;
+                errorFlag = 1;
         }
         catch(IOException e)
         {
-            errorFlag = true;
+            errorFlag = 1;
             System.err.println("IGNORE IF STEPPER COMMAND CAUSES THIS ERROR.  Could not use Input and Output streams (IOException).  This should never happen, unless on rare instances.  Try unplugging and replugging in the Arduino/XBee again, then re-run the program.  If that doesn't fix the problem, get a TA for assistance");
             if (verbose)
             {
@@ -601,8 +602,11 @@ public class RXTXRobot
             return;
         }
         debug("Moving stepper " + stepper + " " + steps + " steps");
+        errorFlag = 2;
         sendRaw("p " + stepper + " " + steps);
-        if (errorFlag == false)
+        if (errorFlag == 2)
+            errorFlag = 0;
+        if (errorFlag == 0)
         {
             if(stepsPerRotation == -1)
                 sleep((int)(steps*60*1000*((24.0/100))/(24*30))); // Old sleep method
@@ -642,7 +646,7 @@ public class RXTXRobot
         }
         debug("Running motor " + motor + " at speed " + speed + " for time of " + time);
         sendRaw("d " + motor + " "  + speed + " " + time);
-        if (errorFlag == false)
+        if (errorFlag == 0)
             sleep(time);
     }
     /**
@@ -680,7 +684,7 @@ public class RXTXRobot
         }
         debug("Running two motors, motor " + motor1 + " at speed " + speed1 + " and motor " + motor2 + " at speed " + speed2 + " for time of " + time);
         sendRaw("D " + motor1 + " " + speed1 +" " + motor2 + " " + speed2 + " " + time);
-        if (errorFlag == false)
+        if (errorFlag == 0)
             sleep(time);
     }
 }
