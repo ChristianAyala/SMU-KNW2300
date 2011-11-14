@@ -277,7 +277,7 @@ public class RXTXRobot
     }
     /**
      * 
-     * Checks if the RXTXRobot object is connected to the Arduino/XBee AND LabView/XBee
+     * Checks if the RXTXRobot object is connected to the Arduino/XBee AND LabView/XBee.
      * 
      * Returns true if the RXTXRobot object is successfully connected to the Arduino/XBee and LabView/XBee.  Returns false otherwise.
      * 
