@@ -6,7 +6,7 @@ package rxtxrobot;
  * 
  * 
  *   public:
- *     +RXTXRobot(String port, [boolean verbose])
+ *     +RXTXRobot(String arduino_port, [String labview_port], [boolean verbose])
  *     +connect()
  *     +isConnected()
  *     +close()
@@ -83,6 +83,44 @@ public class RXTXRobot
     private byte errorFlag = 0;
     final private static int bufferSize = 1024;
     /**
+     * Accepts the arduino port.
+     * 
+     * Accepts a port name for the Arduino, does not connect to LabView, and sets the verbose debugging
+     * to false. 
+     * 
+     * <br /><br />The port name will be:<br />
+     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Windows:</b> "COM3" (or "COM4" or "COM5", check device manager to see)<br />
+     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Mac/Linux:</b> "/dev/ttyACM0"
+     * 
+     * @param arduino_port Port name the Arduino/XBee is connected to.
+     */
+    public RXTXRobot(String arduino_port)
+    {
+        this.arduino_port = arduino_port;
+        this.labview_port = "";
+        this.stepsPerRotation = -1;
+        this.verbose = false;
+        connect();
+    }
+    /**
+     * Accepts the arduino port, and verbose debugging boolean.
+     * 
+     * <br /><br />The port name will be:<br />
+     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Windows:</b> "COM3" (or "COM4" or "COM5", check device manager to see)<br />
+     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Mac/Linux:</b> "/dev/ttyACM0"
+     * 
+     * @param arduino_port Port name the Arduino/XBee is connected to
+     * @param verbose Boolean value that allows for descriptive debugging messages
+     */
+    public RXTXRobot(String arduino_port, boolean verbose)
+    {
+        this.arduino_port = arduino_port;
+        this.labview_port = "";
+        this.stepsPerRotation = -1;
+        this.verbose = verbose;
+        connect();
+    }
+    /**
      * Accepts the arduino port, and the labview port.
      * 
      * Accepts a port name for the Arduino, a port name for LabView, and sets the verbose debugging
@@ -151,32 +189,40 @@ public class RXTXRobot
             try
             {
                 CommPortIdentifier a_portIdentifier = CommPortIdentifier.getPortIdentifier(arduino_port);
-                CommPortIdentifier l_portIdentifier = CommPortIdentifier.getPortIdentifier(labview_port);
+                CommPortIdentifier l_portIdentifier = null;
+                if (!labview_port.equals(""))
+                    l_portIdentifier = CommPortIdentifier.getPortIdentifier(labview_port);
                 if (a_portIdentifier.isCurrentlyOwned())
                 {
                     System.err.println("Error: Arduino port is currently in use ("+arduino_port+")");
                 }
-                else if (l_portIdentifier.isCurrentlyOwned())
+                else if (!labview_port.equals("") && l_portIdentifier.isCurrentlyOwned())
                 {
                     System.err.println("Error: Labview port is currently in use ("+labview_port+")");
                 }
                 else
                 {
                         a_commPort = a_portIdentifier.open("RXTXRobot",2000);
-                        l_commPort = l_portIdentifier.open("LabView",2000);
-                        if ( a_commPort instanceof SerialPort && l_commPort instanceof SerialPort )
+                        if (!labview_port.equals(""))
+                            l_commPort = l_portIdentifier.open("LabView",2000);
+                        if ( a_commPort instanceof SerialPort && (labview_port.equals("") || l_commPort instanceof SerialPort ))
                         {
                             a_serialPort = (SerialPort) a_commPort;
-                            l_serialPort = (SerialPort) l_commPort;
+                            if (!labview_port.equals(""))
+                                l_serialPort = (SerialPort) l_commPort;
                             a_serialPort.setSerialPortParams(9600,SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.PARITY_NONE);
-                            l_serialPort.setSerialPortParams(9600,SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.PARITY_NONE);
+                            if (!labview_port.equals(""))
+                                l_serialPort.setSerialPortParams(9600,SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.PARITY_NONE);
                             debug("Sleeping and resetting...");
                             Thread.sleep(3000);
                             debug("Waking up...");
                             a_in = a_serialPort.getInputStream();
                             a_out = a_serialPort.getOutputStream();
-                            l_in = l_serialPort.getInputStream();
-                            l_out = l_serialPort.getOutputStream();
+                            if (!labview_port.equals(""))
+                            {
+                                l_in = l_serialPort.getInputStream();
+                                l_out = l_serialPort.getOutputStream();
+                            }
                         }
                 }
             }
@@ -239,7 +285,7 @@ public class RXTXRobot
      */
     public final boolean isConnected()
     {
-        return a_serialPort != null && a_commPort != null && l_serialPort != null && l_commPort != null;
+        return a_serialPort != null && a_commPort != null && (labview_port.equals("") || (l_serialPort != null && l_commPort != null));
     }
     /**
      * 
@@ -258,10 +304,13 @@ public class RXTXRobot
             a_serialPort.close();
         if (a_commPort != null)
             a_commPort.close();
-        if (l_serialPort != null)
-            l_serialPort.close();
-        if (l_commPort != null)
-            l_commPort.close();
+        if (!labview_port.equals(""))
+        {
+            if (l_serialPort != null)
+                l_serialPort.close();
+            if (l_commPort != null)
+                l_commPort.close();
+        }
     }
     
     /**
@@ -326,6 +375,11 @@ public class RXTXRobot
      */
     public Coord readFromLabView()
     {
+        if (labview_port.equals(""))
+        {
+            System.err.println("A connection to labview was not made.  Cannot read from labview.");
+            return null;
+        }
         String command = "s";
         debug("Sending command: " + command);
         try
@@ -608,10 +662,10 @@ public class RXTXRobot
             errorFlag = 0;
         if (errorFlag == 0)
         {
-            if(stepsPerRotation == -1)
-                sleep((int)(steps*60*1000*((24.0/100))/(24*30))); // Old sleep method
+            if(stepsPerRotation < 0)
+                sleep((int)(Math.abs(steps)*60*1000*((24.0/100))/(24*30))); // Old sleep method
             else
-                sleep((int)((steps*60000)/(30*stepsPerRotation))); // steps * (1 rot/# steps) * (1 min / 30 rot) * (60 sec / 1 min) * (1000 ms / 1 sec)
+                sleep((int)((Math.abs(steps)*60000)/(30*stepsPerRotation))); // steps * (1 rot/# steps) * (1 min / 30 rot) * (60 sec / 1 min) * (1000 ms / 1 sec)
         }
     }
     /**
@@ -638,6 +692,7 @@ public class RXTXRobot
         if (time < 0)
         {
             System.err.println("ERROR: runMotor was not given a time that is >=0");
+            return;
         }
         if (motor != RXTXRobot.MOTOR1 && motor != RXTXRobot.MOTOR2)
         {
@@ -676,6 +731,7 @@ public class RXTXRobot
         if (time < 0)
         {
             System.err.println("ERROR: runMotor was not given a time that is >=0");
+            return;
         }
         if ((motor1 != RXTXRobot.MOTOR1 && motor1 != RXTXRobot.MOTOR2) || (motor2 != RXTXRobot.MOTOR1 && motor2 != RXTXRobot.MOTOR2))
         {
