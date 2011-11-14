@@ -171,7 +171,7 @@ public class RXTXRobot
     }
     /**
      * 
-     * Attempts to connect to the Arduino/XBee and the LabView/XBee
+     * Attempts to connect to the Arduino/XBee and the LabView/XBee.
      * 
      * This method identifies the port that is currently being used by the Arduino/XBee 
      * and makes a serial connection to the Arduino if the port is not already in use.
