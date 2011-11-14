@@ -531,12 +531,21 @@ public class RXTXRobot
      */
     public int getDigitalPin(int index)
     {
-        String pins = this.getDigitalPins();
-        String[] split = pins.split("\\s+");
-        if (index >=RXTXRobot.NUM_DIGITAL_PINS || index<0)
-            System.err.println("ERROR: getDigitalPin was given an index that is not within the range of 0 to "+(RXTXRobot.NUM_DIGITAL_PINS-1)+" (inclusive)");
-        else
-            return Integer.parseInt(split[index+1]);
+        try
+        {
+            String pins = this.getDigitalPins();
+            String[] split = pins.split("\\s+");
+            if (index >=RXTXRobot.NUM_DIGITAL_PINS || index<0)
+                System.err.println("ERROR: getDigitalPin was given an index that is not within the range of 0 to "+(RXTXRobot.NUM_DIGITAL_PINS-1)+" (inclusive)");
+            else
+                return Integer.parseInt(split[index+1]);
+        }
+        catch (ArrayIndexOutOfBoundsException e)
+        {
+            System.err.println("getDigitalPin() did not get a response from the Arduino board.  Try again.");
+            debug("ERROR: "+e.getMessage());
+            return -1;
+        }
         return -1;
     }
     /**
@@ -549,12 +558,21 @@ public class RXTXRobot
      */
     public int getAnalogPin(int index)
     {
-        String pins = this.getAnalogPins();
-        String[] split = pins.split("\\s+");
-        if (index >=RXTXRobot.NUM_ANALOG_PINS || index<0)
-            System.err.println("ERROR: getAnalogPin was given an index that is not within the range of 0 to "+(RXTXRobot.NUM_ANALOG_PINS-1)+" (inclusive)");
-        else
-            return Integer.parseInt(split[index+1]);
+        try
+        {
+            String pins = this.getAnalogPins();
+            String[] split = pins.split("\\s+");
+            if (index >=RXTXRobot.NUM_ANALOG_PINS || index<0)
+                System.err.println("ERROR: getAnalogPin was given an index that is not within the range of 0 to "+(RXTXRobot.NUM_ANALOG_PINS-1)+" (inclusive)");
+            else
+                return Integer.parseInt(split[index+1]);
+        }
+        catch (ArrayIndexOutOfBoundsException e)
+        {
+            System.err.println("getAnalogPin() did not get a response from the Arduino board.  Try again.");
+            debug("ERROR: "+e.getMessage());
+            return -1;
+        }
         return -1;
     }
     /**
