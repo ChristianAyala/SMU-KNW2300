@@ -423,6 +423,49 @@ public class RXTXRobot
         }
         return null;
     }
+    public Coord[] readFromLabView2()
+    {
+        if (labview_port.equals(""))
+        {
+            System.err.println("A connection to labview was not made.  Cannot read from labview.");
+            return new Coord[0];
+        }
+        String command = "s";
+        debug("Sending command: " + command);
+        try
+        {
+            if (l_out != null && l_in != null && isConnected())
+            {
+                
+                buffer = new byte[bufferSize];
+                l_out.write((command).getBytes());
+                sleep(800);
+                l_in.read(buffer, 0, Math.min(l_in.available(), buffer.length));
+                lastResponse = new String(buffer);
+                debug("XBee Response: " + lastResponse);
+                lastResponse = lastResponse.substring(lastResponse.indexOf("[")+1, lastResponse.indexOf("]"));
+                if (lastResponse.indexOf(",")==-1)
+                {
+                    System.err.println("No response from LabView.  Returning a null object");
+                    return null;
+                }
+                String[] parts = lastResponse.split(",");
+                debug("Creating Coord with x1="+parts[0]+", y1="+parts[1]+", x2="+parts[2]+", y2="+parts[3]);
+                Coord[] ans = {new Coord(Double.parseDouble(parts[0]),Double.parseDouble(parts[1]),-1.0),new Coord(Double.parseDouble(parts[2]),Double.parseDouble(parts[3]),-1.0)};
+                return ans;
+            }
+        }
+        catch(NumberFormatException e)
+        {
+            debug("Labview returned: " + lastResponse + " and determined it not to be a number.");
+            return new Coord[0];
+        }
+        catch(Exception e)
+        {
+            System.err.println("A generic error occurred: Error: " + e.getMessage());
+        }
+        return new Coord[0];
+    }
     /**
      * 
      * Returns the last response sent from the Arduino.
