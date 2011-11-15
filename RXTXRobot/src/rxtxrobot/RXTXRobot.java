@@ -338,6 +338,11 @@ public class RXTXRobot
      */
     public void sendRaw(String str)
     {
+        sendRaw(str,200);
+    }
+    
+    private void sendRaw(String str,int sleep)
+    {
         if (errorFlag != 2)
             errorFlag = 0;
         debug("Sending command: " + str);
@@ -346,25 +351,28 @@ public class RXTXRobot
             if (a_out != null && a_in != null && isConnected())
             {
                 a_out.write((str+"\r\n").getBytes());
-                if (verbose && errorFlag != 2)
-                {
-                    buffer = new byte[bufferSize];
-                    sleep(200);
-                    a_in.read(buffer, 0, Math.min(a_in.available(), buffer.length));
-                    lastResponse = (new String(buffer)).trim();
-                }
+                //if (verbose && errorFlag != 2)
+                //{  
+                buffer = new byte[bufferSize];
+                sleep(sleep);
+                a_in.read(buffer, 0, Math.min(a_in.available(), buffer.length));
+                lastResponse = (new String(buffer)).trim();
+                //}
             }
             else
                 errorFlag = 1;
         }
         catch(IOException e)
         {
-            errorFlag = 1;
-            System.err.println("IGNORE IF STEPPER COMMAND CAUSES THIS ERROR.  Could not use Input and Output streams (IOException).  This should never happen, unless on rare instances.  Try unplugging and replugging in the Arduino/XBee again, then re-run the program.  If that doesn't fix the problem, get a TA for assistance");
-            if (verbose)
+            if (errorFlag != 2)
             {
-                System.err.println("Error Message: " + e.getMessage()+"\n\nError StackTrace:\n");
-                e.printStackTrace();
+                errorFlag = 1;
+                System.err.println("IGNORE IF STEPPER COMMAND CAUSES THIS ERROR.  Could not use Input and Output streams (IOException).  This should never happen, unless on rare instances.  Try unplugging and replugging in the Arduino/XBee again, then re-run the program.  If that doesn't fix the problem, get a TA for assistance");
+                if (verbose)
+                {
+                    System.err.println("Error Message: " + e.getMessage()+"\n\nError StackTrace:\n");
+                    e.printStackTrace();
+                }
             }
         }
     }
