@@ -446,7 +446,8 @@ public class RXTXRobot
                 if (lastResponse.indexOf(",")==-1)
                 {
                     System.err.println("No response from LabView.  Returning an empty Coord array.");
-                    return new Coord[0];
+                    Coord[] ans = {new Coord(-1.0,-1.0,-1.0), new Coord(-1.0,-1.0,-1.0)};
+                    return ans;
                 }
                 lastResponse = lastResponse.substring(lastResponse.indexOf("[")+1, lastResponse.indexOf("]"));
                 String[] parts = lastResponse.split(",");
@@ -458,13 +459,15 @@ public class RXTXRobot
         catch(NumberFormatException e)
         {
             debug("Labview returned: " + lastResponse + " and determined it not to be a number.");
-            return new Coord[0];
+            Coord[] ans = {new Coord(-1.0,-1.0,-1.0), new Coord(-1.0,-1.0,-1.0)};
+            return ans;
         }
         catch(Exception e)
         {
             System.err.println("A generic error occurred: Error: " + e.getMessage());
         }
-        return new Coord[0];
+        Coord[] ans = {new Coord(-1.0,-1.0,-1.0), new Coord(-1.0,-1.0,-1.0)};
+        return ans;
     }
     /**
      * 
