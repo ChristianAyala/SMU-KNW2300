@@ -401,12 +401,12 @@ public class RXTXRobot
                 l_in.read(buffer, 0, Math.min(l_in.available(), buffer.length));
                 lastResponse = new String(buffer);
                 debug("XBee Response: " + lastResponse);
-                lastResponse = lastResponse.substring(lastResponse.indexOf("[")+1, lastResponse.indexOf("]"));
                 if (lastResponse.indexOf(",")==-1)
                 {
                     System.err.println("No response from LabView.  Returning a null object");
                     return null;
                 }
+                lastResponse = lastResponse.substring(lastResponse.indexOf("[")+1, lastResponse.indexOf("]"));
                 String[] parts = lastResponse.split(",");
                 debug("Creating Coord with x="+parts[0]+", y="+parts[1]+", z="+parts[2]);
                 return new Coord(Double.parseDouble(parts[0]),Double.parseDouble(parts[1]),Double.parseDouble(parts[2]));
@@ -443,12 +443,12 @@ public class RXTXRobot
                 l_in.read(buffer, 0, Math.min(l_in.available(), buffer.length));
                 lastResponse = new String(buffer);
                 debug("XBee Response: " + lastResponse);
-                lastResponse = lastResponse.substring(lastResponse.indexOf("[")+1, lastResponse.indexOf("]"));
                 if (lastResponse.indexOf(",")==-1)
                 {
-                    System.err.println("No response from LabView.  Returning a null object");
-                    return null;
+                    System.err.println("No response from LabView.  Returning an empty Coord array.");
+                    return new Coord[0];
                 }
+                lastResponse = lastResponse.substring(lastResponse.indexOf("[")+1, lastResponse.indexOf("]"));
                 String[] parts = lastResponse.split(",");
                 debug("Creating Coord with x1="+parts[0]+", y1="+parts[1]+", x2="+parts[2]+", y2="+parts[3]);
                 Coord[] ans = {new Coord(Double.parseDouble(parts[0]),Double.parseDouble(parts[1]),-1.0),new Coord(Double.parseDouble(parts[2]),Double.parseDouble(parts[3]),-1.0)};
