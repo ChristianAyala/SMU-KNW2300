@@ -231,7 +231,7 @@ public class RXTXRobot
                 System.err.println("Invalid port (NoSuchPortException). Check to make sure that the correct port is set at the objects initialization.");
                 if (verbose)
                 {
-                    System.err.println("Error Message: " + e.getMessage()+"\n\nError StackTrace:\n");
+                    System.err.println("Error Message: " + e.toString()+"\n\nError StackTrace:\n");
                     e.printStackTrace();
                 }
             }
@@ -240,7 +240,7 @@ public class RXTXRobot
                 System.err.println("Port is already being used by a different application (PortInUseException). Did you stop a previously running instance of this program?");
                 if (verbose)
                 {
-                    System.err.println("Error Message: " + e.getMessage()+"\n\nError StackTrace:\n");
+                    System.err.println("Error Message: " + e.toString()+"\n\nError StackTrace:\n");
                     e.printStackTrace();
                 }
             }
@@ -249,7 +249,7 @@ public class RXTXRobot
                 System.err.println("Comm Operation is unsupported (UnsupportedCommOperationException).  This error shouldn't really happen, ever.  If you see this, ask a TA for assistance");
                 if (verbose)
                 {
-                    System.err.println("Error Message: " + e.getMessage()+"\n\nError StackTrace:\n");
+                    System.err.println("Error Message: " + e.toString()+"\n\nError StackTrace:\n");
                     e.printStackTrace();
                 }
             }
@@ -258,7 +258,7 @@ public class RXTXRobot
                 System.err.println("Thread was interrupted (InterruptedException).  Something stopped the Thread from executing (early termination of program?).  If you meant to terminate the program, ignore this error.");
                 if (verbose)
                 {
-                    System.err.println("Error Message: " + e.getMessage()+"\n\nError StackTrace:\n");
+                    System.err.println("Error Message: " + e.toString()+"\n\nError StackTrace:\n");
                     e.printStackTrace();
                 }
             }
@@ -267,7 +267,7 @@ public class RXTXRobot
                 System.err.println("Could not assign Input and Output streams (IOException).  This should never happen, unless on rare instances.  Try unplugging and replugging in the Arduino/XBee again, then re-run the program.  If that doesn't fix the problem, get a TA for assistance");
                 if (verbose)
                 {
-                    System.err.println("Error Message: " + e.getMessage()+"\n\nError StackTrace:\n");
+                    System.err.println("Error Message: " + e.toString()+"\n\nError StackTrace:\n");
                     e.printStackTrace();
                 }
             }
@@ -370,7 +370,7 @@ public class RXTXRobot
                 System.err.println("IGNORE IF STEPPER COMMAND CAUSES THIS ERROR.  Could not use Input and Output streams (IOException).  This should never happen, unless on rare instances.  Try unplugging and replugging in the Arduino/XBee again, then re-run the program.  If that doesn't fix the problem, get a TA for assistance");
                 if (verbose)
                 {
-                    System.err.println("Error Message: " + e.getMessage()+"\n\nError StackTrace:\n");
+                    System.err.println("Error Message: " + e.toString()+"\n\nError StackTrace:\n");
                     e.printStackTrace();
                 }
             }
@@ -419,7 +419,7 @@ public class RXTXRobot
         }
         catch(Exception e)
         {
-            System.err.println("A generic error occurred: Error: " + e.getMessage());
+            System.err.println("A generic error occurred: Error: " + e.toString());
         }
         return null;
     }
@@ -464,7 +464,7 @@ public class RXTXRobot
         }
         catch(Exception e)
         {
-            System.err.println("A generic error occurred: Error: " + e.getMessage());
+            System.err.println("A generic error occurred: Error: " + e.toString());
         }
         Coord[] ans = {new Coord(-1.0,-1.0,-1.0), new Coord(-1.0,-1.0,-1.0)};
         return ans;
@@ -499,7 +499,7 @@ public class RXTXRobot
         }
         catch(InterruptedException e)
         {
-            System.err.println("Thread was interrupted (InterruptedException). Error: " + e.getMessage());
+            System.err.println("Thread was interrupted (InterruptedException). Error: " + e.toString());
         }
     }
     /**
@@ -535,9 +535,57 @@ public class RXTXRobot
         }
         catch(Exception e)
         {
-            System.err.println("Cannot read command (IOException)! Error: " + e.getMessage());
+            System.err.println("Cannot read command (IOException)! Error: " + e.toString());
         }
         return "";
+    }
+    /**
+     * 
+     * Returns the 6 analog pins from the Arduino in an Integer array. <br /><br />
+     * 
+     * Each pin's value is returned in a zero-indexed integer array.
+     * 
+     * An error is displayed if something goes wrong, but verbose is required for more in-depth errors.
+     * 
+     * @return Integer array of the Analog pins or null on error.
+     */
+    public int[] getAllAnalogPins()
+    {
+        try
+        {
+            int ans[] = null;
+            String pins = this.getAnalogPins();
+            String[] split = pins.split("\\s+");
+            if (split.length == 0)
+            {
+                System.err.println("getAnalogPins() - No response was received from the Arduino.  Try again");
+                return null;
+            }
+            if (split.length != RXTXRobot.NUM_ANALOG_PINS)
+            {
+                System.err.println("getAnalogPins() - Incorrect length returned: " + split.length);
+                if (verbose)
+                    for (int x=0;x<split.length;++x)
+                        System.err.println("["+x+"] = " + split[x]);
+                return null;
+            }
+            ans = new int[split.length-1];
+            for (int x=1;x<split.length;++x)
+            {
+                ans[x-1] = Integer.parseInt(split[x]);
+            }
+            return ans;
+        }
+        catch (Exception e)
+        {
+            System.err.println("An error occurred with getAllAnalogPins.");
+            if (verbose)
+            {
+                System.err.println("Stacktrace: ");
+                e.printStackTrace();
+            }
+        }
+        return null;
     }
     /**
      * Returns the 12 digital pin values from the Arduino in String form. <br /><br />
@@ -571,9 +619,57 @@ public class RXTXRobot
         }
         catch(Exception e)
         {
-            System.err.println("Cannot read command (IOException)! Error: " + e.getMessage());
+            System.err.println("Cannot read command (IOException)! Error: " + e.toString());
         }
         return "";
+    }
+    /**
+     * 
+     * Returns the 12 digital pins from the Arduino in an Integer array. <br /><br />
+     * 
+     * Each pin's value is returned in a zero-indexed integer array.
+     * 
+     * An error is displayed if something goes wrong, but verbose is required for more in-depth errors.
+     * 
+     * @return Integer array of the Digital pins or null on error.
+     */
+    public int[] getAllDigitalPins()
+    {
+        try
+        {
+            int ans[] = null;
+            String pins = this.getDigitalPins();
+            String[] split = pins.split("\\s+");
+            if (split.length == 0)
+            {
+                System.err.println("getDigitalPins() - No response was received from the Arduino.  Try again");
+                return null;
+            }
+            if (split.length != RXTXRobot.NUM_DIGITAL_PINS)
+            {
+                System.err.println("getDigitalPins() - Incorrect length returned: " + split.length);
+                if (verbose)
+                    for (int x=0;x<split.length;++x)
+                        System.err.println("["+x+"] = " + split[x]);
+                return null;
+            }
+            ans = new int[split.length-1];
+            for (int x=1;x<split.length;++x)
+            {
+                ans[x-1] = Integer.parseInt(split[x]);
+            }
+            return ans;
+        }
+        catch (Exception e)
+        {
+            System.err.println("An error occurred with getAllDigitalsPins.");
+            if (verbose)
+            {
+                System.err.println("Stacktrace: ");
+                e.printStackTrace();
+            }
+        }
+        return null;
     }
     /**
      * Returns the value of the digital pin specified by index.
@@ -597,7 +693,7 @@ public class RXTXRobot
         catch (ArrayIndexOutOfBoundsException e)
         {
             System.err.println("getDigitalPin() did not get a response from the Arduino board.  Try again.");
-            debug("ERROR: "+e.getMessage());
+            debug("ERROR: "+e.toString());
             return -1;
         }
         return -1;
@@ -624,7 +720,7 @@ public class RXTXRobot
         catch (ArrayIndexOutOfBoundsException e)
         {
             System.err.println("getAnalogPin() did not get a response from the Arduino board.  Try again.");
-            debug("ERROR: "+e.getMessage());
+            debug("ERROR: "+e.toString());
             return -1;
         }
         return -1;
