@@ -520,17 +520,17 @@ public class RXTXRobot
         {
             if (a_out != null && a_in != null && isConnected())
             {
-                buffer = new byte[bufferSize];
+                //buffer = new byte[bufferSize];
                 debug("Reading Analog Pins...");
                 sendRaw("r a");
-                sleep(200);
-                a_in.read(buffer, 0, Math.min(a_in.available(), buffer.length));
-                lastResponse = (new String(buffer)).trim();
+                //sleep(200);
+                //a_in.read(buffer, 0, Math.min(a_in.available(), buffer.length));
+                //lastResponse = (new String(buffer)).trim();
                 debug("Received response: " + lastResponse);
                 return lastResponse;
             }
         }
-        catch(IOException e)
+        catch(Exception e)
         {
             System.err.println("Cannot read command (IOException)! Error: " + e.getMessage());
         }
@@ -556,17 +556,17 @@ public class RXTXRobot
         {
             if (a_out != null && a_in != null && isConnected())
             {
-                buffer = new byte[bufferSize];
+                //buffer = new byte[bufferSize];
                 debug("Reading Digital Pins...");
                 sendRaw("r d");
-                sleep(200);
-                a_in.read(buffer, 0, Math.min(a_in.available(), buffer.length));
-                lastResponse = (new String(buffer)).trim();
+                //sleep(200);
+                //a_in.read(buffer, 0, Math.min(a_in.available(), buffer.length));
+                //lastResponse = (new String(buffer)).trim();
                 debug("Received response: " + lastResponse);
                 return lastResponse;
             }
         }
-        catch(IOException e)
+        catch(Exception e)
         {
             System.err.println("Cannot read command (IOException)! Error: " + e.getMessage());
         }
