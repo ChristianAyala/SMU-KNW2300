@@ -357,8 +357,10 @@ public class RXTXRobot
                 //{  
                 buffer = new byte[bufferSize];
                 sleep(sleep);
-                a_in.read(buffer, 0, Math.min(a_in.available(), buffer.length));
+                //a_in.read(buffer, 0, Math.min(a_in.available(), buffer.length));
+                int bytesRead = a_in.read(buffer);
                 lastResponse = (new String(buffer)).trim();
+                debug("Received " + bytesRead + " from Arduino: " + lastResponse);
                 //}
             }
             else
@@ -400,9 +402,10 @@ public class RXTXRobot
                 buffer = new byte[bufferSize];
                 l_out.write((command).getBytes());
                 sleep(800);
-                l_in.read(buffer, 0, Math.min(l_in.available(), buffer.length));
+                //l_in.read(buffer, 0, Math.min(l_in.available(), buffer.length));
+                int bytesRead = l_in.read(buffer);
                 lastResponse = new String(buffer);
-                debug("XBee Response: " + lastResponse);
+                debug("XBee Response ("+bytesRead+" bytes read): " + lastResponse);
                 if (lastResponse.indexOf(",")==-1)
                 {
                     System.err.println("No response from LabView.  Returning a null object");
@@ -442,9 +445,10 @@ public class RXTXRobot
                 buffer = new byte[bufferSize];
                 l_out.write((command).getBytes());
                 sleep(800);
-                l_in.read(buffer, 0, Math.min(l_in.available(), buffer.length));
+                //l_in.read(buffer, 0, Math.min(l_in.available(), buffer.length));
+                int bytesRead = l_in.read(buffer);
                 lastResponse = new String(buffer);
-                debug("XBee Response: " + lastResponse);
+                debug("XBee Response ("+bytesRead+" bytes read): " + lastResponse);
                 if (lastResponse.indexOf(",")==-1)
                 {
                     System.err.println("No response from LabView.  Returning an empty Coord array.");
