@@ -369,7 +369,7 @@ public class RXTXRobot
             if (errorFlag != 2)
             {
                 errorFlag = 1;
-                System.err.println("IGNORE IF STEPPER COMMAND CAUSES THIS ERROR.  Could not use Input and Output streams (IOException).  This should never happen, unless on rare instances.  Try unplugging and replugging in the Arduino/XBee again, then re-run the program.  If that doesn't fix the problem, get a TA for assistance");
+                System.err.println("Could not read or use Input and Output streams (IOException).");
                 if (verbose)
                 {
                     System.err.println("Error Message: " + e.toString()+"\n\nError StackTrace:\n");
