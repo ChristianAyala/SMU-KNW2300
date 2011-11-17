@@ -360,7 +360,7 @@ public class RXTXRobot
                 //a_in.read(buffer, 0, Math.min(a_in.available(), buffer.length));
                 int bytesRead = a_in.read(buffer);
                 lastResponse = (new String(buffer)).trim();
-                debug("Received " + bytesRead + " from Arduino: " + lastResponse);
+                debug("Received " + bytesRead + " bytes from Arduino: " + lastResponse);
                 //}
             }
             else
