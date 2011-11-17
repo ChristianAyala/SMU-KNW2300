@@ -547,19 +547,21 @@ public class RXTXRobot
      * 
      * An error is displayed if something goes wrong, but verbose is required for more in-depth errors.
      * 
-     * @return Integer array of the Analog pins or null on error.
+     * @return Integer array of size RXTXRobot.NUM_ANALOG_PINS filled with the Analog pin's value (or -1 on error).
      */
     public int[] getAllAnalogPins()
     {
+        int[] ans = new int[RXTXRobot.NUM_ANALOG_PINS];
+        for (int x=0;x<ans.length;++x)
+            ans[x] = -1;
         try
         {
-            int ans[] = null;
             String pins = this.getAnalogPins();
             String[] split = pins.split("\\s+");
-            if (split.length == 0)
+            if (split.length == 1)
             {
                 System.err.println("getAllAnalogPins() - No response was received from the Arduino.  Try again");
-                return null;
+                return ans;
             }
             if (split.length-1 != RXTXRobot.NUM_ANALOG_PINS)
             {
@@ -567,9 +569,9 @@ public class RXTXRobot
                 if (verbose)
                     for (int x=0;x<split.length;++x)
                         System.err.println("["+x+"] = " + split[x]);
-                return null;
+                return ans;
             }
-            ans = new int[split.length-1];
+            //ans = new int[split.length-1];
             for (int x=1;x<split.length;++x)
             {
                 ans[x-1] = Integer.parseInt(split[x]);
@@ -585,7 +587,7 @@ public class RXTXRobot
                 e.printStackTrace();
             }
         }
-        return null;
+        return ans;
     }
     /**
      * Returns the 12 digital pin values from the Arduino in String form. <br /><br />
@@ -631,19 +633,21 @@ public class RXTXRobot
      * 
      * An error is displayed if something goes wrong, but verbose is required for more in-depth errors.
      * 
-     * @return Integer array of the Digital pins or null on error.
+     * @return Integer array of size RXTXRobot.NUM_DIGITAL_PINS filled with the Digital pin's value (or -1 on error)
      */
     public int[] getAllDigitalPins()
     {
+        int[] ans = new int[RXTXRobot.NUM_DIGITAL_PINS];
+        for (int x=0;x<ans.length;++x)
+            ans[x] = -1;
         try
         {
-            int ans[] = null;
             String pins = this.getDigitalPins();
             String[] split = pins.split("\\s+");
-            if (split.length == 0)
+            if (split.length == 1)
             {
                 System.err.println("getAllDigitalPins() - No response was received from the Arduino.  Try again");
-                return null;
+                return ans;
             }
             if (split.length-1 != RXTXRobot.NUM_DIGITAL_PINS)
             {
@@ -651,9 +655,9 @@ public class RXTXRobot
                 if (verbose)
                     for (int x=0;x<split.length;++x)
                         System.err.println("["+x+"] = " + split[x]);
-                return null;
+                return ans;
             }
-            ans = new int[split.length-1];
+            //ans = new int[split.length-1];
             for (int x=1;x<split.length;++x)
             {
                 ans[x-1] = Integer.parseInt(split[x]);
@@ -669,7 +673,7 @@ public class RXTXRobot
                 e.printStackTrace();
             }
         }
-        return null;
+        return ans;
     }
     /**
      * Returns the value of the digital pin specified by index.
