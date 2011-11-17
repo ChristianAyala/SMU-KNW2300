@@ -37,6 +37,7 @@ import java.io.*;
 public class RXTXRobot
 {
     /* Constants */
+    final private static String API_VERSION = "2.4";
     /**
      * Refers to the servo motor located in SERVO1
      */
@@ -184,6 +185,7 @@ public class RXTXRobot
      */
     public final void connect()
     {
+        System.out.println("RXTXRobot API version " + RXTXRobot.API_VERSION);
         if (!isConnected())
         {
             try
