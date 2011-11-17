@@ -558,12 +558,12 @@ public class RXTXRobot
             String[] split = pins.split("\\s+");
             if (split.length == 0)
             {
-                System.err.println("getAnalogPins() - No response was received from the Arduino.  Try again");
+                System.err.println("getAllAnalogPins() - No response was received from the Arduino.  Try again");
                 return null;
             }
-            if (split.length != RXTXRobot.NUM_ANALOG_PINS)
+            if (split.length-1 != RXTXRobot.NUM_ANALOG_PINS)
             {
-                System.err.println("getAnalogPins() - Incorrect length returned: " + split.length);
+                System.err.println("getAllAnalogPins() - Incorrect length returned: " + split.length);
                 if (verbose)
                     for (int x=0;x<split.length;++x)
                         System.err.println("["+x+"] = " + split[x]);
@@ -642,12 +642,12 @@ public class RXTXRobot
             String[] split = pins.split("\\s+");
             if (split.length == 0)
             {
-                System.err.println("getDigitalPins() - No response was received from the Arduino.  Try again");
+                System.err.println("getAllDigitalPins() - No response was received from the Arduino.  Try again");
                 return null;
             }
-            if (split.length != RXTXRobot.NUM_DIGITAL_PINS)
+            if (split.length-1 != RXTXRobot.NUM_DIGITAL_PINS)
             {
-                System.err.println("getDigitalPins() - Incorrect length returned: " + split.length);
+                System.err.println("getAllDigitalPins() - Incorrect length returned: " + split.length);
                 if (verbose)
                     for (int x=0;x<split.length;++x)
                         System.err.println("["+x+"] = " + split[x]);
