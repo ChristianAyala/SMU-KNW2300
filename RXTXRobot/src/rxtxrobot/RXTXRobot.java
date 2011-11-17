@@ -196,11 +196,11 @@ public class RXTXRobot
                     l_portIdentifier = CommPortIdentifier.getPortIdentifier(labview_port);
                 if (a_portIdentifier.isCurrentlyOwned())
                 {
-                    System.err.println("Error: Arduino port is currently in use ("+arduino_port+")");
+                    System.err.println("Error: Arduino port ("+arduino_port+") is currently owned by "+a_portIdentifier.getCurrentOwner());
                 }
                 else if (!labview_port.equals("") && l_portIdentifier.isCurrentlyOwned())
                 {
-                    System.err.println("Error: Labview port is currently in use ("+labview_port+")");
+                    System.err.println("Error: Labview port ("+labview_port+") is currently owned by "+l_portIdentifier.getCurrentOwner());
                 }
                 else
                 {
