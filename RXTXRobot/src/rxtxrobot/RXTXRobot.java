@@ -34,7 +34,7 @@ import java.io.*;
  */
 public class RXTXRobot
 {
-    /* Constants */
+    /* Constants - These should not change unless you know what you are doing */
     final private static String API_VERSION = "2.5";
     /**
      * Refers to the servo motor located in SERVO1
@@ -175,7 +175,9 @@ public class RXTXRobot
      * This method identifies the port that is currently being used by the Arduino/XBee 
      * and makes a serial connection to the Arduino if the port is not already in use.
      * If there is an error in connecting, then a different error message will be 
-     * displayed to the user for each case.
+     * displayed to the user for each case.  This method is automatically called from the
+     * constructor.  Only use it if you have detected the connection is closed from {@link isConnected()}
+     * or if you called {@link close()} before.
      * 
      * This function does not terminate runtime if an error is discovered.  See the
      * function {@link isConnected()} to test for an active connection.
@@ -184,6 +186,7 @@ public class RXTXRobot
     public final void connect()
     {
         System.out.println("RXTXRobot API version " + RXTXRobot.API_VERSION);
+        System.out.println("Starting up robot, please wait (typically takes 3 seconds)...");
         if (!isConnected())
         {
             try
@@ -223,6 +226,7 @@ public class RXTXRobot
                                 l_in = l_serialPort.getInputStream();
                                 l_out = l_serialPort.getOutputStream();
                             }
+                            System.out.println("Connected...");
                         }
                 }
             }
@@ -264,7 +268,7 @@ public class RXTXRobot
             }
             catch(IOException e)
             {
-                System.err.println("Could not assign Input and Output streams (IOException).  This should never happen, unless on rare instances.  Try unplugging and replugging in the Arduino/XBee again, then re-run the program.  If that doesn't fix the problem, get a TA for assistance");
+                System.err.println("Could not assign Input and Output streams (IOException).  You may be calling the \"close()\" method before this one.  Make sure you only call \"close()\" at the very end of your program.");
                 if (verbose)
                 {
                     System.err.println("Error Message: " + e.toString()+"\n\nError StackTrace:\n");
@@ -379,11 +383,11 @@ public class RXTXRobot
         }
     }
     /**
-     * Reads the Wii remote data from LabView.
+     * Reads the Wii remote data from LabView and returns one 3D coordinate.
      * 
      * @return The response from LabView in a {@link Coord} object or null on error.
      */
-    public Coord readFromLabView()
+    public Coord readFromLabView3D()
     {
         if (labview_port.equals(""))
         {
@@ -396,14 +400,7 @@ public class RXTXRobot
         {
             if (l_out != null && l_in != null && isConnected())
             {
-                
-                buffer = new byte[bufferSize];
-                l_out.write((command).getBytes());
-                sleep(800);
-                //l_in.read(buffer, 0, Math.min(l_in.available(), buffer.length));
-                int bytesRead = l_in.read(buffer);
-                lastResponse = new String(buffer);
-                debug("XBee Response ("+bytesRead+" bytes read): " + lastResponse);
+                this.sendRaw(command,800);
                 if (lastResponse.indexOf(",")==-1)
                 {
                     System.err.println("No response from LabView.  Returning a null object");
@@ -411,7 +408,7 @@ public class RXTXRobot
                 }
                 lastResponse = lastResponse.substring(lastResponse.indexOf("[")+1, lastResponse.indexOf("]"));
                 String[] parts = lastResponse.split(",");
-                debug("Creating Coord with x="+parts[0]+", y="+parts[1]+", z="+parts[2]);
+                debug("Creating Coord: ("+parts[0]+", "+parts[1]+", "+parts[2]+")");
                 return new Coord(Double.parseDouble(parts[0]),Double.parseDouble(parts[1]),Double.parseDouble(parts[2]));
             }
         }
@@ -426,12 +423,17 @@ public class RXTXRobot
         }
         return null;
     }
-    public Coord[] readFromLabView2()
+    /**
+     * Reads the Wii remote data from LabView and returns two 2D coordinates.
+     * 
+     * @return The response from LabView in a {@link Coord} object (z-attribute = -1) or an array of length 2 of null objects.
+     */
+    public Coord[] readFromLabView2D()
     {
         if (labview_port.equals(""))
         {
             System.err.println("A connection to labview was not made.  Cannot read from labview.");
-            return new Coord[0];
+            return new Coord[2];
         }
         String command = "s";
         debug("Sending command: " + command);
@@ -439,14 +441,7 @@ public class RXTXRobot
         {
             if (l_out != null && l_in != null && isConnected())
             {
-                
-                buffer = new byte[bufferSize];
-                l_out.write((command).getBytes());
-                sleep(800);
-                //l_in.read(buffer, 0, Math.min(l_in.available(), buffer.length));
-                int bytesRead = l_in.read(buffer);
-                lastResponse = new String(buffer);
-                debug("XBee Response ("+bytesRead+" bytes read): " + lastResponse);
+                this.sendRaw(command,800);
                 if (lastResponse.indexOf(",")==-1)
                 {
                     System.err.println("No response from LabView.  Returning an empty Coord array.");
@@ -455,7 +450,7 @@ public class RXTXRobot
                 }
                 lastResponse = lastResponse.substring(lastResponse.indexOf("[")+1, lastResponse.indexOf("]"));
                 String[] parts = lastResponse.split(",");
-                debug("Creating Coord with x1="+parts[0]+", y1="+parts[1]+", x2="+parts[2]+", y2="+parts[3]);
+                debug("Creating 2 Coords:  ("+parts[0]+", "+parts[1]+") and ("+parts[2]+", "+parts[3]+")");
                 Coord[] ans = {new Coord(Double.parseDouble(parts[0]),Double.parseDouble(parts[1]),-1.0),new Coord(Double.parseDouble(parts[2]),Double.parseDouble(parts[3]),-1.0)};
                 return ans;
             }
@@ -463,15 +458,13 @@ public class RXTXRobot
         catch(NumberFormatException e)
         {
             debug("Labview returned: " + lastResponse + " and determined it not to be a number.");
-            Coord[] ans = {new Coord(-1.0,-1.0,-1.0), new Coord(-1.0,-1.0,-1.0)};
-            return ans;
+            return new Coord[2];
         }
         catch(Exception e)
         {
             System.err.println("A generic error occurred: Error: " + e.toString());
         }
-        Coord[] ans = {new Coord(-1.0,-1.0,-1.0), new Coord(-1.0,-1.0,-1.0)};
-        return ans;
+        return new Coord[2];
     }
     /**
      * 
@@ -646,13 +639,13 @@ public class RXTXRobot
      * 
      * Moves the specified servo to the specified angular position.
      * 
-     * Accepts either RXTXRobot.SERVO1 or RXTXRobot.SERVO2 and an angular position between 0 and 180 exclusive.
+     * Accepts either RXTXRobot.SERVO1 or RXTXRobot.SERVO2 and an angular position between 0 and 180 inclusive.
      * <br /><br />
      * The servo starts at 90 degrees, so a number &lt; 90 will turn it one way, and a number &gt; 90 will turn
      * it the other way.  An error message will be displayed on error.
      * 
      * @param servo The servo motor that you would like to move: RXTXRobot.SERVO1 or RXTXRobot.SERVO2.
-     * @param position The position (in degrees) where you want the servo to turn to: 0 &lt; position &lt; 180.
+     * @param position The position (in degrees) where you want the servo to turn to: 0 &le; position &le; 180.
      */
     public void moveServo(int servo, int position)
     {
@@ -662,8 +655,8 @@ public class RXTXRobot
             return;
         }
         debug("Moving servo " + servo + " to position " + position);
-        if (position <= 0 || position >= 180)
-            System.err.println("ERROR: moveServo position must be greater than 0 and less than 180.  You supplied " + position + ", which is invalid.");
+        if (position < 0 || position > 180)
+            System.err.println("ERROR: moveServo position must be  >=0 and <=180.  You supplied " + position + ", which is invalid.");
         else
             sendRaw("v " + servo + " " + position);
     }
@@ -671,7 +664,7 @@ public class RXTXRobot
      * 
      * Moves both servos simultaneously to the desired positions.
      * 
-     * Accepts two angular positions between 0 and 180 exclusive and moves the servo 
+     * Accepts two angular positions between 0 and 180 inclusive and moves the servo 
      * motors to the corresponding angular position. SERVO1 moves pos1 degrees and 
      * SERVO2 moves pos2 degrees.
      * <br /><br />
@@ -684,8 +677,8 @@ public class RXTXRobot
     public void moveBothServos(int pos1, int pos2)
     {
         debug("Moving both servos to positions " + pos1 + " and " + pos2);
-        if (pos1 <= 0 || pos1 >= 180 || pos2 <= 0 || pos2 >= 180)
-            System.err.println("ERROR: moveBothServos positions must be greater than 0 and less than 180.  You supplied " + pos1 + " and " + pos2 + ".  One or more are invalid.");
+        if (pos1 < 0 || pos1 > 180 || pos2 < 0 || pos2 > 180)
+            System.err.println("ERROR: moveBothServos positions must be >=0 and <=180.  You supplied " + pos1 + " and " + pos2 + ".  One or more are invalid.");
         else
             sendRaw("V " + pos1 + " " + pos2);
     }
@@ -693,11 +686,11 @@ public class RXTXRobot
      * 
      * Move the stepper motor a specified number of steps (<b>Blocking method</b>).
      * 
-     * Accepts a stepper motor (M1 and M2 on the Ardiuno board) and a number of steps
+     * Accepts a stepper motor and a number of steps
      * that the stepper motor should turn.  Negative steps will rotate
      * counter-clockwise and positive steps will rotate clockwise.<br /><br />
      * 
-     * One step = 15 degrees. (<i>IE: 24 steps for one full revolution</i>)<br /><br />
+     * Typically, one step = 15 degrees. (<i>IE: 24 steps for one full revolution</i>) (<i>Note: Some stepper motors are different.  Try through experimenting</i>)<br /><br />
      * 
      * <b>Note: This method is a blocking method.</b>
      * 
