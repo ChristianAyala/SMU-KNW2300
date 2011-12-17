@@ -14,9 +14,7 @@ package rxtxrobot;
  *     +getLastResponse()
  *     +sleep(int length)
  *     +getAnalogPins()
- *     +getAnalogPin(int index)
  *     +getDigitalPins()
- *     +getDigitalPin(int index)
  *     +setAnalogPin(int pin, int value)
  *     +setDigitalPin(int pin, int value)
  *     +moveServo(int servo, int position)
@@ -37,7 +35,7 @@ import java.io.*;
 public class RXTXRobot
 {
     /* Constants */
-    final private static String API_VERSION = "2.4";
+    final private static String API_VERSION = "2.5";
     /**
      * Refers to the servo motor located in SERVO1
      */
@@ -510,43 +508,6 @@ public class RXTXRobot
     }
     /**
      * 
-     * Returns the 6 analog pin values from the Arduino in String form. <br /><br />
-     * 
-     * Each pin's value is returned in one string, separated by a space.  Therefore,
-     * the format of the string is:<br /><br />
-     * 
-     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>0_pin 1_pin 2_pin 3_pin 4_pin 5_pin</i><br /><br />
-     * 
-     * Where #_pin is an integer containing the pin's current value.  The string is
-     * stored into lastResponse for future reference if needed.  An error is displayed to
-     * the user if an Exception is internally thrown, but execution does not stop.
-     * 
-     * @return The output of the 6 analog pins in string form or an empty String on error.
-     */
-    public String getAnalogPins()
-    {
-        try
-        {
-            if (a_out != null && a_in != null && isConnected())
-            {
-                //buffer = new byte[bufferSize];
-                debug("Reading Analog Pins...");
-                sendRaw("r a");
-                //sleep(200);
-                //a_in.read(buffer, 0, Math.min(a_in.available(), buffer.length));
-                //lastResponse = (new String(buffer)).trim();
-                debug("Received response: " + lastResponse);
-                return lastResponse;
-            }
-        }
-        catch(Exception e)
-        {
-            System.err.println("Cannot read command (IOException)! Error: " + e.toString());
-        }
-        return "";
-    }
-    /**
-     * 
      * Returns the 6 analog pins from the Arduino in an Integer array. <br /><br />
      * 
      * Each pin's value is returned in a zero-indexed integer array.
@@ -555,38 +516,41 @@ public class RXTXRobot
      * 
      * @return Integer array of size RXTXRobot.NUM_ANALOG_PINS filled with the Analog pin's value (or -1 on error).
      */
-    public int[] getAllAnalogPins()
+    public int[] getAnalogPins()
     {
         int[] ans = new int[RXTXRobot.NUM_ANALOG_PINS];
         for (int x=0;x<ans.length;++x)
             ans[x] = -1;
         try
         {
-            String pins = this.getAnalogPins();
-            String[] split = pins.split("\\s+");
-            if (split.length == 1)
+            sendRaw("r a");
+            String[] split = this.getLastResponse().split("\\s+");
+            if (split.length <= 1)
             {
-                System.err.println("getAllAnalogPins() - No response was received from the Arduino.  Try again");
+                System.err.println("getAnalogPins() - No response was received from the Arduino.  Try again");
                 return ans;
             }
             if (split.length-1 != RXTXRobot.NUM_ANALOG_PINS)
             {
-                System.err.println("getAllAnalogPins() - Incorrect length returned: " + split.length);
+                System.err.println("getAnalogPins() - Incorrect length returned: " + split.length);
                 if (verbose)
                     for (int x=0;x<split.length;++x)
                         System.err.println("["+x+"] = " + split[x]);
                 return ans;
             }
-            //ans = new int[split.length-1];
             for (int x=1;x<split.length;++x)
             {
                 ans[x-1] = Integer.parseInt(split[x]);
             }
             return ans;
         }
+        catch (NumberFormatException e)
+        {
+            System.err.println("getAnalogPins() - Returned string could not be parsed into Integers");
+        }
         catch (Exception e)
         {
-            System.err.println("An error occurred with getAllAnalogPins.");
+            System.err.println("An error occurred with getAnalogPins.");
             if (verbose)
             {
                 System.err.println("Stacktrace: ");
@@ -594,42 +558,6 @@ public class RXTXRobot
             }
         }
         return ans;
-    }
-    /**
-     * Returns the 12 digital pin values from the Arduino in String form. <br /><br />
-     * 
-     * Each pin's value is returned in one string, separated by a space.  Therefore,
-     * the format of the string is:<br /><br />
-     * 
-     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>0_pin 1_pin 2_pin 3_pin ... 11_pin</i><br /><br />
-     * 
-     * Where #_pin is an integer containing the pin's current value.  The string is
-     * stored into lastResponse for future reference if needed.  An error is displayed to
-     * the user if an Exception is internally thrown, but execution does not stop.
-     * 
-     * @return The output of the 12 digital pins in string form or an empty String on error.
-     */
-    public String getDigitalPins()
-    {
-        try
-        {
-            if (a_out != null && a_in != null && isConnected())
-            {
-                //buffer = new byte[bufferSize];
-                debug("Reading Digital Pins...");
-                sendRaw("r d");
-                //sleep(200);
-                //a_in.read(buffer, 0, Math.min(a_in.available(), buffer.length));
-                //lastResponse = (new String(buffer)).trim();
-                debug("Received response: " + lastResponse);
-                return lastResponse;
-            }
-        }
-        catch(Exception e)
-        {
-            System.err.println("Cannot read command (IOException)! Error: " + e.toString());
-        }
-        return "";
     }
     /**
      * 
@@ -641,38 +569,41 @@ public class RXTXRobot
      * 
      * @return Integer array of size RXTXRobot.NUM_DIGITAL_PINS filled with the Digital pin's value (or -1 on error)
      */
-    public int[] getAllDigitalPins()
+    public int[] getDigitalPins()
     {
         int[] ans = new int[RXTXRobot.NUM_DIGITAL_PINS];
         for (int x=0;x<ans.length;++x)
             ans[x] = -1;
         try
         {
-            String pins = this.getDigitalPins();
-            String[] split = pins.split("\\s+");
-            if (split.length == 1)
+            this.sendRaw("r d");
+            String[] split = this.getLastResponse().split("\\s+");
+            if (split.length <= 1)
             {
-                System.err.println("getAllDigitalPins() - No response was received from the Arduino.  Try again");
+                System.err.println("getDigitalPins() - No response was received from the Arduino.  Try again");
                 return ans;
             }
             if (split.length-1 != RXTXRobot.NUM_DIGITAL_PINS)
             {
-                System.err.println("getAllDigitalPins() - Incorrect length returned: " + split.length);
+                System.err.println("getDigitalPins() - Incorrect length returned: " + split.length);
                 if (verbose)
                     for (int x=0;x<split.length;++x)
                         System.err.println("["+x+"] = " + split[x]);
                 return ans;
             }
-            //ans = new int[split.length-1];
             for (int x=1;x<split.length;++x)
             {
                 ans[x-1] = Integer.parseInt(split[x]);
             }
             return ans;
         }
+        catch (NumberFormatException e)
+        {
+            System.err.println("getAnalogPins() - Returned string could not be parsed into Integers");
+        }
         catch (Exception e)
         {
-            System.err.println("An error occurred with getAllDigitalsPins.");
+            System.err.println("An error occurred with getDigitalsPins.");
             if (verbose)
             {
                 System.err.println("Stacktrace: ");
@@ -680,60 +611,6 @@ public class RXTXRobot
             }
         }
         return ans;
-    }
-    /**
-     * Returns the value of the digital pin specified by index.
-     * <br /><br />
-     * <b>Index must be: 0 &le; index &lt; {@link NUM_DIGITAL_PINS}</b>
-     * 
-     * @param index The pin number that you want to read from
-     * @return The value of the specified pin number or -1 on error.
-     */
-    public int getDigitalPin(int index)
-    {
-        try
-        {
-            String pins = this.getDigitalPins();
-            String[] split = pins.split("\\s+");
-            if (index >=RXTXRobot.NUM_DIGITAL_PINS || index<0)
-                System.err.println("ERROR: getDigitalPin was given an index that is not within the range of 0 to "+(RXTXRobot.NUM_DIGITAL_PINS-1)+" (inclusive)");
-            else
-                return Integer.parseInt(split[index+1]);
-        }
-        catch (ArrayIndexOutOfBoundsException e)
-        {
-            System.err.println("getDigitalPin() did not get a response from the Arduino board.  Try again.");
-            debug("ERROR: "+e.toString());
-            return -1;
-        }
-        return -1;
-    }
-    /**
-     * Returns the value of the analog pin specified by index.
-     * <br /><br />
-     * <b>Index must be: 0 &le; index &lt; {@link NUM_ANALOG_PINS}</b>
-     * 
-     * @param index The pin number that you want to read from
-     * @return The value of the specified pin number or -1 on error.
-     */
-    public int getAnalogPin(int index)
-    {
-        try
-        {
-            String pins = this.getAnalogPins();
-            String[] split = pins.split("\\s+");
-            if (index >=RXTXRobot.NUM_ANALOG_PINS || index<0)
-                System.err.println("ERROR: getAnalogPin was given an index that is not within the range of 0 to "+(RXTXRobot.NUM_ANALOG_PINS-1)+" (inclusive)");
-            else
-                return Integer.parseInt(split[index+1]);
-        }
-        catch (ArrayIndexOutOfBoundsException e)
-        {
-            System.err.println("getAnalogPin() did not get a response from the Arduino board.  Try again.");
-            debug("ERROR: "+e.toString());
-            return -1;
-        }
-        return -1;
     }
     /**
      * 
