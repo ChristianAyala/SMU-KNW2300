@@ -121,7 +121,7 @@ void moveDCmotor(){ // move DC motor
     if (s<0) {s=-s;dir=BACKWARD;}
     if (pin==2) motor2.run(dir);
     if (pin==3) motor3.run(dir);
-    messageSendChar('d');messageSendInt(pin);messageSendInt(dir);messageSendInt(s);messageSendInt(t);messageEnd();
+    // messageSendChar('d');messageSendInt(pin);messageSendInt(dir);messageSendInt(s);messageSendInt(t);messageEnd();
     if (t==0) {
 //      if (pin==0) {motor0.setSpeed(s);} // insert move dc command here //
 //      if (pin==1) {motor1.setSpeed(s);}// insert move dc command here //
@@ -171,9 +171,9 @@ void move2DCmotor(){ // move DC motor
     if (pin1==3) motor3.run(dir1);
     if (pin2==2) motor2.run(dir2);
     if (pin2==3) motor3.run(dir2);
-    messageSendChar('D');messageSendInt(pin1);messageSendInt(dir1);messageSendInt(s1);
-    messageSendInt(pin2);messageSendInt(dir2);messageSendInt(s2);
-    messageSendInt(t);messageEnd();
+   // messageSendChar('D');messageSendInt(pin1);messageSendInt(dir1);messageSendInt(s1);
+   // messageSendInt(pin2);messageSendInt(dir2);messageSendInt(s2);
+    //messageSendInt(t);messageEnd();
      if (t==0) {
      // if (pin1==0) motor0.setSpeed(s1);// insert move dc command here //
      // if (pin1==1) motor1.setSpeed(s1);// insert move dc command here //
@@ -215,12 +215,13 @@ void movestepper(){ // move stepper motor
     messageSendInt(pin); // Echo what is being read
     steps=messageGetInt(); // Get number of steps
     messageSendInt(steps); // Echo what is being read
+    messageEnd();
     dir=FORWARD;
     if (steps<0) {steps=-steps;dir=BACKWARD;}
     // insert move stepper command here //
     if (pin==0) stepper0.step(steps,dir,SINGLE);
     //if (pin==1) stepper1.step(steps,FORWARD,SINGLE);
-    messageEnd(); // Terminate the message being sent
+    // messageEnd(); // Terminate the message being sent
 
   }
 
@@ -241,6 +242,7 @@ void move2stepper(){ // move stepper motor
     messageSendInt(pin1); // Echo what is being read
     steps1=messageGetInt(); // Get number of steps
     messageSendInt(steps1); // Echo what is being read
+    messageEnd();
     dir1=FORWARD;
     if (steps0<0) {steps0=-steps0;dir1=BACKWARD;}
     dir2=FORWARD;
@@ -248,7 +250,7 @@ void move2stepper(){ // move stepper motor
     // insert 2 move stepper command here //
     stepper0.step(steps0,dir1,SINGLE);
    // stepper1.step(steps1,dir2,SINGLE);
-    messageEnd(); // Terminate the message being sent
+    //messageEnd(); // Terminate the message being sent
 
   }
 
@@ -260,10 +262,11 @@ void moveservo(){ // move servo motor
     messageSendInt(pin); // Echo what is being read
     pos=messageGetInt(); // Get servo postiion
     messageSendInt(pos); // Echo what is being read
+    messageEnd();
     // insert move servo command here //
     if (pin==0) myservo0.write(pos);
     if (pin==1) myservo1.write(pos);
-    messageEnd(); // Terminate the message being sent
+    //messageEnd(); // Terminate the message being sent
 
   }
 
@@ -276,9 +279,10 @@ void move2servo(){ // move servo motor
     messageSendInt(pos1); // Echo what is being read
     pos2=messageGetInt(); // Get servo postiion
     messageSendInt(pos2); // Echo what is being read
+    messageEnd();
     myservo0.write(pos1); // move first servo
     myservo1.write(pos2); // move second servo
-    messageEnd(); // Terminate the message being sent
+   // messageEnd(); // Terminate the message being sent
     
   }
 
