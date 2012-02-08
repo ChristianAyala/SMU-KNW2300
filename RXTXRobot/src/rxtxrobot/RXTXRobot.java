@@ -20,14 +20,16 @@ package rxtxrobot;
  *     +moveServo(int servo, int position)
  *     +moveBothServos(int position_1, int position_2)
  *     +moveStepper(int stepper, int steps)
- *     +runMotor(int motor_1, int speed_1, [int motor_2, int speed_2], int time)
+ *     +runMotor(int motor_1, int speed_1, [int motor_2, int speed_2], [int motor_3, int speed_3, int motor_4, int speed_4], int time)
  * 
  *   private:
  *     -debug(String str)
  */
 
 import gnu.io.*;
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * @author Chris King
@@ -35,7 +37,7 @@ import java.io.*;
 public class RXTXRobot
 {
     /* Constants - These should not change unless you know what you are doing */
-    final private static String API_VERSION = "2.5";
+    final private static String API_VERSION = "2.6";
     /**
      * Refers to the servo motor located in SERVO1
      */
@@ -52,6 +54,14 @@ public class RXTXRobot
      * Refers to the M4 DC motor on the Arduino
      */
     final public static int MOTOR2 = 3;
+    /**
+     * Refers to the M2 DC motor on the Arduino
+     */
+    final public static int MOTOR3 = 1;
+    /**
+     * Refers to the M1 DC motor on the Arduino
+     */
+    final public static int MOTOR4 = 0;
     /**
      * Refers to the M1/M2 Stepper motor on the Arduino
      */
@@ -788,6 +798,49 @@ public class RXTXRobot
         }
         debug("Running two motors, motor " + motor1 + " at speed " + speed1 + " and motor " + motor2 + " at speed " + speed2 + " for time of " + time);
         sendRaw("D " + motor1 + " " + speed1 +" " + motor2 + " " + speed2 + " " + time);
+        if (errorFlag == 0)
+            sleep(time);
+    }
+    /**
+     * 
+     * Runs four DC motors at different speeds for the same amount of time. (<b>Potential blocking method</b>)
+     *   
+     * Accepts DC motors, either RXTXRobot.MOTOR1, RXTXRobot.MOTOR2, RXTXRobot.MOTOR3, RXTXRobot.MOTOR4, the speed 
+     * in which those motor should run (arbitrary units), accepts another DC motor, the speed in which
+     * that motor should run, etc, and the time with which both motors should run (in milliseconds).
+     * <br /><br />
+     * If speed is negative for any motor, that motor will run in reverse.
+     * <br /><br />
+     * If time is 0, the motors will run infinitely until another call to both specific motors is made, even if the Java program terminates.
+     * 
+     * <br /><br />An error message will display on error.<br /><br />
+     * 
+     * <b>Note: This method is a blocking method <u>unless</u> time = 0</b>
+     * 
+     * @param motor1 The first DC motor: RXTXRobot.MOTOR1 or RXTXRobot.MOTOR2 or RXTXRobot.MOTOR3 or RXTXRobot.MOTOR4
+     * @param speed1 The speed that the first DC motor should run at
+     * @param motor2 The second DC motor: RXTXRobot.MOTOR1 or RXTXRobot.MOTOR2 or RXTXRobot.MOTOR3 or RXTXRobot.MOTOR4
+     * @param speed2 The speed that the second DC motor should run at
+     * @param motor3 The second DC motor: RXTXRobot.MOTOR1 or RXTXRobot.MOTOR2 or RXTXRobot.MOTOR3 or RXTXRobot.MOTOR4
+     * @param speed3 The speed that the second DC motor should run at
+     * @param motor4 The second DC motor: RXTXRobot.MOTOR1 or RXTXRobot.MOTOR2 or RXTXRobot.MOTOR3 or RXTXRobot.MOTOR4
+     * @param speed4 The speed that the second DC motor should run at
+     * @param time The amount of time that the DC motors should run
+     */
+    public void runMotor(int motor1, int speed1, int motor2, int speed2, int motor3, int speed3, int motor4, int speed4, int time)
+    {
+        if (time < 0)
+        {
+            System.err.println("ERROR: runMotor was not given a time that is >=0");
+            return;
+        }
+        if ((motor1 < 1 || motor1 > 4) || (motor2 < 1 || motor2 > 4) || (motor3 < 1 || motor3 > 4) || (motor4 < 1 || motor4 > 4))
+        {
+            System.err.println("ERROR: runMotor was not given a correct motor argument");
+            return;
+        }
+        debug("Running four motors, motor " + motor1 + " at speed " + speed1 + " and motor " + motor2 + " at speed " + speed2 + " and motor " + motor3 + " at speed " + speed3 + " and motor " + motor4 + " at speed " + speed4 + " for time of " + time);
+        sendRaw("F " + motor1 + " " + speed1 +" " + motor2 + " " + speed2 + " " + motor3 + " " + speed3 + " " + motor4 + " " + speed4 + " " + time);
         if (errorFlag == 0)
             sleep(time);
     }
