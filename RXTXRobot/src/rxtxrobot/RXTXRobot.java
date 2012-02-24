@@ -752,7 +752,7 @@ public class RXTXRobot
             System.err.println("ERROR: runMotor was not given a time that is >=0");
             return;
         }
-        if (motor != RXTXRobot.MOTOR1 && motor != RXTXRobot.MOTOR2)
+        if (motor != RXTXRobot.MOTOR1 && motor != RXTXRobot.MOTOR2 && motor != RXTXRobot.MOTOR3 && motor != RXTXRobot.MOTOR4)
         {
             System.err.println("ERROR: runMotor was not given a correct motor argument");
             return;
@@ -791,7 +791,7 @@ public class RXTXRobot
             System.err.println("ERROR: runMotor was not given a time that is >=0");
             return;
         }
-        if ((motor1 != RXTXRobot.MOTOR1 && motor1 != RXTXRobot.MOTOR2) || (motor2 != RXTXRobot.MOTOR1 && motor2 != RXTXRobot.MOTOR2))
+        if ((motor1 < 0 || motor1 > 3) || (motor2 < 0 || motor2 > 3))
         {
             System.err.println("ERROR: runMotor was not given a correct motor argument");
             return;
@@ -834,7 +834,7 @@ public class RXTXRobot
             System.err.println("ERROR: runMotor was not given a time that is >=0");
             return;
         }
-        if ((motor1 < 1 || motor1 > 4) || (motor2 < 1 || motor2 > 4) || (motor3 < 1 || motor3 > 4) || (motor4 < 1 || motor4 > 4))
+        if ((motor1 < 0 || motor1 > 3) || (motor2 < 0 || motor2 > 3) || (motor3 < 0 || motor3 > 3) || (motor4 < 0 || motor4 > 3))
         {
             System.err.println("ERROR: runMotor was not given a correct motor argument");
             return;

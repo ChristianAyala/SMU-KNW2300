@@ -1,5 +1,5 @@
-#define withStepper 1
-
+//#define withStepper 1
+int withStepper = 1;
 /* 
  ---- Modification to SimpleMessageSystem to Include Motor Commands ----
  
@@ -111,7 +111,7 @@ void loop()
       move2servo(); // Call the servo2move function
       break; // Break from the switch
     case 'P': // 2 Stepper Motor
-      move2stepper(); // Call the stepper2move function
+      //move2stepper(); // Call the stepper2move function
       break; // Break from the switch
     case 'D': // 2 DC Motor
       move2DCmotor(); // Call the move2DCmotor function
@@ -537,4 +537,3 @@ void writepin() { // Write pin
     digitalWrite(pin,state);  //Sets the state of the pin HIGH (1) or LOW (0)
   }
 }
-
