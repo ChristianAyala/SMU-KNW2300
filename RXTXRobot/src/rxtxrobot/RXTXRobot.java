@@ -151,6 +151,7 @@ public class RXTXRobot
     public RXTXRobot(String arduino_port, String labview_port)
     {
         this.arduino_port = arduino_port;
+        this.labview_port = labview_port;
         this.stepsPerRotation = -1;
         this.verbose = false;
         connectLabView();
@@ -183,15 +184,17 @@ public class RXTXRobot
         this.labview_port = labview_port;
         this.verbose = verbose;
         this.stepsPerRotation = spr;
+        connectLabView();
         connect();
     }
     
     private void connectLabView()
     {
-        try
+        try 
         {
+            this.labview_port = "";
             labviewServerSocket = new ServerSocket(1337);
-            System.out.println("Waiting for labview to connect... Your IP is " + InetAddress.getLocalHost().getHostAddress());
+            System.out.println("Waiting for labview to connect... Make sure Labview is trying to the correct IP address");
             labviewSocket = labviewServerSocket.accept();
             labviewWrite = new PrintWriter(labviewSocket.getOutputStream(), true);
             labviewRead = new BufferedReader(new InputStreamReader(labviewSocket.getInputStream()));
@@ -339,8 +342,8 @@ public class RXTXRobot
     {
         sleep(300);
         try {
-        labviewSocket.close();
-        labviewServerSocket.close();
+            labviewSocket.close();
+            labviewServerSocket.close();
         } catch(Exception e) {}
         debug("Resetting servos to position of 90 degrees for next run's use");
         this.moveBothServos(90,90);
@@ -348,7 +351,7 @@ public class RXTXRobot
             a_serialPort.close();
         if (a_commPort != null)
             a_commPort.close();
-        if (!labview_port.equals(""))
+        if (!"".equals(labview_port))
         {
             if (l_serialPort != null)
                 l_serialPort.close();
@@ -423,7 +426,7 @@ public class RXTXRobot
         }
     }
     /**
-     * Reads the Wii remote data from LabView and returns one 3D coordinate.
+     * Reads the Wii remote data from LabView through XBees and returns one 3D coordinate.
      * 
      * @return The response from LabView in a {@link Coord} object or null on error.
      */
@@ -464,7 +467,7 @@ public class RXTXRobot
         return null;
     }
     /**
-     * Reads the Wii remote data from LabView and returns two 2D coordinates.
+     * Reads the Wii remote data from LabView through XBees and returns two 2D coordinates.
      * 
      * @return The response from LabView in a {@link Coord} object (z-attribute = -1) or an array of length 2 of null objects.
      */
@@ -507,7 +510,11 @@ public class RXTXRobot
         return new Coord[2];
     }
     
-    
+    /**
+     * Reads the Wii remote data from LabView through sockets and returns one 3D coordinate.
+     * 
+     * @return The response from LabView in a {@link Coord} object or null on error.
+     */
     public Coord readFromLabView()
     {
         if (!labviewSocket.isConnected())
