@@ -27,9 +27,10 @@ package rxtxrobot;
  */
 
 import gnu.io.*;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 
 /**
  * @author Chris King
@@ -91,6 +92,11 @@ public class RXTXRobot
     private int stepsPerRotation;
     private byte errorFlag = 0;
     final private static int bufferSize = 1024;
+    
+    private ServerSocket labviewServerSocket;
+    private Socket labviewSocket;
+    private PrintWriter labviewWrite;
+    private BufferedReader labviewRead;
     /**
      * Accepts the arduino port.
      * 
@@ -145,9 +151,9 @@ public class RXTXRobot
     public RXTXRobot(String arduino_port, String labview_port)
     {
         this.arduino_port = arduino_port;
-        this.labview_port = labview_port;
         this.stepsPerRotation = -1;
         this.verbose = false;
+        connectLabView();
         connect();
     }
     /**
@@ -167,6 +173,7 @@ public class RXTXRobot
         this.labview_port = labview_port;
         this.verbose = verbose;
         this.stepsPerRotation = -1;
+        connectLabView();
         connect();
     }
     // Secret constructor
@@ -178,6 +185,25 @@ public class RXTXRobot
         this.stepsPerRotation = spr;
         connect();
     }
+    
+    private void connectLabView()
+    {
+        try
+        {
+            labviewServerSocket = new ServerSocket(1337);
+            System.out.println("Waiting for labview to connect... Your IP is " + InetAddress.getLocalHost().getHostAddress());
+            labviewSocket = labviewServerSocket.accept();
+            labviewWrite = new PrintWriter(labviewSocket.getOutputStream(), true);
+            labviewRead = new BufferedReader(new InputStreamReader(labviewSocket.getInputStream()));
+            System.out.println("Labview connected!  Starting to run program...");
+        }
+        catch(Exception e)
+        {
+            System.err.println("An error occurred waiting for labview:" + e + "\n\nStacktrace: ");
+            e.printStackTrace();
+            System.exit(0);
+        }
+    }    
     /**
      * 
      * Attempts to connect to the Arduino/XBee and the LabView/XBee.
@@ -312,6 +338,10 @@ public class RXTXRobot
     public final void close()
     {
         sleep(300);
+        try {
+        labviewSocket.close();
+        labviewServerSocket.close();
+        } catch(Exception e) {}
         debug("Resetting servos to position of 90 degrees for next run's use");
         this.moveBothServos(90,90);
         if (a_serialPort != null)
@@ -475,6 +505,41 @@ public class RXTXRobot
             System.err.println("A generic error occurred: Error: " + e.toString());
         }
         return new Coord[2];
+    }
+    
+    
+    public Coord readFromLabView()
+    {
+        if (!labviewSocket.isConnected())
+        {
+            System.err.println("The connection to labview was apparently lost...");
+            return null;
+        }
+        String command = "s";
+        debug("Sending command: " + command);
+        try
+        {
+            labviewWrite.write("s");
+            labviewWrite.flush();
+            lastResponse = "";
+            this.sleep(200);
+            while (labviewRead.ready())
+                lastResponse += (char)labviewRead.read();
+            lastResponse = lastResponse.substring(lastResponse.indexOf("[")+1, lastResponse.indexOf("]"));
+            String[] parts = lastResponse.split(",");
+            debug("Creating Coord: ("+parts[0]+", "+parts[1]+", "+parts[2]+")");
+            return new Coord(Double.parseDouble(parts[0]),Double.parseDouble(parts[1]),Double.parseDouble(parts[2]));
+        }
+        catch(NumberFormatException e)
+        {
+            debug("Labview returned: " + lastResponse + " and determined it not to be a number.");
+            return null;
+        }
+        catch(Exception e)
+        {
+            System.err.println("A generic error occurred: Error: " + e.toString());
+        }
+        return null;
     }
     /**
      * 
