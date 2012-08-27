@@ -28,17 +28,17 @@ package rxtxrobot;
 
 import gnu.io.*;
 import java.io.*;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 /**
  * @author Chris King
+ * @version 2.7
  */
 public class RXTXRobot
 {
     /* Constants - These should not change unless you know what you are doing */
-    final private static String API_VERSION = "2.6";
+    final private static String API_VERSION = "2.7";
     /**
      * Refers to the servo motor located in SERVO1
      */
@@ -215,11 +215,11 @@ public class RXTXRobot
      * and makes a serial connection to the Arduino if the port is not already in use.
      * If there is an error in connecting, then a different error message will be 
      * displayed to the user for each case.  This method is automatically called from the
-     * constructor.  Only use it if you have detected the connection is closed from {@link isConnected()}
-     * or if you called {@link close()} before.
+     * constructor.  Only use it if you have detected the connection is closed from {@link #isConnected() isConnected()}
+     * or if you called {@link #close() close()} before.
      * 
      * This function does not terminate runtime if an error is discovered.  See the
-     * function {@link isConnected()} to test for an active connection.
+     * function {@link #isConnected() isConnected()} to test for an active connection.
      * 
      */
     public final void connect()
@@ -564,7 +564,7 @@ public class RXTXRobot
      * 
      * Allows the robot to sleep for time length measured in milliseconds.
      * 
-     * Uses a standard Thread.sleep() function to pause execution of the program for the 
+     * Uses a standard {@link Thread#sleep(long) Thread.sleep(long)} function to pause execution of the program for the 
      * specified milliseconds. Displays an error if the thread is interrupted during 
      * this process, but does not throw an Exception. (1000 milliseconds = 1 second)
      * 
@@ -589,7 +589,7 @@ public class RXTXRobot
      * 
      * An error is displayed if something goes wrong, but verbose is required for more in-depth errors.
      * 
-     * @return Integer array of size RXTXRobot.NUM_ANALOG_PINS filled with the Analog pin's value (or -1 on error).
+     * @return Integer array of size {@link #NUM_ANALOG_PINS RXTXRobot.NUM_ANALOG_PINS} filled with the Analog pin's value (or -1 on error).
      */
     public int[] getAnalogPins()
     {
@@ -642,7 +642,7 @@ public class RXTXRobot
      * 
      * An error is displayed if something goes wrong, but verbose is required for more in-depth errors.
      * 
-     * @return Integer array of size RXTXRobot.NUM_DIGITAL_PINS filled with the Digital pin's value (or -1 on error)
+     * @return Integer array of size {@link #NUM_DIGITAL_PINS RXTXRobot.NUM_DIGITAL_PINS} filled with the Digital pin's value (or -1 on error)
      */
     public int[] getDigitalPins()
     {
@@ -692,7 +692,7 @@ public class RXTXRobot
      * Sets the value of the specified analog pin.
      * 
      * Sets the specified analog pin to the specified value.
-     * <br /><br /><b>Index must be: 0 &le; index &lt; {@link NUM_ANALOG_PINS}</b>
+     * <br /><br /><b>Index must be: 0 &le; index &lt; {@link #NUM_ANALOG_PINS RXTXRobot.NUM_ANALOG_PINS}</b>
      * 
      * @param pin The analog pin number to set.
      * @param value The value that you would like to set the pin to.
@@ -707,7 +707,7 @@ public class RXTXRobot
      * Sets the value of the digital pin.
      * 
      * Sets the specified digital pin to the specified value.
-     * <br /><br /><b>Index must be: 0 &le; index &lt; {@link NUM_DIGITAL_PINS}</b>
+     * <br /><br /><b>Index must be: 0 &le; index &lt; {@link #NUM_DIGITAL_PINS RXTXRobot.NUM_DIGITAL_PINS}</b>
      * 
      * @param pin The analog pin number to set.
      * @param value The value that you would like to set the pin to.
@@ -721,12 +721,12 @@ public class RXTXRobot
      * 
      * Moves the specified servo to the specified angular position.
      * 
-     * Accepts either RXTXRobot.SERVO1 or RXTXRobot.SERVO2 and an angular position between 0 and 180 inclusive.
+     * Accepts either {@link #SERVO1 RXTXRobot.SERVO1} or {@link #SERVO2 RXTXRobot.SERVO2} and an angular position between 0 and 180 inclusive.
      * <br /><br />
      * The servo starts at 90 degrees, so a number &lt; 90 will turn it one way, and a number &gt; 90 will turn
      * it the other way.  An error message will be displayed on error.
      * 
-     * @param servo The servo motor that you would like to move: RXTXRobot.SERVO1 or RXTXRobot.SERVO2.
+     * @param servo The servo motor that you would like to move: {@link #SERVO1 RXTXRobot.SERVO1} or {@link #SERVO2 RXTXRobot.SERVO2}.
      * @param position The position (in degrees) where you want the servo to turn to: 0 &le; position &le; 180.
      */
     public void moveServo(int servo, int position)
@@ -747,8 +747,8 @@ public class RXTXRobot
      * Moves both servos simultaneously to the desired positions.
      * 
      * Accepts two angular positions between 0 and 180 inclusive and moves the servo 
-     * motors to the corresponding angular position. SERVO1 moves pos1 degrees and 
-     * SERVO2 moves pos2 degrees.
+     * motors to the corresponding angular position. {@link #SERVO1 SERVO1} moves {@code pos1} degrees and 
+     * {@link #SERVO2 SERVO2} moves {@code pos2} degrees.
      * <br /><br />
      * The servos start at 90 degrees, so a number &lt; 90 will turn it one way, and a number &gt; 90 will turn
      * it the other way.  An error message will be displayed on error.
@@ -776,7 +776,7 @@ public class RXTXRobot
      * 
      * <b>Note: This method is a blocking method.</b>
      * 
-     * @param stepper The stepper motor that you want to move ({@link RXTXRobot.STEPPER1})
+     * @param stepper The stepper motor that you want to move ({@link #STEPPER1 RXTXRobot.STEPPER1})
      * @param steps The number of steps you want the motor to move
      */
     public void moveStepper(int stepper, int steps)
@@ -802,8 +802,8 @@ public class RXTXRobot
      * 
      * Runs a DC motor at a specific speed for a specific time. (<b>Potential blocking method</b>)
      *   
-     * Accepts a DC motor, either RXTXRobot.MOTOR1 or RXTXRobot.MOTOR2, the speed 
-     * that the motor should run at (arbitrary units), and the time with which the motor should run (in milliseconds).
+     * Accepts a DC motor, either {@link #MOTOR1 RXTXRobot.MOTOR1} or {@link #MOTOR2 RXTXRobot.MOTOR2}, the speed 
+     * that the motor should run at (0 - 255), and the time with which the motor should run (in milliseconds).
      * <br /><br />
      * If speed is negative, the motor will run in reverse.
      * <br /><br />
@@ -813,8 +813,8 @@ public class RXTXRobot
      * 
      * <b>Note: This method is a blocking method <u>unless</u> time = 0</b>
      * 
-     * @param motor The DC motor you want to run: RXTXRobot.MOTOR1 or RXTXRobot.MOTOR2
-     * @param speed The speed that the motor should run at (arbitrary units)
+     * @param motor The DC motor you want to run: {@link #MOTOR1 RXTXRobot.MOTOR1} or {@link #MOTOR2 RXTXRobot.MOTOR2}
+     * @param speed The speed that the motor should run at (0 - 255)
      * @param time The number of milliseconds the motor should run (0 for infinite)
      */
     public void runMotor(int motor, int speed, int time)
@@ -838,8 +838,8 @@ public class RXTXRobot
      * 
      * Runs both DC motors at different speeds for the same amount of time. (<b>Potential blocking method</b>)
      *   
-     * Accepts a DC motor, either RXTXRobot.MOTOR1 or RXTXRobot.MOTOR2, the speed 
-     * in which that motor should run (arbitrary units), accepts another DC motor, the speed in which
+     * Accepts a DC motor, either {@link #MOTOR1 RXTXRobot.MOTOR1} or {@link #MOTOR2 RXTXRobot.MOTOR2}, the speed 
+     * in which that motor should run (0 - 255), accepts another DC motor, the speed in which
      * that motor should run, and the time with which both motors should run (in milliseconds).
      * <br /><br />
      * If speed is negative for either motor, that motor will run in reverse.
@@ -850,9 +850,9 @@ public class RXTXRobot
      * 
      * <b>Note: This method is a blocking method <u>unless</u> time = 0</b>
      * 
-     * @param motor1 The first DC motor: RXTXRobot.MOTOR1 or RXTXRobot.MOTOR2
+     * @param motor1 The first DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1} or {@link #MOTOR2 RXTXRobot.MOTOR2}
      * @param speed1 The speed that the first DC motor should run at
-     * @param motor2 The second DC motor: RXTXRobot.MOTOR1 or RXTXRobot.MOTOR2
+     * @param motor2 The second DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1} or {@link #MOTOR2 RXTXRobot.MOTOR2}
      * @param speed2 The speed that the second DC motor should run at
      * @param time The amount of time that the DC motors should run
      */
@@ -877,8 +877,8 @@ public class RXTXRobot
      * 
      * Runs four DC motors at different speeds for the same amount of time. (<b>Potential blocking method</b>)
      *   
-     * Accepts DC motors, either RXTXRobot.MOTOR1, RXTXRobot.MOTOR2, RXTXRobot.MOTOR3, RXTXRobot.MOTOR4, the speed 
-     * in which those motor should run (arbitrary units), accepts another DC motor, the speed in which
+     * Accepts DC motors, either {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, {@link #MOTOR4 RXTXRobot.MOTOR4}, the speed 
+     * in which those motor should run (0 - 255), accepts another DC motor, the speed in which
      * that motor should run, etc, and the time with which both motors should run (in milliseconds).
      * <br /><br />
      * If speed is negative for any motor, that motor will run in reverse.
@@ -889,14 +889,14 @@ public class RXTXRobot
      * 
      * <b>Note: This method is a blocking method <u>unless</u> time = 0</b>
      * 
-     * @param motor1 The first DC motor: RXTXRobot.MOTOR1 or RXTXRobot.MOTOR2 or RXTXRobot.MOTOR3 or RXTXRobot.MOTOR4
+     * @param motor1 The first DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1} or {@link #MOTOR2 RXTXRobot.MOTOR2} or {@link #MOTOR3 RXTXRobot.MOTOR3} or {@link #MOTOR4 RXTXRobot.MOTOR4}
      * @param speed1 The speed that the first DC motor should run at
-     * @param motor2 The second DC motor: RXTXRobot.MOTOR1 or RXTXRobot.MOTOR2 or RXTXRobot.MOTOR3 or RXTXRobot.MOTOR4
+     * @param motor2 The second DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1} or {@link #MOTOR2 RXTXRobot.MOTOR2} or {@link #MOTOR3 RXTXRobot.MOTOR3} or {@link #MOTOR4 RXTXRobot.MOTOR4}
      * @param speed2 The speed that the second DC motor should run at
-     * @param motor3 The second DC motor: RXTXRobot.MOTOR1 or RXTXRobot.MOTOR2 or RXTXRobot.MOTOR3 or RXTXRobot.MOTOR4
-     * @param speed3 The speed that the second DC motor should run at
-     * @param motor4 The second DC motor: RXTXRobot.MOTOR1 or RXTXRobot.MOTOR2 or RXTXRobot.MOTOR3 or RXTXRobot.MOTOR4
-     * @param speed4 The speed that the second DC motor should run at
+     * @param motor3 The third DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1} or {@link #MOTOR2 RXTXRobot.MOTOR2} or {@link #MOTOR3 RXTXRobot.MOTOR3} or {@link #MOTOR4 RXTXRobot.MOTOR4}
+     * @param speed3 The speed that the third DC motor should run at
+     * @param motor4 The fourth DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1} or {@link #MOTOR2 RXTXRobot.MOTOR2} or {@link #MOTOR3 RXTXRobot.MOTOR3} or {@link #MOTOR4 RXTXRobot.MOTOR4}
+     * @param speed4 The speed that the fourth DC motor should run at
      * @param time The amount of time that the DC motors should run
      */
     public void runMotor(int motor1, int speed1, int motor2, int speed2, int motor3, int speed3, int motor4, int speed4, int time)
