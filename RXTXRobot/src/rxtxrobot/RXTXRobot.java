@@ -203,7 +203,7 @@ public class RXTXRobot
         catch(Exception e)
         {
             System.err.println("An error occurred waiting for labview:" + e + "\n\nStacktrace: ");
-            e.printStackTrace();
+            e.printStackTrace(System.err);
             System.exit(0);
         }
     }    
@@ -275,7 +275,7 @@ public class RXTXRobot
                 if (verbose)
                 {
                     System.err.println("Error Message: " + e.toString()+"\n\nError StackTrace:\n");
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                 }
             }
             catch(PortInUseException e)
@@ -284,7 +284,7 @@ public class RXTXRobot
                 if (verbose)
                 {
                     System.err.println("Error Message: " + e.toString()+"\n\nError StackTrace:\n");
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                 }
             }
             catch(UnsupportedCommOperationException e)
@@ -293,7 +293,7 @@ public class RXTXRobot
                 if (verbose)
                 {
                     System.err.println("Error Message: " + e.toString()+"\n\nError StackTrace:\n");
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                 }
             }
             catch(InterruptedException e)
@@ -302,7 +302,7 @@ public class RXTXRobot
                 if (verbose)
                 {
                     System.err.println("Error Message: " + e.toString()+"\n\nError StackTrace:\n");
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                 }
             }
             catch(IOException e)
@@ -311,7 +311,7 @@ public class RXTXRobot
                 if (verbose)
                 {
                     System.err.println("Error Message: " + e.toString()+"\n\nError StackTrace:\n");
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                 }
             }
         }
@@ -420,7 +420,7 @@ public class RXTXRobot
                 if (verbose)
                 {
                     System.err.println("Error Message: " + e.toString()+"\n\nError StackTrace:\n");
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                 }
             }
         }
@@ -629,7 +629,7 @@ public class RXTXRobot
             if (verbose)
             {
                 System.err.println("Stacktrace: ");
-                e.printStackTrace();
+                e.printStackTrace(System.err);
             }
         }
         return ans;
@@ -682,7 +682,7 @@ public class RXTXRobot
             if (verbose)
             {
                 System.err.println("Stacktrace: ");
-                e.printStackTrace();
+                e.printStackTrace(System.err);
             }
         }
         return ans;
