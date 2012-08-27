@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 use Getopt::Long;
-
+use File::Basename;
 
 my $CONSOLE_WIDTH = 100;
 
@@ -12,14 +12,18 @@ my $quiet = 0;
 my $save_directory = '';
 my $source_dir = '';
 
-GetOptions('version-number=s', \$version_number,
-	   'savedir=s', \$save_directory,
+GetOptions('savedir=s', \$save_directory,
    	   'sourcedir=s', \$source_dir,
 	   'quiet', \$quiet);
 
 if ($version_number eq '0' and scalar(@ARGV) == 0)
 {
+	print "Build tool written by Chris King:\n\n";
 	print "Usage: $0 [--quiet] [--savedir directory] [--sourcedir directory] version_number\n";
+	print "		version_number		Specify the version number of the API\n";
+	print "		--quiet			Hide all output, including errors,  and fail all prompts\n";
+	print "		--savedir [dir]		Specify the save location.  Default is the user's Desktop\n";
+	print "		--sourcedir [dir]	Specify the source location.  Default is ./\n";
 	exit 1;
 }
 
@@ -29,21 +33,20 @@ $source_dir = './' if ($source_dir eq '');
 
 print_box("Building version $version_number of RXTXRobot Project");
 
-if ($save_directory eq '')
-{
-	$save_directory = $ENV{'HOME'}.'/Desktop/RXTXRobot_v'.$version_number;
-}
+$save_directory = $ENV{'HOME'}.'/Desktop/RXTXRobot_v'.$version_number if ($save_directory eq '');
+
 my $save_directory_JAR = $save_directory.'_JAR';
 my $save_directory_LIB = $save_directory.'_LIB';
 print_progress('Checking for existing files');
-if (-d $save_directory.'_JAR' or -d $save_directory.'_LIB' or -e $save_directory.'.zip')
+if (-d $save_directory_JAR or -d $save_directory_LIB or -e $save_directory.'.zip')
 {	
-	print "failed\n\n";
+	finish_progress(0,2);
 	if (prompt("WARNING: Version $version_number already exists. Overwrite?"))
 	{
 		`rm -rf $save_directory_JAR`;
 		`rm -rf $save_directory_LIB`;
 		`rm -f $save_directory.zip`;
+		`rm -f ${save_directory}_LIB.zip`;
 	}
 	else
 	{
@@ -53,50 +56,52 @@ if (-d $save_directory.'_JAR' or -d $save_directory.'_LIB' or -e $save_directory
 }
 else
 {
-	print "done\n";
+	finish_progress(1);
 }
 print_progress('Checking Source Directory');
 
 if (not -d $source_dir or not -e $source_dir.'/RXTXRobot/build.xml' or not -d $source_dir.'/RXTXRobot/lib' or not -e $source_dir.'/RXTXRobot/store/RXTXRobot.jar' or not -d $source_dir.'/RXTXRobot/dist/javadoc' or not -d $source_dir.'/Examples')
 {
-	print "failed\n\n\n";
+	finish_progress(0,3);
 	print_box('Source directory is not valid');
-	print "\n$source_dir\n";
 	exit 1;
 }
-print "done\n";
+finish_progress(1);
 print_progress('Making directories');
 `mkdir "$save_directory_JAR"`;
 `mkdir "$save_directory_JAR/jar/"`;
 `mkdir "$save_directory_LIB"`;
-print "done\n";
+finish_progress(1);
 print_progress('Moving Javadocs');
 `cp -r "$source_dir/RXTXRobot/dist/javadoc" "$save_directory_JAR/javadocs"`;
-print "done\n";
+finish_progress(1);
 print_progress('Moving API JAR');
 `cp "$source_dir/RXTXRobot/store/RXTXRobot.jar" "$save_directory_JAR/jar/RXTXRobot.jar"`;
-print "done\n";
+finish_progress(1);
 print_progress('Moving Examples');
 `cp -r "$source_dir/Examples" "$save_directory_JAR/examples"`;
-print "done\n";
+finish_progress(1);
 print_progress('Zipping up API');
-`zip -r -9 -q "$save_directory.zip" -xi "$save_directory_JAR"`;
-print "done\n";
+my $temp_location = basename($save_directory_JAR);
+my $cd_loc = dirname($save_directory_JAR);
+`cd $cd_loc; zip -r -9 -q "$save_directory.zip" -xi "$temp_location"`;
+finish_progress(1);
 print_progress('Moving main readme');
 `cp "$source_dir/RXTXRobot/lib/README.txt" "$save_directory_LIB/README.txt"`;
-print "done\n";
+finish_progress(1);
 print_progress('Moving RXTXcomm_INSTALL');
 `cp -r "$source_dir/RXTXRobot/lib/RXTXcomm_INSTALL" "$save_directory_LIB/RXTXcomm_INSTALL"`;
-print "done\n";
+finish_progress(1);
 print_progress('Zipping up Library');
-`zip -r -9 -q "$save_directory_LIB.zip" -xi "$save_directory_LIB"`;
-print "done\n";
+$temp_location = basename($save_directory_LIB);
+$cd_loc = dirname($save_directory_JAR);
+`cd $cd_loc; zip -r -9 -q "$save_directory_LIB.zip" -xi "$temp_location"`;
+finish_progress(1);
 print_progress('Cleaning up');
 `rm -rf $save_directory_LIB`;
 `rm -rf $save_directory_JAR`;
-print "done\n";
+finish_progress(1,3);
 
-print "\n\n";
 print_box("RXTXRobot API version $version_number built successfully");
 exit 0;
 
@@ -117,6 +122,15 @@ sub print_progress
 	print $text.('.'x($CONSOLE_WIDTH-length($text)));
 }
 
+sub finish_progress
+{
+	my $num = shift;
+	my $newlines = shift || 1;
+	print "fail" if ($num == 0);
+	print "done" if ($num == 1);
+	print "\n" for(1 .. $newlines);
+}
+
 sub prompt
 {
 	my $text = shift;
@@ -126,6 +140,7 @@ sub prompt
 		print $text.' [Y/n] ';
 		$input = <STDIN>;
 		chomp($input);
+		$input = 'y' unless ($input);
 	}
 	while (lc($input) ne 'y' and lc($input) ne 'n');
 	return 1 if (lc($input) eq 'y');
