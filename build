@@ -72,12 +72,6 @@ foreach my $x (@files)
 	}
 }
 
-if (not -d $source_dir or not -e $source_dir.'/RXTXRobot/build.xml' or not -d $source_dir.'/RXTXRobot/lib' or not -e $source_dir.'/RXTXRobot/store/RXTXRobot.jar' or not -d $source_dir.'/RXTXRobot/dist/javadoc' or not -d $source_dir.'/Examples')
-{
-	finish_progress(0,3);
-	print_box('Source directory is not valid');
-	exit 1;
-}
 finish_progress(1);
 print_progress('Making directories');
 `mkdir "$save_directory_JAR"`;
@@ -117,6 +111,7 @@ exit 0;
 
 sub print_box
 {
+	return if ($quiet);
 	my $text = shift;
 	my @lines = split("\n", $text);
 	my $maxlength = 0;
@@ -136,12 +131,14 @@ sub print_box
 
 sub print_progress
 {
+	return if ($quiet);
 	my $text = shift;
 	print $text.('.'x($CONSOLE_WIDTH-length($text)));
 }
 
 sub finish_progress
 {
+	return if ($quiet);
 	my $num = shift;
 	my $newlines = shift || 1;
 	print "fail" if ($num == 0);
@@ -151,6 +148,7 @@ sub finish_progress
 
 sub prompt
 {
+	return 0 if ($quiet);
 	my $text = shift;
 	my $input = 'a';
 	do
