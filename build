@@ -60,6 +60,18 @@ else
 }
 print_progress('Checking Source Directory');
 
+
+my @files = qw(/RXTXRobot/build.xml /RXTXRobot/lib /RXTXRobot/store/RXTXRobot.jar /RXTXRobot/dist/javadoc /Examples  /RXTXRobot/lib/RXTXcomm_INSTALL);
+foreach my $x (@files)
+{
+	if (not -e $source_dir.$x)
+	{
+		finish_progress(0,3);
+		print_box("Source directory is not valid\n$x does not exist");
+		exit 1;
+	}
+}
+
 if (not -d $source_dir or not -e $source_dir.'/RXTXRobot/build.xml' or not -d $source_dir.'/RXTXRobot/lib' or not -e $source_dir.'/RXTXRobot/store/RXTXRobot.jar' or not -d $source_dir.'/RXTXRobot/dist/javadoc' or not -d $source_dir.'/Examples')
 {
 	finish_progress(0,3);
@@ -82,9 +94,6 @@ print_progress('Moving Examples');
 `cp -r "$source_dir/Examples" "$save_directory_JAR/examples"`;
 finish_progress(1);
 print_progress('Zipping up API');
-my $temp_location = basename($save_directory_JAR);
-my $cd_loc = dirname($save_directory_JAR);
-#`cd $cd_loc; zip -r -9 -q "$save_directory.zip" -xi "$temp_location"`;
 `cd $save_directory_JAR; zip -r -9 -q "$save_directory.zip" -xi "./"`;
 finish_progress(1);
 print_progress('Moving main readme');
@@ -94,7 +103,6 @@ print_progress('Moving RXTXcomm_INSTALL');
 `cp -r "$source_dir/RXTXRobot/lib/RXTXcomm_INSTALL" "$save_directory_LIB/RXTXcomm_INSTALL"`;
 finish_progress(1);
 print_progress('Zipping up Library');
-# `cd $cd_loc; zip -r -9 -q "$save_directory_LIB.zip" -xi "$temp_location"`;
 `cd $save_directory_LIB; zip -r -9 -q "$save_directory_LIB.zip" -xi "./"`;
 finish_progress(1);
 print_progress('Cleaning up');
@@ -110,9 +118,19 @@ exit 0;
 sub print_box
 {
 	my $text = shift;
-	print "-"x(length($text)+6);
-	print "\n|  $text  |\n";
-	print "-"x(length($text)+6);
+	my @lines = split("\n", $text);
+	my $maxlength = 0;
+	foreach (@lines)
+	{
+		$maxlength = length($_) if ($maxlength < length($_));
+	}
+	print "-"x($maxlength+6);
+	print "\n";
+	foreach (@lines)
+	{
+		print "|  $_".(' 'x($maxlength-length($_)))."  |\n";
+	}
+	print "-"x($maxlength+6);
 	print "\n\n";
 }
 
