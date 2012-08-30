@@ -3,7 +3,6 @@ use strict;
 use warnings;
 
 use Getopt::Long;
-use File::Basename;
 
 my $CONSOLE_WIDTH = 100;
 
@@ -29,24 +28,23 @@ if ($version_number eq '0' and scalar(@ARGV) == 0)
 
 $version_number = $ARGV[0] if ($version_number eq '0');
 $source_dir = './' if ($source_dir eq '');
-
+$save_directory = $ENV{'HOME'}.'/Desktop' if ($save_directory eq '');
 
 print_box("Building version $version_number of RXTXRobot Project");
 
-$save_directory = $ENV{'HOME'}.'/Desktop/RXTXRobot_v'.$version_number if ($save_directory eq '');
 
-my $save_directory_JAR = $save_directory.'_JAR';
-my $save_directory_LIB = $save_directory.'_LIB';
+my $save_directory_JAR = $save_directory.'/RXTXRobot_v'.$version_number.'_JAR';
+my $save_directory_LIB = $save_directory.'/RXTXRobot_v'.$version_number.'_LIB';
 print_progress('Checking for existing files');
-if (-d $save_directory_JAR or -d $save_directory_LIB or -e $save_directory.'.zip')
+if (-d $save_directory_JAR or -d $save_directory_LIB or -e $save_directory_JAR.'.zip' or -e $save_directory_LIB.'.zip')
 {	
 	finish_progress(0,2);
 	if (prompt("WARNING: Version $version_number already exists. Overwrite?"))
 	{
-		`rm -rf $save_directory_JAR`;
-		`rm -rf $save_directory_LIB`;
-		`rm -f $save_directory.zip`;
-		`rm -f ${save_directory}_LIB.zip`;
+		execute("rm -rf \"$save_directory_JAR\"");
+		execute("rm -rf \"$save_directory_LIB\"");
+		execute("rm -f \"$save_directory_JAR.zip\"");
+		execute("rm -f \"$save_directory_LIB.zip\"");
 	}
 	else
 	{
@@ -67,44 +65,35 @@ foreach my $x (@files)
 	if (not -e $source_dir.$x)
 	{
 		finish_progress(0,3);
-		print_box("Source directory is not valid\n$x does not exist");
+		print_box("Source directory is not valid\n${source_dir}$x does not exist");
 		exit 1;
 	}
 }
 
 finish_progress(1);
 print_progress('Making directories');
-`mkdir "$save_directory_JAR"`;
-`mkdir "$save_directory_JAR/jar/"`;
-`mkdir "$save_directory_LIB"`;
-finish_progress(1);
+execute("mkdir -p \"$save_directory_JAR\"");
+execute("mkdir -p \"$save_directory_JAR/jar/\"");
+execute("mkdir -p \"$save_directory_LIB\"",1);
 print_progress('Moving Javadocs');
-`cp -r "$source_dir/RXTXRobot/dist/javadoc" "$save_directory_JAR/javadocs"`;
-finish_progress(1);
+execute("cp -r \"$source_dir/RXTXRobot/dist/javadoc\" \"$save_directory_JAR/javadocs\"",1);
 print_progress('Moving API JAR');
-`cp "$source_dir/RXTXRobot/store/RXTXRobot.jar" "$save_directory_JAR/jar/RXTXRobot.jar"`;
-finish_progress(1);
+execute("cp \"$source_dir/RXTXRobot/store/RXTXRobot.jar\" \"$save_directory_JAR/jar/RXTXRobot.jar\"",1);
 print_progress('Moving Examples');
-`cp -r "$source_dir/Examples" "$save_directory_JAR/examples"`;
-finish_progress(1);
+execute("cp -r \"$source_dir/Examples\" \"$save_directory_JAR/examples\"",1);
 print_progress('Zipping up API');
-`cd $save_directory_JAR; zip -r -9 -q "$save_directory.zip" -xi "./"`;
-finish_progress(1);
+execute("cd \"$save_directory_JAR\"; zip -r -9 -q \"$save_directory_JAR.zip\" -xi \"./\"",1);
 print_progress('Moving main readme');
-`cp "$source_dir/RXTXRobot/lib/README.txt" "$save_directory_LIB/README.txt"`;
-finish_progress(1);
+execute("cp \"$source_dir/RXTXRobot/lib/README.txt\" \"$save_directory_LIB/README.txt\"",1);
 print_progress('Moving RXTXcomm_INSTALL');
-`cp -r "$source_dir/RXTXRobot/lib/RXTXcomm_INSTALL" "$save_directory_LIB/RXTXcomm_INSTALL"`;
-finish_progress(1);
+execute("cp -r \"$source_dir/RXTXRobot/lib/RXTXcomm_INSTALL\" \"$save_directory_LIB/RXTXcomm_INSTALL\"",1);
 print_progress('Zipping up Library');
-`cd $save_directory_LIB; zip -r -9 -q "$save_directory_LIB.zip" -xi "./"`;
-finish_progress(1);
+execute("cd \"$save_directory_LIB\"; zip -r -9 -q \"$save_directory_LIB.zip\" -xi \"./\"",1);
 print_progress('Cleaning up');
-`rm -rf $save_directory_LIB`;
-`rm -rf $save_directory_JAR`;
-finish_progress(1,3);
+execute("rm -rf \"$save_directory_LIB\"");
+execute("rm -rf \"$save_directory_JAR\"",1);
 
-print_box("RXTXRobot API version $version_number built successfully");
+print_box("RXTXRobot API version $version_number built successfully\n\nJar Location:         $save_directory_JAR.zip\nLibrary Location:     $save_directory_LIB.zip",3);
 exit 0;
 
 
@@ -113,12 +102,14 @@ sub print_box
 {
 	return if ($quiet);
 	my $text = shift;
+	my $topLines = shift || 1;
 	my @lines = split("\n", $text);
 	my $maxlength = 0;
 	foreach (@lines)
 	{
 		$maxlength = length($_) if ($maxlength < length($_));
 	}
+	print "\n" for (1 .. $topLines);
 	print "-"x($maxlength+6);
 	print "\n";
 	foreach (@lines)
@@ -162,4 +153,26 @@ sub prompt
 	return 1 if (lc($input) eq 'y');
 	return 0;
 }
+
+sub execute
+{
+	my $cmd = shift;
+	my $show_success = shift || 0;
+	my $response = `$cmd 2>&1`;
+	if ($? != 0)
+	{
+		chomp($response);
+		$response =~ s/\t/    /g;
+		$response =~ s/\n/ - /g;
+		$response =~ tr/\x20-\x7f//cd;
+		finish_progress(0,2);
+		print_box("Error: \n\n$response");
+		exit 1;
+	}
+	else
+	{
+		finish_progress(1) if ($show_success);
+	}
+}
+
 
