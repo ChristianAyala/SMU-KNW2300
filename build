@@ -27,7 +27,7 @@ if ($version_number eq '0' and scalar(@ARGV) == 0)
 }
 
 $version_number = $ARGV[0] if ($version_number eq '0');
-$source_dir = './' if ($source_dir eq '');
+$source_dir = '.' if ($source_dir eq '');
 $save_directory = $ENV{'HOME'}.'/Desktop' if ($save_directory eq '');
 
 print_box("Building version $version_number of RXTXRobot Project");

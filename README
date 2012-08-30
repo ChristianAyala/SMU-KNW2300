@@ -1,5 +1,9 @@
 Instructions for compilation and distribution:
 
+
+******  The "build" script referenced below only works in Linux, Unix, and Mac OS  ******
+
+
 	The directory "RXTXRobot" is a valid NetBeans project.  Open it in NetBeans.
 
 	To compile it for students (JAR and Javadocs):
