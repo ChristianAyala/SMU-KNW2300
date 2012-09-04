@@ -15,7 +15,7 @@ GetOptions('savedir=s', \$save_directory,
    	   'sourcedir=s', \$source_dir,
 	   'quiet', \$quiet);
 
-if ($version_number eq '0' and scalar(@ARGV) == 0)
+if (scalar(@ARGV) == 0)
 {
 	print "Build tool written by Chris King:\n\n";
 	print "Usage: $0 [--quiet] [--savedir directory] [--sourcedir directory] version_number\n";
@@ -26,7 +26,7 @@ if ($version_number eq '0' and scalar(@ARGV) == 0)
 	exit 1;
 }
 
-$version_number = $ARGV[0] if ($version_number eq '0');
+$version_number = $ARGV[0];
 $source_dir = '.' if ($source_dir eq '');
 $save_directory = $ENV{'HOME'}.'/Desktop' if ($save_directory eq '');
 
