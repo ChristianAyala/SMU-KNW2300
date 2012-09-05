@@ -1,5 +1,3 @@
-//#define withStepper 1
-int withStepper = 1;
 /* 
  ---- Modification to SimpleMessageSystem to Include Motor Commands ----
  
@@ -35,29 +33,17 @@ int withStepper = 1;
 // Needed for Servos
 #include <Servo.h>
 
-// Needed for Steppers
-#if withStepper==1
-	#include <Stepper.h>
-	#define STEPS 100 // Change this to the number of steps on motor
-#endif
-
 // Needed for DC motors
 #include <AFMotor.h>
 
 //Set up our global motor types
-#if withStepper != 1
 	AF_DCMotor motor0(1);
 	AF_DCMotor motor1(2);
-#else
-	AF_Stepper stepper0(STEPS,1);
-#endif
 AF_DCMotor motor2(3);
 AF_DCMotor motor3(4);
 Servo myservo0;
 Servo myservo1;
 // create an instance of the stepper class, 
-//AF_Stepper stepper0(STEPS,1);
-//AF_Stepper stepper1(STEPS,2);
 
 void setup()
 {
@@ -67,15 +53,10 @@ void setup()
   Serial.begin(9600); //Baud set at 9600 for compatibility, CHANGE!
   myservo0.attach(9); // attach the sevo on pin 9 to servo object
   myservo1.attach(10); // attach the servo on pin 10 to servo object
-  #if withStepper == 1
-	  stepper0.setSpeed(30); // set the speed of stepper motor 1 to 30 RPMs
-  #else
 	 motor0.setSpeed(0);
 	 motor1.setSpeed(0);
 	 motor0.run(FORWARD);
 	 motor1.run(FORWARD);
- #endif
-//  stepper1.setSpeed(30); // set the speed of stepper motor 2 to 30 RPMs
 //  motor0.setSpeed(0); // initialize motor speeds
 //  motor1.setSpeed(0); // initialize motor speeds
   motor2.setSpeed(0); // initialize motor speeds
@@ -110,9 +91,6 @@ void loop()
     case 'V': // 2 Servo Motor
       move2servo(); // Call the servo2move function
       break; // Break from the switch
-    case 'P': // 2 Stepper Motor
-      //move2stepper(); // Call the stepper2move function
-      break; // Break from the switch
     case 'D': // 2 DC Motor
       move2DCmotor(); // Call the move2DCmotor function
       break; // Break from the switch
@@ -139,38 +117,25 @@ void moveDCmotor(){ // move DC motor
     messageEnd(); // Terminate the message being sent
     dir=FORWARD;
     if (s<0) {s=-s;dir=BACKWARD;}
-    #if withStepper != 1
     	if (pin==0) motor0.run(dir);
 	if (pin==1) motor1.run(dir);
-    #endif
     if (pin==2) motor2.run(dir);
     if (pin==3) motor3.run(dir);
-    // messageSendChar('d');messageSendInt(pin);messageSendInt(dir);messageSendInt(s);messageSendInt(t);messageEnd();
     if (t==0) {
-	 #if withStepper != 1
 	    if (pin==0) { motor0.setSpeed(s);}
 	    if (pin==1) { motor1.setSpeed(s);}
-	 #endif
-//      if (pin==0) {motor0.setSpeed(s);} // insert move dc command here //
-//      if (pin==1) {motor1.setSpeed(s);}// insert move dc command here //
       if (pin==2) {motor2.setSpeed(s);}// insert move dc command here //
       if (pin==3) {motor3.setSpeed(s);}// insert move dc command here //
     }
     else 
     {
-	#if withStepper != 1
 	    if (pin==0) {motor0.setSpeed(s);}
 	    if (pin==1) {motor1.setSpeed(s);}
-	#endif
-//      if (pin==0) {motor0.setSpeed(s);} // insert move dc command here //
-//      if (pin==1) {motor1.setSpeed(s);}// insert move dc command here //
       if (pin==2) {motor2.setSpeed(s);}// insert move dc command here //
       if (pin==3) {motor3.setSpeed(s);}// insert move dc command here //
       for (i=0;i<t;i++) delay(1);
-	#if withStepper != 1
       	   if (pin==0) motor0.setSpeed(0);
 	   if (pin==1) motor1.setSpeed(0);
-	#endif
 //      if (pin==0) motor0.setSpeed(0);// insert move dc command here //
 //      if (pin==1) motor1.setSpeed(0);// insert move dc command here //
       if (pin==2) motor2.setSpeed(0);// insert move dc command here //
@@ -203,12 +168,10 @@ void move2DCmotor(){ // move DC motor
     if (s1<0) {s1=-s1;dir1=BACKWARD;}
     dir2=FORWARD;
     if (s2<0) {s2=-s2;dir2=BACKWARD;}
-    #if withStepper != 1
     	if (pin1==0) motor0.run(dir1);
 	if (pin1==1) motor1.run(dir1);
 	if (pin2==0) motor0.run(dir2);
 	if (pin2==1) motor1.run(dir2);
-    #endif
     if (pin1==2) motor2.run(dir1);
     if (pin1==3) motor3.run(dir1);
     if (pin2==2) motor2.run(dir2);
@@ -217,12 +180,10 @@ void move2DCmotor(){ // move DC motor
    // messageSendInt(pin2);messageSendInt(dir2);messageSendInt(s2);
     //messageSendInt(t);messageEnd();
      if (t==0) {
-	  #if withStepper != 1
 	     if (pin1==0) motor0.setSpeed(s1);
 	     if (pin1==1) motor1.setSpeed(s1);
 	     if (pin2==0) motor0.setSpeed(s2);
 	     if (pin2==1) motor1.setSpeed(s2);
-	  #endif
      // if (pin1==0) motor0.setSpeed(s1);// insert move dc command here //
      // if (pin1==1) motor1.setSpeed(s1);// insert move dc command here //
       if (pin1==2) motor2.setSpeed(s1);// insert move dc command here //
@@ -234,12 +195,10 @@ void move2DCmotor(){ // move DC motor
     }
     else 
     {
-       #if withStepper != 1
 	    if (pin1==0) motor0.setSpeed(s1);
 	    if (pin1==1) motor1.setSpeed(s1);
 	    if (pin2==0) motor0.setSpeed(s2);
 	    if (pin2==1) motor1.setSpeed(s2);
-       #endif
       // if (pin1==0) motor0.setSpeed(s1);// insert move dc command here //
       // if (pin1==1) motor1.setSpeed(s1);// insert move dc command here //
        if (pin1==2) motor2.setSpeed(s1);// insert move dc command here //
@@ -249,12 +208,10 @@ void move2DCmotor(){ // move DC motor
        if (pin2==2) motor2.setSpeed(s2);// insert move dc command here //
        if (pin2==3) motor3.setSpeed(s2);// insert move dc command here //
       for (i=0;i<t;i++) delay(1); // wait for time then stop motors
-      #if withStepper != 1
       	if (pin1==0) motor0.setSpeed(0);
 	if (pin1==1) motor1.setSpeed(0);
 	if (pin2==0) motor0.setSpeed(0);
 	if (pin2==1) motor1.setSpeed(0);
-      #endif
       // if (pin1==0) motor0.setSpeed(0);// insert move dc command here //
       // if (pin1==1) motor1.setSpeed(0);// insert move dc command here //
        if (pin1==2) motor2.setSpeed(0);// insert move dc command here //
@@ -309,7 +266,6 @@ void move4DCmotor(){ // move DC motor
     if (s3<0) {s3=-s3;dir3=BACKWARD;}
     dir4=FORWARD;
     if (s4<0) {s4=-s4;dir4=BACKWARD;}
-    #if withStepper != 1
     	if (pin1==0) motor0.run(dir1);
 	if (pin1==1) motor1.run(dir1);
 	if (pin2==0) motor0.run(dir2);
@@ -318,7 +274,6 @@ void move4DCmotor(){ // move DC motor
 	if (pin3==1) motor1.run(dir3);
 	if (pin4==0) motor0.run(dir4);
 	if (pin4==1) motor1.run(dir4);
-    #endif
     if (pin1==2) motor2.run(dir1);
     if (pin1==3) motor3.run(dir1);
     if (pin2==2) motor2.run(dir2);
@@ -331,7 +286,6 @@ void move4DCmotor(){ // move DC motor
    // messageSendInt(pin2);messageSendInt(dir2);messageSendInt(s2);
     //messageSendInt(t);messageEnd();
      if (t==0) {
-	  #if withStepper != 1
 	     if (pin1==0) motor0.setSpeed(s1);
 	     if (pin1==1) motor1.setSpeed(s1);
 	     if (pin2==0) motor0.setSpeed(s2);
@@ -340,9 +294,6 @@ void move4DCmotor(){ // move DC motor
 	     if (pin3==1) motor1.setSpeed(s3);
 	     if (pin4==0) motor0.setSpeed(s4);
 	     if (pin4==1) motor1.setSpeed(s4);
-	  #endif
-     // if (pin1==0) motor0.setSpeed(s1);// insert move dc command here //
-     // if (pin1==1) motor1.setSpeed(s1);// insert move dc command here //
       if (pin1==2) motor2.setSpeed(s1);// insert move dc command here //
       if (pin1==3) motor3.setSpeed(s1);// insert move dc command here //
      // if (pin2==0) motor0.setSpeed(s2);// insert move dc command here //
@@ -356,7 +307,6 @@ void move4DCmotor(){ // move DC motor
     }
     else 
     {
-       #if withStepper != 1
 	    if (pin1==0) motor0.setSpeed(s1);
 	    if (pin1==1) motor1.setSpeed(s1);
 	    if (pin2==0) motor0.setSpeed(s2);
@@ -365,7 +315,6 @@ void move4DCmotor(){ // move DC motor
 	    if (pin3==1) motor1.setSpeed(s3);
 	    if (pin4==0) motor0.setSpeed(s4);
 	    if (pin4==1) motor1.setSpeed(s4);
-       #endif
       // if (pin1==0) motor0.setSpeed(s1);// insert move dc command here //
       // if (pin1==1) motor1.setSpeed(s1);// insert move dc command here //
        if (pin1==2) motor2.setSpeed(s1);// insert move dc command here //
@@ -379,7 +328,6 @@ void move4DCmotor(){ // move DC motor
        if (pin4==2) motor2.setSpeed(s4);
        if (pin4==3) motor3.setSpeed(s4);
       for (i=0;i<t;i++) delay(1); // wait for time then stop motors
-      #if withStepper != 1
       	if (pin1==0) motor0.setSpeed(0);
 	if (pin1==1) motor1.setSpeed(0);
 	if (pin2==0) motor0.setSpeed(0);
@@ -388,7 +336,6 @@ void move4DCmotor(){ // move DC motor
 	if (pin3==1) motor1.setSpeed(0);
 	if (pin4==0) motor0.setSpeed(0);
 	if (pin4==1) motor1.setSpeed(0);
-      #endif
       // if (pin1==0) motor0.setSpeed(0);// insert move dc command here //
       // if (pin1==1) motor1.setSpeed(0);// insert move dc command here //
        if (pin1==2) motor2.setSpeed(0);// insert move dc command here //
@@ -406,54 +353,9 @@ void move4DCmotor(){ // move DC motor
 
 
 void movestepper(){ // move stepper motor
-  int pin;
-  int steps;
-  int dir;
-    messageSendChar('p');  // Echo what is being read
-    pin=messageGetInt(); // Get servo number
-    messageSendInt(pin); // Echo what is being read
-    steps=messageGetInt(); // Get number of steps
-    messageSendInt(steps); // Echo what is being read
-    messageEnd();
-    dir=FORWARD;
-    if (steps<0) {steps=-steps;dir=BACKWARD;}
-    // insert move stepper command here //
-    #if withStepper == 1
-         if (pin==0) stepper0.step(steps,dir,SINGLE);
-    #endif
-    //if (pin==1) stepper1.step(steps,FORWARD,SINGLE);
-    // messageEnd(); // Terminate the message being sent
-
+    messageSendChar('n');  // Echo what is being read
+    messageSendChar('o');
   }
-/*
-void move2stepper(){ // move stepper motor
-  int pin0;
-  int steps0;
-  int pin1;
-  int steps1;
-  int dir1;
-  int dir2;
-    messageSendChar('P');  // Echo what is being read
-    pin0=messageGetInt(); // Get servo number
-    messageSendInt(pin0); // Echo what is being read
-    steps0=messageGetInt(); // Get number of steps
-    messageSendInt(steps0); // Echo what is being read
-    messageSendChar('P');  // Echo what is being read
-    pin1=messageGetInt(); // Get servo number
-    messageSendInt(pin1); // Echo what is being read
-    steps1=messageGetInt(); // Get number of steps
-    messageSendInt(steps1); // Echo what is being read
-    messageEnd();
-    dir1=FORWARD;
-    if (steps0<0) {steps0=-steps0;dir1=BACKWARD;}
-    dir2=FORWARD;
-    if (steps1<0) {steps1=-steps1;dir2=BACKWARD;}
-    // insert 2 move stepper command here //
-    stepper0.step(steps0,dir1,SINGLE);
-   // stepper1.step(steps1,dir2,SINGLE);
-    //messageEnd(); // Terminate the message being sent
-
-  }*/
 
 void moveservo(){ // move servo motor
   int pin;
@@ -537,3 +439,4 @@ void writepin() { // Write pin
     digitalWrite(pin,state);  //Sets the state of the pin HIGH (1) or LOW (0)
   }
 }
+

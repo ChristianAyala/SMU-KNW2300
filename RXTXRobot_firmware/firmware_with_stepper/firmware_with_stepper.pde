@@ -17,6 +17,8 @@
  P [num1] [steps1] [num2] [steps2]-> move 2 stepper motors [num] in direction [direction] [steps] steps
  D [num1] [speed1] [num2] [speed2] [t] -> set dc motor number [num] to speed [speed] for time [t], if t=0 then keep on.
  
+ F [num1] [speed1] [num2] [speed2] [num3] [speed3] [num4] [speed4] [t] -> set dc motor number [num] to speed [speed] for time [t], if t=0 then keep on
+
  
  Base: Thomas Ouellet Fredericks 
  Additions: Alexandre Quessy
@@ -32,21 +34,20 @@
 #include <Servo.h>
 
 // Needed for Steppers
-#include <Stepper.h>
-#define STEPS 100 // Change this to the number of steps on motor
+	#include <Stepper.h>
+	#define STEPS 100 // Change this to the number of steps on motor
 
 // Needed for DC motors
 #include <AFMotor.h>
 
 //Set up our global motor types
-//AF_DCMotor motor0(1);
-//AF_DCMotor motor1(2);
+	AF_Stepper stepper0(STEPS,1);
 AF_DCMotor motor2(3);
 AF_DCMotor motor3(4);
 Servo myservo0;
 Servo myservo1;
 // create an instance of the stepper class, 
-AF_Stepper stepper0(STEPS,1);
+//AF_Stepper stepper0(STEPS,1);
 //AF_Stepper stepper1(STEPS,2);
 
 void setup()
@@ -57,7 +58,7 @@ void setup()
   Serial.begin(9600); //Baud set at 9600 for compatibility, CHANGE!
   myservo0.attach(9); // attach the sevo on pin 9 to servo object
   myservo1.attach(10); // attach the servo on pin 10 to servo object
-  stepper0.setSpeed(30); // set the speed of stepper motor 1 to 30 RPMs
+	  stepper0.setSpeed(30); // set the speed of stepper motor 1 to 30 RPMs
 //  stepper1.setSpeed(30); // set the speed of stepper motor 2 to 30 RPMs
 //  motor0.setSpeed(0); // initialize motor speeds
 //  motor1.setSpeed(0); // initialize motor speeds
@@ -93,12 +94,12 @@ void loop()
     case 'V': // 2 Servo Motor
       move2servo(); // Call the servo2move function
       break; // Break from the switch
-    case 'P': // 2 Stepper Motor
-      move2stepper(); // Call the stepper2move function
-      break; // Break from the switch
     case 'D': // 2 DC Motor
       move2DCmotor(); // Call the move2DCmotor function
       break; // Break from the switch
+    case 'F':
+      move4DCmotor();
+      break;
     }
   }
 }
@@ -206,6 +207,12 @@ void move2DCmotor(){ // move DC motor
     }
 }
 
+void move4DCmotor(){ // move DC motor
+	messageSendChar('n');
+	messageSendChar('o');
+}
+
+
 void movestepper(){ // move stepper motor
   int pin;
   int steps;
@@ -219,38 +226,9 @@ void movestepper(){ // move stepper motor
     dir=FORWARD;
     if (steps<0) {steps=-steps;dir=BACKWARD;}
     // insert move stepper command here //
-    if (pin==0) stepper0.step(steps,dir,SINGLE);
+         if (pin==0) stepper0.step(steps,dir,SINGLE);
     //if (pin==1) stepper1.step(steps,FORWARD,SINGLE);
     // messageEnd(); // Terminate the message being sent
-
-  }
-
-void move2stepper(){ // move stepper motor
-  int pin0;
-  int steps0;
-  int pin1;
-  int steps1;
-  int dir1;
-  int dir2;
-    messageSendChar('P');  // Echo what is being read
-    pin0=messageGetInt(); // Get servo number
-    messageSendInt(pin0); // Echo what is being read
-    steps0=messageGetInt(); // Get number of steps
-    messageSendInt(steps0); // Echo what is being read
-    messageSendChar('P');  // Echo what is being read
-    pin1=messageGetInt(); // Get servo number
-    messageSendInt(pin1); // Echo what is being read
-    steps1=messageGetInt(); // Get number of steps
-    messageSendInt(steps1); // Echo what is being read
-    messageEnd();
-    dir1=FORWARD;
-    if (steps0<0) {steps0=-steps0;dir1=BACKWARD;}
-    dir2=FORWARD;
-    if (steps1<0) {steps1=-steps1;dir2=BACKWARD;}
-    // insert 2 move stepper command here //
-    stepper0.step(steps0,dir1,SINGLE);
-   // stepper1.step(steps1,dir2,SINGLE);
-    //messageEnd(); // Terminate the message being sent
 
   }
 
