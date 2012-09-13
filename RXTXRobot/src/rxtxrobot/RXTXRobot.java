@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -108,6 +109,9 @@ public class RXTXRobot
     private Socket labviewSocket;
     private PrintWriter labviewWrite;
     private BufferedReader labviewRead;
+    
+    private PrintStream error_stream;
+    private PrintStream out_stream;
     /**
      * Accepts the arduino port.
      * 
@@ -126,6 +130,8 @@ public class RXTXRobot
         this.labview_port = "";
         this.stepsPerRotation = -1;
         this.verbose = false;
+        setOutStream(System.out);
+        setErrStream(System.err);
         connect();
     }
     /**
@@ -144,6 +150,8 @@ public class RXTXRobot
         this.labview_port = "";
         this.stepsPerRotation = -1;
         this.verbose = verbose;
+        setOutStream(System.out);
+        setErrStream(System.err);
         connect();
     }
     /**
@@ -165,6 +173,8 @@ public class RXTXRobot
         this.labview_port = labview_port;
         this.stepsPerRotation = -1;
         this.verbose = false;
+        setOutStream(System.out);
+        setErrStream(System.err);
         connectLabView();
         connect();
     }
@@ -185,6 +195,8 @@ public class RXTXRobot
         this.labview_port = labview_port;
         this.verbose = verbose;
         this.stepsPerRotation = -1;
+        setOutStream(System.out);
+        setErrStream(System.err);
         connectLabView();
         connect();
     }
@@ -195,6 +207,8 @@ public class RXTXRobot
         this.labview_port = labview_port;
         this.verbose = verbose;
         this.stepsPerRotation = spr;
+        setOutStream(System.out);
+        setErrStream(System.err);
         connectLabView();
         connect();
     }
@@ -205,19 +219,45 @@ public class RXTXRobot
         {
             this.labview_port = "";
             labviewServerSocket = new ServerSocket(1337);
-            System.out.println("Waiting for labview to connect... Make sure Labview is trying to the correct IP address");
+            out_stream.println("Waiting for labview to connect... Make sure Labview is trying to the correct IP address");
             labviewSocket = labviewServerSocket.accept();
             labviewWrite = new PrintWriter(labviewSocket.getOutputStream(), true);
             labviewRead = new BufferedReader(new InputStreamReader(labviewSocket.getInputStream()));
-            System.out.println("Labview connected!  Starting to run program...");
+            out_stream.println("Labview connected!  Starting to run program...");
         }
         catch(Exception e)
         {
             System.err.println("An error occurred waiting for labview:" + e + "\n\nStacktrace: ");
-            e.printStackTrace(System.err);
+            e.printStackTrace(error_stream);
             System.exit(0);
         }
-    }    
+    }
+    /**
+     * 
+     * Sets the output PrintStream; System.out by default.
+     * 
+     * This method lets you set the output stream from System.out to somewhere else.  It shouldn't be used unless you know what you are doing.
+     * 
+     * @param o PrintStream to write output to.
+     */
+    public final void setOutStream(PrintStream o)
+    {
+        out_stream = o;
+    }
+    
+    /**
+     * 
+     * Sets the error PrintStream; System.err by default.
+     * 
+     * This method lets you set the output stream from System.err to somewhere else.  It shouldn't be used unless you know what you are doing.
+     * 
+     * @param e PrintStream to write error to.
+     */
+    
+    public final void setErrStream(PrintStream e)
+    {
+        error_stream = e;
+    }
     /**
      * 
      * Attempts to connect to the Arduino/XBee and the LabView/XBee.
@@ -235,8 +275,10 @@ public class RXTXRobot
      */
     public final void connect()
     {
-        System.out.println("RXTXRobot API version " + RXTXRobot.API_VERSION);
-        System.out.println("Starting up robot, please wait (typically takes 3 seconds)...");
+        System.setOut(out_stream);
+        System.setErr(error_stream);
+        out_stream.println("RXTXRobot API version " + RXTXRobot.API_VERSION);
+        out_stream.println("Starting up robot, please wait (typically takes 3 seconds)...");
         if (!isConnected())
         {
             try
@@ -276,7 +318,7 @@ public class RXTXRobot
                                 l_in = l_serialPort.getInputStream();
                                 l_out = l_serialPort.getOutputStream();
                             }
-                            System.out.println("Connected...");
+                            out_stream.println("Connected...");
                         }
                 }
             }
@@ -286,7 +328,7 @@ public class RXTXRobot
                 if (verbose)
                 {
                     System.err.println("Error Message: " + e.toString()+"\n\nError StackTrace:\n");
-                    e.printStackTrace(System.err);
+                    e.printStackTrace(error_stream);
                 }
             }
             catch(PortInUseException e)
@@ -295,7 +337,7 @@ public class RXTXRobot
                 if (verbose)
                 {
                     System.err.println("Error Message: " + e.toString()+"\n\nError StackTrace:\n");
-                    e.printStackTrace(System.err);
+                    e.printStackTrace(error_stream);
                 }
             }
             catch(UnsupportedCommOperationException e)
@@ -304,7 +346,7 @@ public class RXTXRobot
                 if (verbose)
                 {
                     System.err.println("Error Message: " + e.toString()+"\n\nError StackTrace:\n");
-                    e.printStackTrace(System.err);
+                    e.printStackTrace(error_stream);
                 }
             }
             catch(InterruptedException e)
@@ -313,7 +355,7 @@ public class RXTXRobot
                 if (verbose)
                 {
                     System.err.println("Error Message: " + e.toString()+"\n\nError StackTrace:\n");
-                    e.printStackTrace(System.err);
+                    e.printStackTrace(error_stream);
                 }
             }
             catch(IOException e)
@@ -322,7 +364,7 @@ public class RXTXRobot
                 if (verbose)
                 {
                     System.err.println("Error Message: " + e.toString()+"\n\nError StackTrace:\n");
-                    e.printStackTrace(System.err);
+                    e.printStackTrace(error_stream);
                 }
             }
         }
@@ -383,7 +425,7 @@ public class RXTXRobot
     private void debug(String s)
     {
         if (verbose)
-            System.out.println("----> " + s);
+            out_stream.println("----> " + s);
     }
     /**
      * 
@@ -431,7 +473,7 @@ public class RXTXRobot
                 if (verbose)
                 {
                     System.err.println("Error Message: " + e.toString()+"\n\nError StackTrace:\n");
-                    e.printStackTrace(System.err);
+                    e.printStackTrace(error_stream);
                 }
             }
         }
@@ -640,7 +682,7 @@ public class RXTXRobot
             if (verbose)
             {
                 System.err.println("Stacktrace: ");
-                e.printStackTrace(System.err);
+                e.printStackTrace(error_stream);
             }
         }
         return ans;
@@ -693,7 +735,7 @@ public class RXTXRobot
             if (verbose)
             {
                 System.err.println("Stacktrace: ");
-                e.printStackTrace(System.err);
+                e.printStackTrace(error_stream);
             }
         }
         return ans;
