@@ -6,6 +6,7 @@ package rxtxrobot_controls;
 import gnu.io.*;
 import java.awt.Color;
 import java.awt.Point;
+import java.awt.event.ActionEvent;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -18,16 +19,18 @@ import rxtxrobot.*;
  *
  * @author raikia
  */
-public class MainWindow extends javax.swing.JFrame {
+public final class MainWindow extends javax.swing.JFrame {
 
     /**
      * Creates new form MainWindow
      */
-    private RXTXRobot main_obj;
+    private Interaction main_obj;
     private static PrintStream outPs;
     private static PrintStream errPs;
     private static Style errStyle;
     private static Style outStyle;
+    private Thread updateSerial;
+    private Thread robotThread;
     public MainWindow() {
         outPs = new PrintStream(System.out)
         {
@@ -69,8 +72,10 @@ public class MainWindow extends javax.swing.JFrame {
         StyleConstants.setForeground(outStyle, Color.green);
         System.setOut(outPs);
         System.setErr(errPs);
-        enableAll(false);
+        //enableAll(false);
         updatePortList(available_ports);
+        updateSerial = new Thread(new Refresh_Serial(this));
+        updateSerial.start();
     }
 
     
@@ -86,12 +91,27 @@ public class MainWindow extends javax.swing.JFrame {
         }
         return list;
     }
+    public void updatePortList()
+    {
+        List<String> list = checkForPorts();
+        updatePortList(list);
+    }
     private void updatePortList(List<String> list)
     {
         port_model.removeAllElements();
         for (int x=0; x < list.size(); ++x)
             port_model.addElement(list.get(x));
     }
+    
+    private void notifyRobot()
+    {
+        synchronized(main_obj)
+        {
+            System.out.println("notified...");
+            main_obj.notify();
+        }
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -719,42 +739,19 @@ public class MainWindow extends javax.swing.JFrame {
             else
             {
                 System.out.println("Connecting to port: " + (String)arduino_port.getSelectedItem());
-                arduino_connect_btn.setText("Connecting...");
-                arduino_connect_btn.setEnabled(false);
-                main_obj = new RXTXRobot((String)arduino_port.getSelectedItem(),true);
-                main_obj.setOutStream(outPs);
-                main_obj.setErrStream(errPs);
-                if (main_obj.isConnected())
-                {
-                    arduino_connect_btn.setText("Disconnect");
-                    arduino_connect_btn.setEnabled(true);
-                    connection_status.setText("Connected");
-                    connection_status.setForeground(new Color(0,190,0));
-                    enableAll(true);
-                }
-                else
-                {
-                    arduino_connect_btn.setText("Connect");
-                    arduino_connect_btn.setEnabled(true);
-                    connection_status.setText("Error");
-                    connection_status.setForeground(new Color(255,0,0));
-                    enableAll(false);
-                }
+                main_obj = new Interaction(this, (String)arduino_port.getSelectedItem(),outPs, errPs);
+                robotThread = new Thread(main_obj);
+                robotThread.start();
             }
         }
         else
         {
-            arduino_connect_btn.setText("Connect");
-            arduino_connect_btn.setEnabled(true);
-            connection_status.setText("Disconnected");
-            connection_status.setForeground(new Color(255,0,0));
-            main_obj.close();
-            main_obj = null;
-            enableAll(false);
+            main_obj.stopRunning();
+            notifyRobot();
         }
     }//GEN-LAST:event_arduino_connect_btn_actionPerformed
 
-    private void enableAll(boolean a)
+    public void enableAll(boolean a)
     {
         m1_btn.setEnabled(a);
         m1_speed.setEnabled(a);
@@ -786,84 +783,76 @@ public class MainWindow extends javax.swing.JFrame {
         if (m1_btn.getText().equalsIgnoreCase("start"))
         {
             m1_btn.setText("Stop");
-            main_obj.runMotor(RXTXRobot.MOTOR3, m1_speed.getValue(),0);
+            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR3, m1_speed.getValue(),0);
         }
         else
         {
             m1_btn.setText("Start");
-            main_obj.runMotor(RXTXRobot.MOTOR3, 0,0);
+            main_obj.execute(Interaction.RUN_MOTOR,RXTXRobot.MOTOR3, 0,0);
         }
+        notifyRobot();
     }//GEN-LAST:event_dc_motor_1_actionPerformed
 
     private void dc_motor_2_actionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dc_motor_2_actionPerformed
         if (m2_btn.getText().equalsIgnoreCase("start"))
         {
             m2_btn.setText("Stop");
-            main_obj.runMotor(RXTXRobot.MOTOR4, m2_speed.getValue(),0);
+            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR4, m2_speed.getValue(),0);
         }
         else
         {
             m2_btn.setText("Start");
-            main_obj.runMotor(RXTXRobot.MOTOR4, 0,0);
+            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR4, 0,0);
         }
+        notifyRobot();
     }//GEN-LAST:event_dc_motor_2_actionPerformed
 
     private void dc_motor_3_actionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dc_motor_3_actionPerformed
         if (m3_btn.getText().equalsIgnoreCase("start"))
         {
             m3_btn.setText("Stop");
-            main_obj.runMotor(RXTXRobot.MOTOR1, m3_speed.getValue(),0);
+            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR1, m3_speed.getValue(),0);
         }
         else
         {
             m3_btn.setText("Start");
-            main_obj.runMotor(RXTXRobot.MOTOR1, 0,0);
+            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR1, 0,0);
         }
+        notifyRobot();
     }//GEN-LAST:event_dc_motor_3_actionPerformed
 
     private void dc_motor_4_actionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dc_motor_4_actionPerformed
         if (m4_btn.getText().equalsIgnoreCase("start"))
         {
             m4_btn.setText("Stop");
-            main_obj.runMotor(RXTXRobot.MOTOR2, m4_speed.getValue(),0);
+            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR2, m4_speed.getValue(),0);
         }
         else
         {
             m4_btn.setText("Start");
-            main_obj.runMotor(RXTXRobot.MOTOR2, 0,0);
+            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR2, 0,0);
         }
+        notifyRobot();
     }//GEN-LAST:event_dc_motor_4_actionPerformed
 
     private void servo_1_actionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_servo_1_actionPerformed
-        main_obj.moveServo(RXTXRobot.SERVO1, servo1_position.getValue());
+        main_obj.execute(Interaction.MOVE_SERVO, RXTXRobot.SERVO1, servo1_position.getValue());
+        notifyRobot();
     }//GEN-LAST:event_servo_1_actionPerformed
 
     private void servo_2_actionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_servo_2_actionPerformed
-        main_obj.moveServo(RXTXRobot.SERVO2, servo2_position.getValue());
+        main_obj.execute(Interaction.MOVE_SERVO, RXTXRobot.SERVO2, servo2_position.getValue());
+        notifyRobot();
     }//GEN-LAST:event_servo_2_actionPerformed
 
     private void analog_read_btn_actionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_analog_read_btn_actionPerformed
-        int[] pins = main_obj.getAnalogPins();
-        String set = "";
-        for (int x=0;x<pins.length;++x)
-        {
-            if (x!=0)
-                set += ", ";
-            set += pins[x];
-        }
-        analog_textbox.setText(set);
+        main_obj.execute(Interaction.READ_ANALOG);
+        notifyRobot();
     }//GEN-LAST:event_analog_read_btn_actionPerformed
 
     private void digital_read_btn_actionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_digital_read_btn_actionPerformed
-        int[] pins = main_obj.getDigitalPins();
-        String set = "";
-        for (int x=0; x < pins.length; ++x)
-        {
-            if (x!=0)
-                set += ", ";
-            set += pins[x];
-        }
-        digital_textbox.setText(set);
+        main_obj.execute(Interaction.READ_DIGITAL);
+        notifyRobot();
     }//GEN-LAST:event_digital_read_btn_actionPerformed
 
     private void start_all_actionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_start_all_actionPerformed
@@ -946,12 +935,12 @@ public class MainWindow extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuItem about_menuitem;
     private javax.swing.JButton analog_read_btn;
-    private javax.swing.JTextField analog_textbox;
-    private javax.swing.JButton arduino_connect_btn;
+    public javax.swing.JTextField analog_textbox;
+    public javax.swing.JButton arduino_connect_btn;
     private javax.swing.JComboBox arduino_port;
-    private javax.swing.JLabel connection_status;
+    public javax.swing.JLabel connection_status;
     private javax.swing.JButton digital_read_btn;
-    private javax.swing.JTextField digital_textbox;
+    public javax.swing.JTextField digital_textbox;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel14;
