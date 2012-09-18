@@ -781,12 +781,12 @@ public final class MainWindow extends javax.swing.JFrame {
         if (m1_btn.getText().equalsIgnoreCase("start"))
         {
             m1_btn.setText("Stop");
-            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR3, m1_speed.getValue(),0);
+            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR1, m1_speed.getValue(),0);
         }
         else
         {
             m1_btn.setText("Start");
-            main_obj.execute(Interaction.RUN_MOTOR,RXTXRobot.MOTOR3, 0,0);
+            main_obj.execute(Interaction.RUN_MOTOR,RXTXRobot.MOTOR1, 0,0);
         }
         notifyRobot();
     }//GEN-LAST:event_dc_motor_1_actionPerformed
@@ -795,12 +795,12 @@ public final class MainWindow extends javax.swing.JFrame {
         if (m2_btn.getText().equalsIgnoreCase("start"))
         {
             m2_btn.setText("Stop");
-            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR4, m2_speed.getValue(),0);
+            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR1, m2_speed.getValue(),0);
         }
         else
         {
             m2_btn.setText("Start");
-            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR4, 0,0);
+            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR1, 0,0);
         }
         notifyRobot();
     }//GEN-LAST:event_dc_motor_2_actionPerformed
@@ -809,12 +809,12 @@ public final class MainWindow extends javax.swing.JFrame {
         if (m3_btn.getText().equalsIgnoreCase("start"))
         {
             m3_btn.setText("Stop");
-            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR1, m3_speed.getValue(),0);
+            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR3, m3_speed.getValue(),0);
         }
         else
         {
             m3_btn.setText("Start");
-            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR1, 0,0);
+            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR3, 0,0);
         }
         notifyRobot();
     }//GEN-LAST:event_dc_motor_3_actionPerformed
@@ -823,12 +823,12 @@ public final class MainWindow extends javax.swing.JFrame {
         if (m4_btn.getText().equalsIgnoreCase("start"))
         {
             m4_btn.setText("Stop");
-            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR2, m4_speed.getValue(),0);
+            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR4, m4_speed.getValue(),0);
         }
         else
         {
             m4_btn.setText("Start");
-            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR2, 0,0);
+            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR4, 0,0);
         }
         notifyRobot();
     }//GEN-LAST:event_dc_motor_4_actionPerformed
