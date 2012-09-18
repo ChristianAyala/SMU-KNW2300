@@ -36,19 +36,19 @@ public class RXTXRobot
     /**
      * Refers to the the M3 DC motor on the Arduino
      */
-    final public static int MOTOR1 = 2;
+    final public static int MOTOR1 = 0;
     /**
      * Refers to the M4 DC motor on the Arduino
      */
-    final public static int MOTOR2 = 3;
+    final public static int MOTOR2 = 1;
     /**
      * Refers to the M2 DC motor on the Arduino
      */
-    final public static int MOTOR3 = 1;
+    final public static int MOTOR3 = 2;
     /**
      * Refers to the M1 DC motor on the Arduino
      */
-    final public static int MOTOR4 = 0;
+    final public static int MOTOR4 = 3;
     /**
      * Refers to the M1/M2 Stepper motor on the Arduino
      */
