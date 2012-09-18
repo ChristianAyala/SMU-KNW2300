@@ -1,32 +1,5 @@
 package rxtxrobot;
 
-/*  RXTXRobot API package
- *   
- *  All the methods in this package are asyncronous, unless otherwise noted.
- * 
- * 
- *   public:
- *     +RXTXRobot(String arduino_port, [String labview_port], [boolean verbose])
- *     +connect()
- *     +isConnected()
- *     +close()
- *     +sendRaw(String str)
- *     +getLastResponse()
- *     +sleep(int length)
- *     +getAnalogPins()
- *     +getDigitalPins()
- *     +setAnalogPin(int pin, int value)
- *     +setDigitalPin(int pin, int value)
- *     +moveServo(int servo, int position)
- *     +moveBothServos(int position_1, int position_2)
- *     +moveStepper(int stepper, int steps)
- *     +runMotor(int motor_1, int speed_1, [int motor_2, int speed_2], [int motor_3, int speed_3, int motor_4, int speed_4], int time)
- * 
- *   private:
- *     -debug(String str)
- */
-
-
 import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
 import gnu.io.NoSuchPortException;
@@ -45,12 +18,13 @@ import java.net.Socket;
 
 /**
  * @author Chris King
- * @version 2.7
+ * @version 2.8
  */
 public class RXTXRobot
 {
     /* Constants - These should not change unless you know what you are doing */
-    final private static String API_VERSION = "2.7";
+    final private static String API_VERSION = "2.8";
+    final private static boolean ONLY_ALLOW_TWO_MOTORS = true;
     /**
      * Refers to the servo motor located in SERVO1
      */
@@ -112,6 +86,9 @@ public class RXTXRobot
     
     private PrintStream error_stream;
     private PrintStream out_stream;
+    private int[] analogPinCache = null;
+    private int[] digitalPinCache = null;
+    private boolean[] motorsRunning = {false, false, false, false};
     /**
      * Accepts the arduino port.
      * 
@@ -195,18 +172,6 @@ public class RXTXRobot
         this.labview_port = labview_port;
         this.verbose = verbose;
         this.stepsPerRotation = -1;
-        setOutStream(System.out);
-        setErrStream(System.err);
-        connectLabView();
-        connect();
-    }
-    // Secret constructor
-    public RXTXRobot(String arduino_port, String labview_port, boolean verbose, int spr)
-    {
-        this.arduino_port = arduino_port;
-        this.labview_port = labview_port;
-        this.verbose = verbose;
-        this.stepsPerRotation = spr;
         setOutStream(System.out);
         setErrStream(System.err);
         connectLabView();
@@ -634,6 +599,66 @@ public class RXTXRobot
             System.err.println("Thread was interrupted (InterruptedException). Error: " + e.toString());
         }
     }
+    
+    /**
+     * Refreshes the analog pin cache from the robot.
+     * 
+     * This must be called to refresh the data of the pins.
+     */
+    public void refreshAnalogPins()
+    {
+        analogPinCache = this.getAnalogPins();
+    }
+    
+    /**
+     * Refreshes the digital pin cache from the robot.
+     * 
+     * This must be called to refresh the data of the pins.
+     */
+    public void refreshDigitalPins()
+    {
+        digitalPinCache = this.getDigitalPins();
+    }
+    
+    /**
+     * Returns an AnalogPin object for the specified pin.
+     * 
+     * This will get the value of the pin since the last time {@link #refreshAnalogPins() refreshAnalogPins()} was called.
+     * 
+     * @param x The number of the pin: 0 &le; x &lt; {@link #NUM_ANALOG_PINS NUM_ANALOG_PINS}
+     * @return AnalogPin object of the specified pin, or null if error.
+     */
+    public AnalogPin getAnalogPin(int x)
+    {
+        if (analogPinCache == null)
+            this.refreshAnalogPins();
+        if (x >= analogPinCache.length || x < 0)
+        {
+            System.err.println("ERROR: Analog pin " + x + " doesn't exist.");
+            return null;
+        }
+        return new AnalogPin(this, x, analogPinCache[x]);
+    }
+    
+    /**
+     * Returns a DigitalPin object for the specified pin.
+     * 
+     * This will get the value of the pin since the last time {@link #refreshDigitalPins() refreshDigitalPins()} was called.
+     * 
+     * @param x The number of the pin: 0 &le; x &lt; {@link #NUM_DIGITAL_PINS NUM_DIGITAL_PINS}
+     * @return DigitalPin object of the specified pin, or null if error.
+     */
+    public DigitalPin getDigitalPin(int x)
+    {
+        if (digitalPinCache == null)
+            this.refreshDigitalPins();
+        if (x >= digitalPinCache.length || x < 0)
+        {
+            System.err.println("ERROR: Digitial pin " + x + " doesn't exist.");
+            return null;
+        }
+        return new DigitalPin(this, x, digitalPinCache[x]);
+    }
     /**
      * 
      * Returns the 6 analog pins from the Arduino in an Integer array. <br /><br />
@@ -872,6 +897,20 @@ public class RXTXRobot
      */
     public void runMotor(int motor, int speed, int time)
     {
+        if (RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
+        {
+            boolean prev = motorsRunning[motor];
+            if (speed == 0)
+                motorsRunning[motor] = false;
+            else
+                motorsRunning[motor] = true;
+
+            if (!checkRunningMotors())
+            {
+                motorsRunning[motor] = prev;
+                return;
+            }
+        }
         if (time < 0)
         {
             System.err.println("ERROR: runMotor was not given a time that is >=0");
@@ -886,6 +925,8 @@ public class RXTXRobot
         sendRaw("d " + motor + " "  + speed + " " + time);
         if (errorFlag == 0)
             sleep(time);
+        if (time != 0)
+            motorsRunning[motor] = false;
     }
     /**
      * 
@@ -911,6 +952,27 @@ public class RXTXRobot
      */
     public void runMotor(int motor1, int speed1, int motor2, int speed2, int time)
     {
+        if (RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
+        {
+            boolean prev1 = motorsRunning[motor1];
+            boolean prev2 = motorsRunning[motor2];
+            if (speed1 == 0)
+                motorsRunning[motor1] = false;
+            else
+                motorsRunning[motor1] = true;
+            
+            if (speed2 == 0)
+                motorsRunning[motor2] = false;
+            else
+                motorsRunning[motor2] = true;
+            
+            if (!checkRunningMotors())
+            {
+                motorsRunning[motor1] = prev1;
+                motorsRunning[motor2] = prev2;
+                return;
+            }
+        }
         if (time < 0)
         {
             System.err.println("ERROR: runMotor was not given a time that is >=0");
@@ -925,6 +987,11 @@ public class RXTXRobot
         sendRaw("D " + motor1 + " " + speed1 +" " + motor2 + " " + speed2 + " " + time);
         if (errorFlag == 0)
             sleep(time);
+        if (time != 0)
+        {
+            motorsRunning[motor1] = false;
+            motorsRunning[motor2] = false;
+        }
     }
     /**
      * 
@@ -954,6 +1021,11 @@ public class RXTXRobot
      */
     public void runMotor(int motor1, int speed1, int motor2, int speed2, int motor3, int speed3, int motor4, int speed4, int time)
     {
+        if (RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
+        {
+            System.err.println("ERROR: You may only run two DC motors at a time, so you cannot use this method!");
+            return;
+        }
         if (time < 0)
         {
             System.err.println("ERROR: runMotor was not given a time that is >=0");
@@ -968,5 +1040,20 @@ public class RXTXRobot
         sendRaw("F " + motor1 + " " + speed1 +" " + motor2 + " " + speed2 + " " + motor3 + " " + speed3 + " " + motor4 + " " + speed4 + " " + time);
         if (errorFlag == 0)
             sleep(time);
+    }
+    
+    /* This method just checks to make sure that only two DC motors are running */
+    private boolean checkRunningMotors()
+    {
+        int num = 0;
+        for (int x=0; x < motorsRunning.length; ++x)
+            if (motorsRunning[x])
+                ++num;
+        if (num > 2)
+        {
+            System.err.println("ERROR: You may not run more than two motors at any given time!");
+            return false;
+        }
+        return true;
     }
 }
