@@ -18,12 +18,12 @@ import java.net.Socket;
 
 /**
  * @author Chris King
- * @version 2.8
+ * @version 2.8.1
  */
 public class RXTXRobot
 {
     /* Constants - These should not change unless you know what you are doing */
-    final private static String API_VERSION = "2.8";
+    final private static String API_VERSION = "2.8.1";
     final private static boolean ONLY_ALLOW_TWO_MOTORS = true;
     /**
      * Refers to the servo motor located in SERVO1
@@ -223,6 +223,17 @@ public class RXTXRobot
     {
         error_stream = e;
     }
+    
+    /**
+     * Gets the version number of the API.
+     * 
+     * @return A string with the version number
+     */
+    public String getVersion()
+    {
+        return RXTXRobot.API_VERSION;
+    }
+    
     /**
      * 
      * Attempts to connect to the Arduino/XBee and the LabView/XBee.
