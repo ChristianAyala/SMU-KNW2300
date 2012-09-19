@@ -856,37 +856,40 @@ public final class MainWindow extends javax.swing.JFrame {
     }//GEN-LAST:event_digital_read_btn_actionPerformed
 
     private void start_all_actionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_start_all_actionPerformed
-        m1_btn.setText("Start");
-        m2_btn.setText("Start");
-        m3_btn.setText("Start");
-        m4_btn.setText("Start");
-        dc_motor_1_actionPerformed(null);
-        dc_motor_2_actionPerformed(null);
-        dc_motor_3_actionPerformed(null);
-        dc_motor_4_actionPerformed(null);
-        servo_1_actionPerformed(null);
-        servo_2_actionPerformed(null);
+        m1_btn.setText("Stop");
+        main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR1, m1_speed.getValue(),0);
+        m2_btn.setText("Stop");
+        main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR2, m2_speed.getValue(),0);
+        m3_btn.setText("Stop");
+        main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR3, m3_speed.getValue(),0);
+        m4_btn.setText("Stop");
+        main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR4, m4_speed.getValue(),0);
+        main_obj.execute(Interaction.MOVE_SERVO, RXTXRobot.SERVO1, servo1_position.getValue());
+        main_obj.execute(Interaction.MOVE_SERVO, RXTXRobot.SERVO2, servo2_position.getValue());
+        notifyRobot();
     }//GEN-LAST:event_start_all_actionPerformed
 
     private void reset_all_actionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_reset_all_actionPerformed
-        m1_btn.setText("Stop");
-        m2_btn.setText("Stop");
-        m3_btn.setText("Stop");
-        m4_btn.setText("Stop");
-        dc_motor_1_actionPerformed(null);
-        dc_motor_2_actionPerformed(null);
-        dc_motor_3_actionPerformed(null);
-        dc_motor_4_actionPerformed(null);
+        
+        m1_btn.setText("Start");
+        main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR1, 0,0);
+        m2_btn.setText("Start");
+        main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR2, 0,0);
+        m3_btn.setText("Start");
+        main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR3, 0,0);
+        m4_btn.setText("Start");
+        main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR4, 0,0);
         m1_speed.setValue(0);
         m2_speed.setValue(0);
         m3_speed.setValue(0);
         m4_speed.setValue(0);
         servo1_position.setValue(90);
         servo2_position.setValue(90);
-        servo_1_actionPerformed(null);
-        servo_2_actionPerformed(null);
+        main_obj.execute(Interaction.MOVE_SERVO, RXTXRobot.SERVO1, 90);
+        main_obj.execute(Interaction.MOVE_SERVO, RXTXRobot.SERVO2, 90);
         analog_textbox.setText("N/A");
         digital_textbox.setText("N/A");
+        notifyRobot();
     }//GEN-LAST:event_reset_all_actionPerformed
 
     private void about_menuitem_actionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_about_menuitem_actionPerformed
