@@ -106,7 +106,6 @@ public final class MainWindow extends javax.swing.JFrame {
     {
         synchronized(main_obj)
         {
-            System.out.println("notified...");
             main_obj.notify();
         }
     }
@@ -739,6 +738,8 @@ public final class MainWindow extends javax.swing.JFrame {
                 System.out.println("Connecting to port: " + (String)arduino_port.getSelectedItem());
                 main_obj = new Interaction(this, (String)arduino_port.getSelectedItem(),outPs, errPs);
                 robotThread = new Thread(main_obj);
+                updateSerial.stop();
+                updateSerial = new Thread(new Refresh_Serial(this));
                 robotThread.start();
             }
         }
@@ -746,6 +747,7 @@ public final class MainWindow extends javax.swing.JFrame {
         {
             main_obj.stopRunning();
             notifyRobot();
+            updateSerial.start();
         }
     }//GEN-LAST:event_arduino_connect_btn_actionPerformed
 

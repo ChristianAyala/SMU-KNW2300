@@ -3,32 +3,29 @@ package rxtxrobot_controls;
 import java.awt.Color;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import rxtxrobot.RXTXRobot;
 
-public class Interaction implements Runnable
+public final class Interaction implements Runnable
 {
     public static final int RUN_MOTOR = 1;
     public static final int MOVE_SERVO = 2;
     public static final int MOVE_BOTH_SERVOS = 5;
     public static final int READ_ANALOG = 3;
     public static final int READ_DIGITAL = 4;
-    RXTXRobot robot;
+    private RXTXRobot robot;
     private boolean running;
     private String port;
     private PrintStream out;
     private PrintStream err;
-    //private int[] execArgs;
     private ArrayList<int[]> execArgs;
-    private MainWindow parent;
+    private MainWindow parent;    
     public Interaction(MainWindow par, String p, PrintStream out, PrintStream err)
     {
         parent = par;
         port = p;
         this.out = out;
         this.err = err;
-        execArgs = null;
+        execArgs = new ArrayList();
     }
     
     @Override
@@ -40,13 +37,13 @@ public class Interaction implements Runnable
         {
             synchronized(this)
             {
-
-                    if (execArgs.isEmpty())
-                        try {
-                            System.out.println("waiting...");
+                if (execArgs.isEmpty())
+                try
+                {
                     this.wait();
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(Interaction.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                catch (InterruptedException ex)
+                {
                 }
 
                 if (!execArgs.isEmpty())
@@ -106,7 +103,9 @@ public class Interaction implements Runnable
     }
     private void connect()
     {
-        parent.arduino_connect_btn.setText("Connecting...");
+        parent.arduino_connect_btn.setText("Connecting");
+        parent.connection_status.setText("Connecting...");
+        parent.connection_status.setForeground(new Color(0,0,0));
         parent.arduino_connect_btn.setEnabled(false);
         robot = new RXTXRobot(port,true);
         robot.setErrStream(err);
