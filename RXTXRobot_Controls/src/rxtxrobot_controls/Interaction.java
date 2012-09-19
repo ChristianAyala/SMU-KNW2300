@@ -25,7 +25,7 @@ public final class Interaction implements Runnable
         port = p;
         this.out = out;
         this.err = err;
-        execArgs = new ArrayList();
+        execArgs = new ArrayList<int[]>();
     }
     
     @Override
