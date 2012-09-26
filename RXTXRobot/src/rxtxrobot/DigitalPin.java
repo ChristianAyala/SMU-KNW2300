@@ -2,7 +2,7 @@ package rxtxrobot;
 
 /**
  * @author Chris King
- * @version 2.8
+ * @version 2.9
  */
 public class DigitalPin
 {
@@ -28,15 +28,5 @@ public class DigitalPin
     public int getValue()
     {
         return pinVal;
-    }
-    /**
-     * Set the value of the pin.
-     * 
-     * This actually sends the command to the robot to set the value of the pin.
-     * @param x The value to set the pin to.
-     */
-    public void setValue(int x)
-    {
-        parent.setDigitalPin(pinNum, x);
     }
 }
