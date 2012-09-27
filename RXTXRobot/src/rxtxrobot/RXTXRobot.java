@@ -656,7 +656,7 @@ public class RXTXRobot
      * 
      * This will get the value of the pin since the last time {@link #refreshDigitalPins() refreshDigitalPins()} was called.
      * 
-     * @param x The number of the pin: 0 &le; x &lt; {@link #NUM_DIGITAL_PINS NUM_DIGITAL_PINS}
+     * @param x The number of the pin: 2, 4, 7, 8, 12, or 13
      * @return DigitalPin object of the specified pin, or null if error.
      */
     public DigitalPin getDigitalPin(int x)
