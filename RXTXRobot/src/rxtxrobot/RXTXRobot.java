@@ -18,12 +18,12 @@ import java.net.Socket;
 
 /**
  * @author Chris King
- * @version 2.9
+ * @version 2.8.1
  */
 public class RXTXRobot
 {
     /* Constants - These should not change unless you know what you are doing */
-    final private static String API_VERSION = "2.9";
+    final private static String API_VERSION = "2.8.1";
     final private static boolean ONLY_ALLOW_TWO_MOTORS = true;
     /**
      * Refers to the servo motor located in SERVO1
@@ -398,7 +398,7 @@ public class RXTXRobot
      * 
      * @param s message passed to debug
      */
-    public void debug(String s)
+    private void debug(String s)
     {
         if (verbose)
             out_stream.println("----> " + s);
@@ -616,9 +616,9 @@ public class RXTXRobot
      * 
      * This must be called to refresh the data of the pins.
      */
-    public void refreshAnalogInputPins()
+    public void refreshAnalogPins()
     {
-        analogPinCache = this.getAnalogInputPins();
+        analogPinCache = this.getAnalogPins();
     }
     
     /**
@@ -631,62 +631,45 @@ public class RXTXRobot
         digitalPinCache = this.getDigitalPins();
     }
     
-    
     /**
-     * Returns an AnalogInputPin object for the specified pin.
+     * Returns an AnalogPin object for the specified pin.
      * 
-     * This will get the value of the pin since the last time {@link #refreshAnalogInputPins() refreshAnalogInputPins()} was called.
+     * This will get the value of the pin since the last time {@link #refreshAnalogPins() refreshAnalogPins()} was called.
      * 
      * @param x The number of the pin: 0 &le; x &lt; {@link #NUM_ANALOG_PINS NUM_ANALOG_PINS}
-     * @return {@link AnalogInputPin AnalogInputPin} object of the specified pin, or null if error.
+     * @return AnalogPin object of the specified pin, or null if error.
      */
-    public AnalogInputPin getAnalogInputPin(int x)
+    public AnalogPin getAnalogPin(int x)
     {
         if (analogPinCache == null)
-            this.refreshAnalogInputPins();
+            this.refreshAnalogPins();
         if (x >= analogPinCache.length || x < 0)
         {
             System.err.println("ERROR: Analog pin " + x + " doesn't exist.");
             return null;
         }
-        return new AnalogInputPin(this, x, analogPinCache[x]);
+        return new AnalogPin(this, x, analogPinCache[x]);
     }
     
     /**
-     * Returns an AnalogOutputPin object for the specified output pin.
-     * 
-     * This returns an object of the pins that you can write to.  This <b>ONLY</b> works for &quot;Digital Pins&quot; 3, 5, 6, 9, 10, and 11.
-     * 
-     * @param x The pin number.  It must be 3, 5, 6, 9, 10, or 11
-     * @return An {@link AnalogOutputPin AnalogOutputPin} object for the specified pin.
-     */
-    public AnalogOutputPin getAnalogOutputPin(int x)
-    {
-        if (x == 3 || x == 5 || x == 6 || x == 9 || x == 10 || x == 11)
-            return new AnalogOutputPin(this, x);
-        System.err.println("ERROR: You may only get the AnalogOutputPin on pins 3, 5, 6, 9, 10, or 11");
-        return null;
-    }
-    
-    /**
-     * Returns a DigitalPin object for the specified output pin.
+     * Returns a DigitalPin object for the specified pin.
      * 
      * This will get the value of the pin since the last time {@link #refreshDigitalPins() refreshDigitalPins()} was called.
-     * This returns an object of the digital pin that you can read.  This <b>ONLY</b> works for &quot;Digital Pins&quot; 2, 4, 7, 8, 12, or 13.
      * 
-     * @param x The pin number.  It must be 2, 4, 7, 8, 12, or 13
-     * @return An {@link DigitalPin DigitalPin} object for the specified pin.
+     * @param x The number of the pin: 0 &le; x &lt; {@link #NUM_DIGITAL_PINS NUM_DIGITAL_PINS}
+     * @return DigitalPin object of the specified pin, or null if error.
      */
     public DigitalPin getDigitalPin(int x)
     {
         if (digitalPinCache == null)
             this.refreshDigitalPins();
-        if (x == 2 || x == 4 || x == 7 || x == 8 || x == 12 || x == 13)
-            return new DigitalPin(this, x, digitalPinCache[x]);
-        System.err.println("ERROR: You may only get the AnalogOutputPin on pins 2, 4, 7, 8, 12, or 13");
-        return null;
+        if (x >= digitalPinCache.length || x < 0)
+        {
+            System.err.println("ERROR: Digitial pin " + x + " doesn't exist.");
+            return null;
+        }
+        return new DigitalPin(this, x, digitalPinCache[x]);
     }
-    
     /**
      * 
      * Returns the 6 analog pins from the Arduino in an Integer array. <br /><br />
@@ -697,7 +680,7 @@ public class RXTXRobot
      * 
      * @return Integer array of size {@link #NUM_ANALOG_PINS RXTXRobot.NUM_ANALOG_PINS} filled with the Analog pin's value (or -1 on error).
      */
-    private int[] getAnalogInputPins()
+    public int[] getAnalogPins()
     {
         int[] ans = new int[RXTXRobot.NUM_ANALOG_PINS];
         for (int x=0;x<ans.length;++x)
@@ -708,12 +691,12 @@ public class RXTXRobot
             String[] split = this.getLastResponse().split("\\s+");
             if (split.length <= 1)
             {
-                System.err.println("getAnalogInputPins() - No response was received from the Arduino.  Try again");
+                System.err.println("getAnalogPins() - No response was received from the Arduino.  Try again");
                 return ans;
             }
             if (split.length-1 != RXTXRobot.NUM_ANALOG_PINS)
             {
-                System.err.println("getAnalogInputPins() - Incorrect length returned: " + split.length);
+                System.err.println("getAnalogPins() - Incorrect length returned: " + split.length);
                 if (verbose)
                     for (int x=0;x<split.length;++x)
                         System.err.println("["+x+"] = " + split[x]);
@@ -727,11 +710,11 @@ public class RXTXRobot
         }
         catch (NumberFormatException e)
         {
-            System.err.println("getAnalogInputPins() - Returned string could not be parsed into Integers");
+            System.err.println("getAnalogPins() - Returned string could not be parsed into Integers");
         }
         catch (Exception e)
         {
-            System.err.println("An error occurred with getAnalogInputPins.");
+            System.err.println("An error occurred with getAnalogPins.");
             if (verbose)
             {
                 System.err.println("Stacktrace: ");
@@ -740,7 +723,6 @@ public class RXTXRobot
         }
         return ans;
     }
-    
     /**
      * 
      * Returns the 12 digital pins from the Arduino in an Integer array. <br /><br />
@@ -751,7 +733,7 @@ public class RXTXRobot
      * 
      * @return Integer array of size {@link #NUM_DIGITAL_PINS RXTXRobot.NUM_DIGITAL_PINS} filled with the Digital pin's value (or -1 on error)
      */
-    private int[] getDigitalPins()
+    public int[] getDigitalPins()
     {
         int[] ans = new int[RXTXRobot.NUM_DIGITAL_PINS];
         for (int x=0;x<ans.length;++x)
@@ -794,7 +776,36 @@ public class RXTXRobot
         }
         return ans;
     }
-    
+    /**
+     * 
+     * Sets the value of the specified analog pin.
+     * 
+     * Sets the specified analog pin to the specified value.
+     * <br /><br /><b>Index must be: 0 &le; index &lt; {@link #NUM_ANALOG_PINS RXTXRobot.NUM_ANALOG_PINS}</b>
+     * 
+     * @param pin The analog pin number to set.
+     * @param value The value that you would like to set the pin to.
+     */
+    public void setAnalogPin(int pin, int value)
+    {
+        debug("Setting Analog Pin " + pin + " to " + value);
+        sendRaw("w a " + pin + " " + value);
+    }
+    /**
+     * 
+     * Sets the value of the digital pin.
+     * 
+     * Sets the specified digital pin to the specified value.
+     * <br /><br /><b>Index must be: 0 &le; index &lt; {@link #NUM_DIGITAL_PINS RXTXRobot.NUM_DIGITAL_PINS}</b>
+     * 
+     * @param pin The analog pin number to set.
+     * @param value The value that you would like to set the pin to.
+     */
+    public void setDigitalPin(int pin, int value)
+    {
+        debug("Setting Digital Pin " + pin + " to " + value);
+        sendRaw("w d " + pin + " " + value);
+    }
     /**
      * 
      * Moves the specified servo to the specified angular position.
@@ -897,11 +908,6 @@ public class RXTXRobot
      */
     public void runMotor(int motor, int speed, int time)
     {
-        if (speed < 0 || speed > 255)
-        {
-            System.err.println("ERROR: The speed for runMotor must be between 0 and 255 (inclusive)");
-            return;
-        }
         if (RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
         {
             boolean prev = motorsRunning[motor];
@@ -957,11 +963,6 @@ public class RXTXRobot
      */
     public void runMotor(int motor1, int speed1, int motor2, int speed2, int time)
     {
-        if (speed1 < 0 || speed1 > 255 || speed2 < 0 || speed2 > 255)
-        {
-            System.err.println("ERROR: The speed for runMotor must be between 0 and 255 (inclusive)");
-            return;
-        }
         if (RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
         {
             boolean prev1 = motorsRunning[motor1];
@@ -1034,11 +1035,6 @@ public class RXTXRobot
         if (RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
         {
             System.err.println("ERROR: You may only run two DC motors at a time, so you cannot use this method!");
-            return;
-        }
-        if (speed1 < 0 || speed1 > 255 || speed2 < 0 || speed2 > 255 || speed3 < 0 || speed3 > 255 || speed4 < 0 || speed4 > 255)
-        {
-            System.err.println("ERROR: The speed for runMotor must be between 0 and 255 (inclusive)");
             return;
         }
         if (time < 0)
