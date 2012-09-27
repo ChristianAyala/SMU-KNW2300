@@ -671,11 +671,6 @@ public class RXTXRobot
                                  {13,5}};
         if (digitalPinCache == null)
             this.refreshDigitalPins();
-        if (x > 13 || x < 0)
-        {
-            System.err.println("ERROR: Digitial pin " + x + " doesn't exist.");
-            return null;
-        }
         int get_pin = -1;
         for (int y=0;y<mapping.length;++y)
         {
