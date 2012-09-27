@@ -2,7 +2,7 @@ package rxtxrobot;
 
 /**
  * @author Chris King
- * @version 2.8
+ * @version 2.9
  */
 public class AnalogPin
 {
