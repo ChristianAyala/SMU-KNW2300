@@ -56,7 +56,7 @@ public class RXTXRobot
     /**
      * The maximum number of digital pins that can be read from the Arduino (0&nbsp;&le;&nbsp;pins&nbsp;&lt;&nbsp;NUM_DIGITAL_PINS)
      */
-    final public static int NUM_DIGITAL_PINS = 12;
+    final public static int NUM_DIGITAL_PINS = 6;
     /**
      * The maximum number of analog pins that can be read from the Arduino (0&nbsp;&le;&nbsp;pins&nbsp;&lt;&nbsp;NUM_ANALOG_PINS)
      */
@@ -661,14 +661,36 @@ public class RXTXRobot
      */
     public DigitalPin getDigitalPin(int x)
     {
+        // Mapping is an array to match the pin number to the actual returned array from the Arduino:
+        //      pin_number, location_array
+        final int[][] mapping = {{2, 0},
+                                 {4,1},
+                                 {7,2},
+                                 {8,3},
+                                 {12,4},
+                                 {13,5}};
         if (digitalPinCache == null)
             this.refreshDigitalPins();
-        if (x >= digitalPinCache.length || x < 0)
+        if (x > 13 || x < 0)
         {
             System.err.println("ERROR: Digitial pin " + x + " doesn't exist.");
             return null;
         }
-        return new DigitalPin(this, x, digitalPinCache[x]);
+        int get_pin = -1;
+        for (int y=0;y<mapping.length;++y)
+        {
+            if (mapping[y][0] == x)
+            {
+                get_pin = mapping[y][1];
+                break;
+            }
+        }
+        if (get_pin == -1)
+        {
+            System.err.append("You may not read from pin " + x + ".  You can only read from pin 2, 4, 7, 8, 12, or 13");
+            return null;
+        }
+        return new DigitalPin(this, x, digitalPinCache[get_pin]);
     }
     /**
      * 

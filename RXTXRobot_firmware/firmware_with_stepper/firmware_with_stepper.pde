@@ -271,9 +271,14 @@ void readpins(){ // Read pins (analog or digital)
     case 'd': // READ digital pins
 
     messageSendChar('d');  // Echo what is being read
-    for (char i=2;i<14;i++) {
-      messageSendInt(digitalRead(i)); // Read pins 2 to 13
-    }
+
+    // We are only reading these pins because the other pins deal with the motors and shut off the motors if they are read.
+    messageSendInt(digitalRead(2));
+    messageSendInt(digitalRead(4));
+    messageSendInt(digitalRead(7));
+    messageSendInt(digitalRead(8));
+    messageSendInt(digitalRead(12));
+    messageSendInt(digitalRead(13));
     messageEnd(); // Terminate the message being sent
     break; // Break from the switch
 
