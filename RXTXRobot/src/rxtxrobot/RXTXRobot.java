@@ -862,7 +862,7 @@ public class RXTXRobot
      * 
      * Runs a DC motor at a specific speed for a specific time. (<b>Potential blocking method</b>)
      *   
-     * Accepts a DC motor, either {@link #MOTOR1 RXTXRobot.MOTOR1} or {@link #MOTOR2 RXTXRobot.MOTOR2}, the speed 
+     * Accepts a DC motor, either {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}, the speed 
      * that the motor should run at (0 - 255), and the time with which the motor should run (in milliseconds).
      * <br /><br />
      * If speed is negative, the motor will run in reverse.
@@ -873,7 +873,7 @@ public class RXTXRobot
      * 
      * <b>Note: This method is a blocking method <u>unless</u> time = 0</b>
      * 
-     * @param motor The DC motor you want to run: {@link #MOTOR1 RXTXRobot.MOTOR1} or {@link #MOTOR2 RXTXRobot.MOTOR2}
+     * @param motor The DC motor you want to run: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
      * @param speed The speed that the motor should run at (0 - 255)
      * @param time The number of milliseconds the motor should run (0 for infinite)
      */
@@ -919,7 +919,7 @@ public class RXTXRobot
      * 
      * Runs both DC motors at different speeds for the same amount of time. (<b>Potential blocking method</b>)
      *   
-     * Accepts a DC motor, either {@link #MOTOR1 RXTXRobot.MOTOR1} or {@link #MOTOR2 RXTXRobot.MOTOR2}, the speed 
+     * Accepts a DC motor, either {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}, the speed 
      * in which that motor should run (0 - 255), accepts another DC motor, the speed in which
      * that motor should run, and the time with which both motors should run (in milliseconds).
      * <br /><br />
@@ -931,9 +931,9 @@ public class RXTXRobot
      * 
      * <b>Note: This method is a blocking method <u>unless</u> time = 0</b>
      * 
-     * @param motor1 The first DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1} or {@link #MOTOR2 RXTXRobot.MOTOR2}
+     * @param motor1 The first DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
      * @param speed1 The speed that the first DC motor should run at
-     * @param motor2 The second DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1} or {@link #MOTOR2 RXTXRobot.MOTOR2}
+     * @param motor2 The second DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
      * @param speed2 The speed that the second DC motor should run at
      * @param time The amount of time that the DC motors should run
      */
@@ -1001,13 +1001,13 @@ public class RXTXRobot
      * 
      * <b>Note: This method is a blocking method <u>unless</u> time = 0</b>
      * 
-     * @param motor1 The first DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1} or {@link #MOTOR2 RXTXRobot.MOTOR2} or {@link #MOTOR3 RXTXRobot.MOTOR3} or {@link #MOTOR4 RXTXRobot.MOTOR4}
+     * @param motor1 The first DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
      * @param speed1 The speed that the first DC motor should run at
-     * @param motor2 The second DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1} or {@link #MOTOR2 RXTXRobot.MOTOR2} or {@link #MOTOR3 RXTXRobot.MOTOR3} or {@link #MOTOR4 RXTXRobot.MOTOR4}
+     * @param motor2 The second DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
      * @param speed2 The speed that the second DC motor should run at
-     * @param motor3 The third DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1} or {@link #MOTOR2 RXTXRobot.MOTOR2} or {@link #MOTOR3 RXTXRobot.MOTOR3} or {@link #MOTOR4 RXTXRobot.MOTOR4}
+     * @param motor3 The third DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
      * @param speed3 The speed that the third DC motor should run at
-     * @param motor4 The fourth DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1} or {@link #MOTOR2 RXTXRobot.MOTOR2} or {@link #MOTOR3 RXTXRobot.MOTOR3} or {@link #MOTOR4 RXTXRobot.MOTOR4}
+     * @param motor4 The fourth DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
      * @param speed4 The speed that the fourth DC motor should run at
      * @param time The amount of time that the DC motors should run
      */
@@ -1053,4 +1053,58 @@ public class RXTXRobot
         }
         return true;
     }
+    
+    /**
+     * 
+     * Runs the small, mixing motor for a specific time. (<b>Potential blocking method</b>)
+     *   
+     * Accepts a motor location ({@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}), and the time with which the motor should run (in milliseconds).
+     * <br /><br />
+     * If time is 0, the motor will run infinitely until a call to {@link #stopMixer(int) stopMixer}, even if the Java program terminates.
+     * 
+     * <br /><br />An error message will display on error.<br /><br />
+     * 
+     * <b>Note: This method is a blocking method <u>unless</u> time = 0</b>
+     * 
+     * @param motor The motor that the mixer is on: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
+     * @param time The number of milliseconds the motor should run (0 for infinite)
+     */
+    public void runMixer(int motor, int time)
+    {
+        final int MIXER_SPEED = 25;
+        if (motor != RXTXRobot.MOTOR1 && motor != RXTXRobot.MOTOR2 && motor != RXTXRobot.MOTOR3 && motor != RXTXRobot.MOTOR4)
+        {
+            System.err.println("ERROR: You must supply a valid motor port: RXTXRobot.MOTOR1, MOTOR2, MOTOR3, or MOTOR4.");
+            return;
+        }
+        if (time < 0)
+        {
+            System.err.println("ERROR: You must supply a positive time.");
+            return;
+        }
+        debug("Running mixer on port " + motor + " at speed " + MIXER_SPEED + " for time of " + time);
+        sendRaw("d " + motor + " "  + MIXER_SPEED + " " + time);
+        if (errorFlag == 0)
+            sleep(time);
+    }
+    
+    /**
+     * 
+     * Stops the small, mixing motor if it is currently running.
+     * 
+     * This method should be called if {@link #runMixer(int) runMixer} was called with a time of 0.  This method will stop the mixer.
+     * 
+     * @param motor The motor that the mixer is on: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
+     */
+    public void stopMixer(int motor)
+    {
+        if (motor != RXTXRobot.MOTOR1 && motor != RXTXRobot.MOTOR2 && motor != RXTXRobot.MOTOR3 && motor != RXTXRobot.MOTOR4)
+        {
+            System.err.println("ERROR: You must supply a valid motor port: RXTXRobot.MOTOR1, MOTOR2, MOTOR3, or MOTOR4.");
+            return;
+        }
+        debug("Stopping mixer on port " + motor);
+        sendRaw("d " + motor + " 0 0");
+    }
 }
+
