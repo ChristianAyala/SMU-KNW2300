@@ -29,14 +29,4 @@ public class AnalogPin
     {
         return pinVal;
     }
-    /**
-     * Set the value of the pin.
-     * 
-     * This actually sends the command to the robot to set the value of the pin.
-     * @param x The value to set the pin to.
-     */
-    public void setValue(int x)
-    {
-        parent.setAnalogPin(pinNum, x);
-    }
 }

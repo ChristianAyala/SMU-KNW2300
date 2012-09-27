@@ -908,6 +908,11 @@ public class RXTXRobot
      */
     public void runMotor(int motor, int speed, int time)
     {
+        if (speed < 0 || speed > 255)
+        {
+            System.err.println("ERROR: You must give the motors a speed between 0 and 255 (inclusive)");
+            return;
+        }
         if (RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
         {
             boolean prev = motorsRunning[motor];
@@ -963,6 +968,11 @@ public class RXTXRobot
      */
     public void runMotor(int motor1, int speed1, int motor2, int speed2, int time)
     {
+        if (speed1 < 0 || speed1 > 255 || speed2 < 0 || speed2 > 255)
+        {
+            System.err.println("ERROR: You must give the motors a speed between 0 and 255 (inclusive)");
+            return;
+        }
         if (RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
         {
             boolean prev1 = motorsRunning[motor1];
@@ -1032,6 +1042,11 @@ public class RXTXRobot
      */
     public void runMotor(int motor1, int speed1, int motor2, int speed2, int motor3, int speed3, int motor4, int speed4, int time)
     {
+        if (speed1 < 0 || speed1 > 255 || speed2 < 0 || speed2 > 255 || speed3 < 0 || speed3 > 255 || speed4 < 0 || speed4 > 255)
+        {
+            System.err.println("ERROR: You must give the motors a speed between 0 and 255 (inclusive)");
+            return;
+        }
         if (RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
         {
             System.err.println("ERROR: You may only run two DC motors at a time, so you cannot use this method!");
