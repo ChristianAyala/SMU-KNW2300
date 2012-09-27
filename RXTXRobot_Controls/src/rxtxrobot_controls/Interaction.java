@@ -3,6 +3,7 @@ package rxtxrobot_controls;
 import java.awt.Color;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import rxtxrobot.AnalogPin;
 import rxtxrobot.RXTXRobot;
 
 public final class Interaction implements Runnable
@@ -63,25 +64,19 @@ public final class Interaction implements Runnable
                                 robot.runMotor(exec[1],exec[2], exec[3]);
                                 break;
                             case Interaction.READ_ANALOG:
-                                int[] pins = robot.getAnalogPins();
+                                robot.refreshAnalogPins();
                                 String set = "";
-                                for (int x=0;x<pins.length;++x)
+                                for (int x=0;x < RXTXRobot.NUM_ANALOG_PINS;++x)
                                 {
-                                    if (x!=0)
+                                    if (x != 0)
                                         set += ", ";
-                                    set += pins[x];
+                                    set += robot.getAnalogPin(x).getValue();
                                 }
                                 parent.analog_textbox.setText(set);
                                 break;
                             case Interaction.READ_DIGITAL:
-                                int[] pins1 = robot.getDigitalPins();
-                                String set1 = "";
-                                for (int x=0; x < pins1.length; ++x)
-                                {
-                                    if (x!=0)
-                                        set1 += ", ";
-                                    set1 += pins1[x];
-                                }
+                                robot.refreshDigitalPins();
+                                String set1 = robot.getDigitalPin(2).getValue() + ", " + robot.getDigitalPin(4).getValue() + ", " + robot.getDigitalPin(7).getValue() + ", " + robot.getDigitalPin(8).getValue() + ", " + robot.getDigitalPin(12).getValue() + ", " + robot.getDigitalPin(13).getValue();
                                 parent.digital_textbox.setText(set1);
                                 break;
                             default:
