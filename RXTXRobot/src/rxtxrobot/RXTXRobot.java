@@ -680,7 +680,7 @@ public class RXTXRobot
      * 
      * @return Integer array of size {@link #NUM_ANALOG_PINS RXTXRobot.NUM_ANALOG_PINS} filled with the Analog pin's value (or -1 on error).
      */
-    public int[] getAnalogPins()
+    private int[] getAnalogPins()
     {
         int[] ans = new int[RXTXRobot.NUM_ANALOG_PINS];
         for (int x=0;x<ans.length;++x)
@@ -733,7 +733,7 @@ public class RXTXRobot
      * 
      * @return Integer array of size {@link #NUM_DIGITAL_PINS RXTXRobot.NUM_DIGITAL_PINS} filled with the Digital pin's value (or -1 on error)
      */
-    public int[] getDigitalPins()
+    private int[] getDigitalPins()
     {
         int[] ans = new int[RXTXRobot.NUM_DIGITAL_PINS];
         for (int x=0;x<ans.length;++x)
@@ -776,36 +776,7 @@ public class RXTXRobot
         }
         return ans;
     }
-    /**
-     * 
-     * Sets the value of the specified analog pin.
-     * 
-     * Sets the specified analog pin to the specified value.
-     * <br /><br /><b>Index must be: 0 &le; index &lt; {@link #NUM_ANALOG_PINS RXTXRobot.NUM_ANALOG_PINS}</b>
-     * 
-     * @param pin The analog pin number to set.
-     * @param value The value that you would like to set the pin to.
-     */
-    public void setAnalogPin(int pin, int value)
-    {
-        debug("Setting Analog Pin " + pin + " to " + value);
-        sendRaw("w a " + pin + " " + value);
-    }
-    /**
-     * 
-     * Sets the value of the digital pin.
-     * 
-     * Sets the specified digital pin to the specified value.
-     * <br /><br /><b>Index must be: 0 &le; index &lt; {@link #NUM_DIGITAL_PINS RXTXRobot.NUM_DIGITAL_PINS}</b>
-     * 
-     * @param pin The analog pin number to set.
-     * @param value The value that you would like to set the pin to.
-     */
-    public void setDigitalPin(int pin, int value)
-    {
-        debug("Setting Digital Pin " + pin + " to " + value);
-        sendRaw("w d " + pin + " " + value);
-    }
+    
     /**
      * 
      * Moves the specified servo to the specified angular position.
