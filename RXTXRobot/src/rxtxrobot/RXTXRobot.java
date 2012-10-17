@@ -876,7 +876,7 @@ public class RXTXRobot
      * Runs a DC motor at a specific speed for a specific time. (<b>Potential blocking method</b>)
      *   
      * Accepts a DC motor, either {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}, the speed 
-     * that the motor should run at (0 - 255), and the time with which the motor should run (in milliseconds).
+     * that the motor should run at (-255 - 255), and the time with which the motor should run (in milliseconds).
      * <br /><br />
      * If speed is negative, the motor will run in reverse.
      * <br /><br />
@@ -887,14 +887,14 @@ public class RXTXRobot
      * <b>Note: This method is a blocking method <u>unless</u> time = 0</b>
      * 
      * @param motor The DC motor you want to run: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
-     * @param speed The speed that the motor should run at (0 - 255)
+     * @param speed The speed that the motor should run at (-255 - 255)
      * @param time The number of milliseconds the motor should run (0 for infinite)
      */
     public void runMotor(int motor, int speed, int time)
     {
-        if (speed < 0 || speed > 255)
+        if (speed < -255 || speed > 255)
         {
-            System.err.println("ERROR: You must give the motors a speed between 0 and 255 (inclusive)");
+            System.err.println("ERROR: You must give the motors a speed between -255 and 255 (inclusive)");
             return;
         }
         if (RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
@@ -933,7 +933,7 @@ public class RXTXRobot
      * Runs both DC motors at different speeds for the same amount of time. (<b>Potential blocking method</b>)
      *   
      * Accepts a DC motor, either {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}, the speed 
-     * in which that motor should run (0 - 255), accepts another DC motor, the speed in which
+     * in which that motor should run (-255 - 255), accepts another DC motor, the speed in which
      * that motor should run, and the time with which both motors should run (in milliseconds).
      * <br /><br />
      * If speed is negative for either motor, that motor will run in reverse.
@@ -952,9 +952,9 @@ public class RXTXRobot
      */
     public void runMotor(int motor1, int speed1, int motor2, int speed2, int time)
     {
-        if (speed1 < 0 || speed1 > 255 || speed2 < 0 || speed2 > 255)
+        if (speed1 < -255 || speed1 > 255 || speed2 < -255 || speed2 > 255)
         {
-            System.err.println("ERROR: You must give the motors a speed between 0 and 255 (inclusive)");
+            System.err.println("ERROR: You must give the motors a speed between -255 and 255 (inclusive)");
             return;
         }
         if (RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
@@ -1003,7 +1003,7 @@ public class RXTXRobot
      * Runs four DC motors at different speeds for the same amount of time. (<b>Potential blocking method</b>)
      *   
      * Accepts DC motors, either {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, {@link #MOTOR4 RXTXRobot.MOTOR4}, the speed 
-     * in which those motor should run (0 - 255), accepts another DC motor, the speed in which
+     * in which those motor should run (-255 - 255), accepts another DC motor, the speed in which
      * that motor should run, etc, and the time with which both motors should run (in milliseconds).
      * <br /><br />
      * If speed is negative for any motor, that motor will run in reverse.
@@ -1026,9 +1026,9 @@ public class RXTXRobot
      */
     public void runMotor(int motor1, int speed1, int motor2, int speed2, int motor3, int speed3, int motor4, int speed4, int time)
     {
-        if (speed1 < 0 || speed1 > 255 || speed2 < 0 || speed2 > 255 || speed3 < 0 || speed3 > 255 || speed4 < 0 || speed4 > 255)
+        if (speed1 < -255 || speed1 > 255 || speed2 < -255 || speed2 > 255 || speed3 < -255 || speed3 > 255 || speed4 < -255 || speed4 > 255)
         {
-            System.err.println("ERROR: You must give the motors a speed between 0 and 255 (inclusive)");
+            System.err.println("ERROR: You must give the motors a speed between -255 and 255 (inclusive)");
             return;
         }
         if (RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
