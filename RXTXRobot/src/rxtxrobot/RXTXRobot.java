@@ -1084,7 +1084,7 @@ public class RXTXRobot
      */
     public void runMixer(int motor, int time)
     {
-        final int MIXER_SPEED = 25;
+        final int MIXER_SPEED = 30;
         if (motor != RXTXRobot.MOTOR1 && motor != RXTXRobot.MOTOR2 && motor != RXTXRobot.MOTOR3 && motor != RXTXRobot.MOTOR4)
         {
             System.err.println("ERROR: You must supply a valid motor port: RXTXRobot.MOTOR1, MOTOR2, MOTOR3, or MOTOR4.");
