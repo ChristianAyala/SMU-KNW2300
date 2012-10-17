@@ -888,7 +888,7 @@ public class RXTXRobot
      * 
      * @param motor The DC motor you want to run: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
      * @param speed The speed that the motor should run at (-255 - 255)
-     * @param time The number of milliseconds the motor should run (0 for infinite)
+     * @param time The number of milliseconds the motor should run (0 for infinite) (may not be above 30,000 (30 seconds))
      */
     public void runMotor(int motor, int speed, int time)
     {
@@ -911,9 +911,9 @@ public class RXTXRobot
                 return;
             }
         }
-        if (time < 0)
+        if (time < 0 || time > 30000)
         {
-            System.err.println("ERROR: runMotor was not given a time that is >=0");
+            System.err.println("ERROR: runMotor was not given a time that is 0 <= time <= 30000");
             return;
         }
         if (motor != RXTXRobot.MOTOR1 && motor != RXTXRobot.MOTOR2 && motor != RXTXRobot.MOTOR3 && motor != RXTXRobot.MOTOR4)
@@ -948,7 +948,7 @@ public class RXTXRobot
      * @param speed1 The speed that the first DC motor should run at
      * @param motor2 The second DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
      * @param speed2 The speed that the second DC motor should run at
-     * @param time The amount of time that the DC motors should run
+     * @param time The amount of time that the DC motors should run (may not be more than 30,000 (30 seconds))
      */
     public void runMotor(int motor1, int speed1, int motor2, int speed2, int time)
     {
@@ -978,9 +978,9 @@ public class RXTXRobot
                 return;
             }
         }
-        if (time < 0)
+        if (time < 0 || time > 30000)
         {
-            System.err.println("ERROR: runMotor was not given a time that is >=0");
+            System.err.println("ERROR: runMotor was not given a time that is 0 <= time <= 30000");
             return;
         }
         if ((motor1 < 0 || motor1 > 3) || (motor2 < 0 || motor2 > 3))
