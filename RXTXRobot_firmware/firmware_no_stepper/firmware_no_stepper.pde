@@ -73,8 +73,8 @@ void loop()
 
   if (messageBuild() > 0) { // Checks to see if the message is complete and erases any previous messages
     switch (messageGetChar()) { // Gets the first word as a character
-    case 'r': // Read pins (analog or digital)
-      readpins(); // Call the readpins function
+    case 'r': // Read pin (analog or digital)
+      readpin(); // Call the readpin function
       break; // Break from the switch
     case 'w': // Write pin
       writepin(); // Call the writepin function
@@ -389,20 +389,25 @@ void move2servo(){ // move servo motor
     
   }
 
-void readpins(){ // Read pins (analog or digital)
-
+void readpin(){ // Read pin (analog or digital)
+// http://arduino.cc/en/Tutorial/DigitalPins
+// http://www.ladyada.net/make/mshield/faq.html
+  
   switch (messageGetChar()) { // Gets the next word as a character
-
+    
+    
     case 'd': // READ digital pins
+    
+    messageSendChar('d');  // Echo what is being read    
+    
+    // Only digital pins 2 and 13 are unused by the motor shield
 
-    messageSendChar('d');  // Echo what is being read
-
-    // We are only reading these pins because the other pins deal with the motors and shut off the motors if they are read.
+    // set the pin mode to input    
+    pinMode(2, INPUT);
+    pinMode(13, INPUT);
+    
+    // output the message value to the terminal 
     messageSendInt(digitalRead(2));
-    messageSendInt(digitalRead(4));
-    messageSendInt(digitalRead(7));
-    messageSendInt(digitalRead(8));
-    messageSendInt(digitalRead(12));
     messageSendInt(digitalRead(13));
     messageEnd(); // Terminate the message being sent
     break; // Break from the switch
@@ -420,28 +425,26 @@ void readpins(){ // Read pins (analog or digital)
 }
 
 void writepin() { // Write pin
+// http://arduino.cc/en/Tutorial/DigitalPins
+// http://www.ladyada.net/make/mshield/faq.html
 
   int pin;
   int state;
 
   switch (messageGetChar()) { // Gets the next word as a character
 
-    case 'a' : // WRITE an analog pin
-
-    pin = messageGetInt(); // Gets the next word as an integer
-    state = messageGetInt(); // Gets the next word as an integer
-    pinMode(pin, OUTPUT); //Sets the state of the pin to an output
-    analogWrite(pin, state); //Sets the PWM of the pin 
-    break;  // Break from the switch
-
-
-    // WRITE a digital pin
+    // WRITE a digital pin (all analog pin outputs are used by the motor shield)
   case 'd' : 
 
     pin = messageGetInt();  // Gets the next word as an integer
     state = messageGetInt();  // Gets the next word as an integer
-    pinMode(pin,OUTPUT);  //Sets the state of the pin to an output
-    digitalWrite(pin,state);  //Sets the state of the pin HIGH (1) or LOW (0)
+    
+    // Only digital pins 2 and 13 are unused by the motor shield
+    if(pin == 2 || pin == 13)
+    {
+      pinMode(pin,OUTPUT);  //Sets the state of the pin to an output
+      digitalWrite(pin,state);  //Sets the state of the pin HIGH (1) or LOW (0)
+    }
   }
 }
 
