@@ -56,7 +56,7 @@ public class RXTXRobot
     /**
      * The maximum number of digital pins that can be read from the Arduino (0&nbsp;&le;&nbsp;pins&nbsp;&lt;&nbsp;NUM_DIGITAL_PINS)
      */
-    final public static int NUM_DIGITAL_PINS = 2;
+    final public static int NUM_DIGITAL_PINS = 1;
     /**
      * The maximum number of analog pins that can be read from the Arduino (0&nbsp;&le;&nbsp;pins&nbsp;&lt;&nbsp;NUM_ANALOG_PINS)
      */
@@ -656,15 +656,14 @@ public class RXTXRobot
      * 
      * This will get the value of the pin since the last time {@link #refreshDigitalPins() refreshDigitalPins()} was called.
      * 
-     * @param x The number of the pin: 2, 4, 7, 8, 12, or 13
+     * @param x The number of the pin: 13
      * @return DigitalPin object of the specified pin, or null if error.
      */
     public DigitalPin getDigitalPin(int x)
     {
         // Mapping is an array to match the pin number to the actual returned array from the Arduino:
         //      pin_number, location_array
-        final int[][] mapping = {{2, 0},
-                                {13,1}};
+        final int[][] mapping = {{13, 0}};
         if (digitalPinCache == null)
             this.refreshDigitalPins();
         int get_pin = -1;
@@ -678,7 +677,7 @@ public class RXTXRobot
         }
         if (get_pin == -1)
         {
-            System.err.append("You may not read from pin " + x + ".  You can only read from pin 2 or 13");
+            System.err.append("You may not read from pin " + x + ".  You can only read from pin 13");
             return null;
         }
         return new DigitalPin(this, x, digitalPinCache[get_pin]);
@@ -776,11 +775,58 @@ public class RXTXRobot
         }
         catch (NumberFormatException e)
         {
-            System.err.println("getAnalogPins() - Returned string could not be parsed into Integers");
+            System.err.println("getDigitalPins() - Returned string could not be parsed into Integers");
         }
         catch (Exception e)
         {
             System.err.println("An error occurred with getDigitalsPins.");
+            if (verbose)
+            {
+                System.err.println("Stacktrace: ");
+                e.printStackTrace(error_stream);
+            }
+        }
+        return ans;
+    }
+    
+    /**
+     * 
+     * Returns the value of the temperature sensor <b>on digital pin 2</b>. <br /><br />
+     * 
+     * An error is displayed if something goes wrong, but verbose is required for more in-depth errors.
+     * 
+     * @return Integer representing the temperature of the water in Celsius.
+     */
+    public int getTemperature()
+    {
+        int ans = -1;
+        try
+        {
+            this.sendRaw("r t");
+            String[] split = this.getLastResponse().split("\\s+");
+            if (split.length <= 1)
+            {
+                System.err.println("getTemperature() - No response was received from the Arduino.  Try again");
+                return ans;
+            }
+            if (split.length-1 != 1)
+            {
+                System.err.println("getTemperature() - Incorrect length returned: " + split.length);
+                if (verbose)
+                    for (int x=0;x<split.length;++x)
+                        System.err.println("["+x+"] = " + split[x]);
+                return ans;
+            }
+            ans = Integer.parseInt(split[1]);
+            return ans;
+        }
+        catch (NumberFormatException e)
+        {
+            System.err.println("getTemperature() - Returned string could not be parsed into Integer");
+        }
+        catch (Exception e)
+        {
+            System.err.println("An error occurred with getTemperature.");
             if (verbose)
             {
                 System.err.println("Stacktrace: ");

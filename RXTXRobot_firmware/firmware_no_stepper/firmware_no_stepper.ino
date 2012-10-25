@@ -5,6 +5,7 @@
  
  r a -> read analog pins
  r d -> read digital pins
+ r t -> read temperature sensor
  w d [pin] [value] -> write digital pin
  w a [pin] [value] -> write analog pin
  
@@ -36,6 +37,9 @@
 // Needed for DC motors
 #include <AFMotor.h>
 
+// Needed for temperature sensors
+#include <OneWire.h>
+
 //Set up our global motor types
 	AF_DCMotor motor0(1);
 	AF_DCMotor motor1(2);
@@ -43,6 +47,7 @@ AF_DCMotor motor2(3);
 AF_DCMotor motor3(4);
 Servo myservo0;
 Servo myservo1;
+OneWire ds(2); // Make temperature sensor on digital pin 2
 // create an instance of the stepper class, 
 
 void setup()
@@ -403,11 +408,9 @@ void readpin(){ // Read pin (analog or digital)
     // Only digital pins 2 and 13 are unused by the motor shield
 
     // set the pin mode to input    
-    pinMode(2, INPUT);
     pinMode(13, INPUT);
     
     // output the message value to the terminal 
-    messageSendInt(digitalRead(2));
     messageSendInt(digitalRead(13));
     messageEnd(); // Terminate the message being sent
     break; // Break from the switch
@@ -419,7 +422,13 @@ void readpin(){ // Read pin (analog or digital)
       messageSendInt(analogRead(i)); // Read pins 0 to 5
     }
     messageEnd(); // Terminate the message being sent
-
+  break;
+  
+  case 't': // READ temperature information
+      messageSendChar('t');
+      messageSendInt((int)getTemp());
+      messageEnd();
+      break;
   }
 
 }
@@ -448,3 +457,50 @@ void writepin() { // Write pin
   }
 }
 
+// This function is for the temperature sensor and is from http://bildr.org/2011/07/ds18b20-arduino/
+float getTemp(){
+ //returns the temperature from one DS18S20 in DEG Celsius
+
+ byte data[12];
+ byte addr[8];
+
+ if ( !ds.search(addr)) {
+   //no more sensors on chain, reset search
+   ds.reset_search();
+   return -1001;
+ }
+
+ if ( OneWire::crc8( addr, 7) != addr[7]) {
+   Serial.println("CRC is not valid!");
+   return -1002;
+ }
+
+ if ( addr[0] != 0x10 && addr[0] != 0x28) {
+   Serial.print("Device is not recognized");
+   return -1003;
+ }
+
+ ds.reset();
+ ds.select(addr);
+ ds.write(0x44,1); // start conversion, with parasite power on at the end
+
+ byte present = ds.reset();
+ ds.select(addr);  
+ ds.write(0xBE); // Read Scratchpad
+
+ 
+ for (int i = 0; i < 9; i++) { // we need 9 bytes
+  data[i] = ds.read();
+ }
+ 
+ ds.reset_search();
+ 
+ byte MSB = data[1];
+ byte LSB = data[0];
+
+ float tempRead = ((MSB << 8) | LSB); //using two's compliment
+ float TemperatureSum = tempRead / 16;
+ 
+ return TemperatureSum;
+ 
+}
