@@ -448,8 +448,8 @@ void writepin() { // Write pin
     pin = messageGetInt();  // Gets the next word as an integer
     state = messageGetInt();  // Gets the next word as an integer
     
-    // Only digital pins 2 and 13 are unused by the motor shield
-    if(pin == 2 || pin == 13)
+    // Only digital pin 13 are unused by the motor shield
+    if(pin == 13)
     {
       pinMode(pin,OUTPUT);  //Sets the state of the pin to an output
       digitalWrite(pin,state);  //Sets the state of the pin HIGH (1) or LOW (0)
@@ -471,12 +471,10 @@ float getTemp(){
  }
 
  if ( OneWire::crc8( addr, 7) != addr[7]) {
-   Serial.println("CRC is not valid!");
    return -1002;
  }
 
  if ( addr[0] != 0x10 && addr[0] != 0x28) {
-   Serial.print("Device is not recognized");
    return -1003;
  }
 
