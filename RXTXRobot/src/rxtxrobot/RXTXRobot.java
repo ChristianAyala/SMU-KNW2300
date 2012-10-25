@@ -18,12 +18,12 @@ import java.net.Socket;
 
 /**
  * @author Chris King
- * @version 2.9
+ * @version 2.9.1
  */
 public class RXTXRobot
 {
     /* Constants - These should not change unless you know what you are doing */
-    final private static String API_VERSION = "2.9";
+    final private static String API_VERSION = "2.9.1";
     final private static boolean ONLY_ALLOW_TWO_MOTORS = true;
     /**
      * Refers to the servo motor located in SERVO1
