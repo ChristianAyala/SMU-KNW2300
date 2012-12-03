@@ -397,7 +397,9 @@ void move2servo(){ // move servo motor
 void readpin(){ // Read pin (analog or digital)
 // http://arduino.cc/en/Tutorial/DigitalPins
 // http://www.ladyada.net/make/mshield/faq.html
-  
+  // Poll the temperature sensor 10 times and require the temp be less than 50...
+  int x = 51;
+  int counter = 10;
   switch (messageGetChar()) { // Gets the next word as a character
     
     
@@ -425,8 +427,14 @@ void readpin(){ // Read pin (analog or digital)
   break;
   
   case 't': // READ temperature information
+      do
+      {
+      	x = (int)getTemp();
+	--counter;
+      }
+      while ((x > 50 || x <= -1000) && counter > 0);
       messageSendChar('t');
-      messageSendInt((int)getTemp());
+      messageSendInt(x);
       messageEnd();
       break;
   }
@@ -481,7 +489,7 @@ float getTemp(){
  ds.reset();
  ds.select(addr);
  ds.write(0x44,1); // start conversion, with parasite power on at the end
-
+ delay(750);
  byte present = ds.reset();
  ds.select(addr);  
  ds.write(0xBE); // Read Scratchpad
