@@ -58,8 +58,7 @@ goto end
 
 :end
 ECHO "Installing Arduino UNO Drivers (R2 and R3)........................."
-%SystemRoot%\System32\InfDefaultInstall.exe %save%\libs\Drivers\Arduino_UNO_R2.inf
-%SystemRoot%\System32\InfDefaultInstall.exe %save%\libs\Drivers\Arduino_UNO_R3.inf
+%SystemRoot%\System32\InfDefaultInstall.exe %save%\libs\Drivers\Arduino_UNO.inf
 ECHO "Driver Installation has completed SUCCESSFULLY"
 ECHO "Installation Ended."
 
