@@ -2,10 +2,39 @@
 set javafound=n
 set save=%cd%
 set sixtybit=y
+set win8=n
 ECHO ^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=
 ECHO ^|   RXTXRobot Installer for Windows   ^|
 ECHO ^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=
 
+ECHO.
+ECHO Starting Installation!
+ECHO.
+ECHO Determining OS Version.............................................
+FOR /F "delims=: tokens=2" %%i IN ('systeminfo 2^>nul ^| find "OS Name"') DO set vers=%%i
+ECHO %vers% | find "Windows 8" >nul
+IF %ERRORLEVEL% == 0 set win8=y
+IF %win8%%==y (
+	ECHO You are running Windows 8!
+) ELSE (
+	ECHO You are running Windows 7/XP!
+)
+ECHO.
+IF %win8%==y (
+	ECHO Attempting to change the driver permissions to work for Windows 8...
+	bcdedit -set loadoptions DISABLE_INTEGRITY_CHECKS
+	IF %ERRORLEVEL%!=0 (
+		ECHO FATAL ERROR: Could not change driver permissions.
+		ECHO You must right click the install script and "Run as Administrator"
+		goto over
+	)
+	bcdedit -set TESTSIGNING ON
+	IF %ERRORLEVEL% != 0 (
+		ECHO FATAL ERROR: Could not change driver permissions.
+		ECHO You must right click the install script and "Run as Administrator"
+		goto over
+	)
+)
 ECHO Installing Java Libraries..........................................
 IF NOT exist %save%\libs\32-bit\rxtxSerial.dll goto fatalerror
 IF NOT exist %save%\libs\64-bit\rxtxSerial.dll goto fatalerror
