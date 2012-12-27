@@ -50,14 +50,18 @@ ECHO FATAL ERROR:
 ECHO The required libraries were not found!  You must have:
 ECHO    %save%\libs\32-bit\rxtxSerial.dll
 ECHO    %save%\libs\64-bit\rxtxSerial.dll
-goto end
+goto over
 
 :closing
-IF %javafound%==y (
+IF %javafound%==n (
 	ECHO        ERROR: No Java installation was found 
 ) ELSE (
 	ECHO        Java Installation has completed SUCCESSFULLY 
 )
+IF %javafound%==n (
+	goto over
+)
+
 goto end
 
 :end
@@ -70,4 +74,6 @@ ECHO.
 ECHO Installation Ended.
 CD %save%
 PAUSE
+
+:over
 
