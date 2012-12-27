@@ -1,11 +1,12 @@
 @ECHO OFF
 set javafound=n
 set save=%cd%
+set sixtybit=y
 ECHO ^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=
 ECHO ^|   RXTXRobot Installer for Windows   ^|
 ECHO ^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=^=
 
-ECHO Installing Java Libraries......................................
+ECHO Installing Java Libraries..........................................
 IF NOT exist %save%\libs\32-bit\rxtxSerial.dll goto fatalerror
 IF NOT exist %save%\libs\64-bit\rxtxSerial.dll goto fatalerror
 IF exist "C:\Program Files (x86)\" goto checkOldBits
@@ -34,6 +35,7 @@ set javafound=y
 goto closing
 
 :checkRegularNo64
+set sixtybit=n
 IF exist "C:\Program Files\Java\" goto doRegularNo64
 goto closing
 
@@ -68,6 +70,20 @@ goto end
 ECHO.
 ECHO Installing Arduino UNO Drivers (R2 and R3).........................
 %SystemRoot%\System32\InfDefaultInstall.exe %save%\libs\Drivers\Arduino_UNO.inf
+IF %sixtybit%==y (
+	set progSpot=%save%\libs\64-bit\devcon.exe
+) ELSE (
+	set progSpot=%save%\libs\32-bit\devcon.exe
+)
+ECHO.
+ECHO Plug an Arduino into the computer.  Windows will show that a driver was not able to be found.  Hit enter once this has happened, then click "Install Anyway"
+PAUSE
+ECHO.
+ECHO Continuing the installation........................................
+ECHO.
+%progSpot% update %save%\libs\Drivers\Arduino_UNO.inf USB\VID_2341&PID_0001
+%progSpot% update %save%\libs\Drivers\Arduino_UNO.inf USB\VID_2341&PID_0043
+ECHO.
 ECHO         Driver Installation has completed SUCCESSFULLY
 ECHO.
 ECHO.
