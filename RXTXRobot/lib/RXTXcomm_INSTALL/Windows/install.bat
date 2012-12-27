@@ -13,7 +13,7 @@ ECHO.
 ECHO Determining OS Version.............................................
 FOR /F "delims=: tokens=2" %%i IN ('systeminfo 2^>nul ^| find "OS Name"') DO set vers=%%i
 ECHO %vers% | find "Windows 8" >nul
-IF %ERRORLEVEL% == 0 set win8=y
+IF %ERRORLEVEL% EQU 0 set win8=y
 IF %win8%%==y (
 	ECHO You are running Windows 8!
 ) ELSE (
@@ -22,19 +22,22 @@ IF %win8%%==y (
 ECHO.
 IF %win8%==y (
 	ECHO Attempting to change the driver permissions to work for Windows 8...
-	bcdedit -set loadoptions DISABLE_INTEGRITY_CHECKS
-	IF %ERRORLEVEL%!=0 (
+	bcdedit -set loadoptions DISABLE_INTEGRITY_CHECKS >nul 2>nul
+	IF %ERRORLEVEL% NEQ 0 (
 		ECHO FATAL ERROR: Could not change driver permissions.
 		ECHO You must right click the install script and "Run as Administrator"
 		goto over
 	)
-	bcdedit -set TESTSIGNING ON
-	IF %ERRORLEVEL% != 0 (
+	bcdedit -set TESTSIGNING ON >nul 2>nul
+	IF %ERRORLEVEL% NEQ 0 (
 		ECHO FATAL ERROR: Could not change driver permissions.
 		ECHO You must right click the install script and "Run as Administrator"
 		goto over
 	)
+	ECHO Successfully changed driver permissions!
+	ECHO.
 )
+
 ECHO Installing Java Libraries..........................................
 IF NOT exist %save%\libs\32-bit\rxtxSerial.dll goto fatalerror
 IF NOT exist %save%\libs\64-bit\rxtxSerial.dll goto fatalerror
