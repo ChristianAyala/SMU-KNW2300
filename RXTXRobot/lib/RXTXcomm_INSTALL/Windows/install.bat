@@ -18,7 +18,7 @@ goto checkRegular
 
 :doOldBits
 CD "C:\Program Files (x86)\Java\"
-FOR /D /r %%i IN (bin*) ( COPY  %save%\libs\32-bit\rxtxSerial.dll %%i >nul )
+FOR /D /r %%i IN (bin*) DO ( COPY  %save%\libs\32-bit\rxtxSerial.dll %%i >nul )
 set javafound=y
 goto checkRegular
 
@@ -29,7 +29,7 @@ goto closing
 
 :doRegular
 CD "C:\Program Files\Java\"
-FOR /D /r %%i IN (bin*) ( COPY %save%\libs\64-bit\rxtxSerial.dll %%i >nul )
+FOR /D /r %%i IN (bin*) DO ( COPY %save%\libs\64-bit\rxtxSerial.dll %%i >nul )
 set javafound=y
 goto closing
 
@@ -39,7 +39,7 @@ goto closing
 
 :doRegularNo64
 CD "C:\Program Files\Java\"
-FOR /D /r %%i IN (bin*) ( COPY %save%\libs\32-bit\rxtxSerial.dll %%i >nul )
+FOR /D /r %%i IN (bin*) DO ( COPY %save%\libs\32-bit\rxtxSerial.dll %%i >nul )
 set javafound=y
 goto closing
 
