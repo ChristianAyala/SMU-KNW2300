@@ -64,9 +64,9 @@ IF %javafound%==n (
 	goto over
 )
 
-goto end
+goto startDriver
 
-:end
+:startDriver
 ECHO.
 ECHO Installing Arduino UNO Drivers (R2 and R3).........................
 %SystemRoot%\System32\InfDefaultInstall.exe %save%\libs\Drivers\Arduino_UNO.inf
@@ -81,8 +81,32 @@ PAUSE
 ECHO.
 ECHO Continuing the installation........................................
 ECHO.
-%progSpot% update %save%\libs\Drivers\Arduino_UNO.inf USB\VID_2341&PID_0001
-%progSpot% update %save%\libs\Drivers\Arduino_UNO.inf USB\VID_2341&PID_0043
+goto startDriver
+
+:startDriver
+%progSpot% update "%save%\libs\Drivers\Arduino_UNO.inf" "USB\VID_2341&PID_0001" >nul 2>nul
+IF %errorlevel%==0 (
+	set ctrl=0
+) ELSE (
+	set ctrl=1
+)
+%progSpot% update "%save%\libs\Drivers\Arduino_UNO.inf" "USB\VID_2341&PID_0043" >nul 2>nul
+IF NOT %errorlevel%==0 (
+	set /a ctrl=%ctrl%+1
+)
+if %ctrl%==2 (
+	goto errorDriver
+) ELSE (
+	goto doneDriver
+)
+
+:errorDriver
+ECHO.
+ECHO ERROR: Please plug the Arduino in to your computer before continuing!
+PAUSE
+goto startDriver
+
+:doneDriver
 ECHO.
 ECHO         Driver Installation has completed SUCCESSFULLY
 ECHO.
