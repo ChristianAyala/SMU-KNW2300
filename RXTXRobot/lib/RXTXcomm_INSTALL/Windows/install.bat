@@ -75,7 +75,9 @@ IF %sixtybit%==y (
 	set progSpot=%save%\libs\32-bit\devcon.exe
 )
 ECHO.
-ECHO Plug an Arduino into the computer.  Windows will show that a driver was not able to be found.  Hit enter once this has happened, then click "Install Anyway"
+ECHO Plug an Arduino into the computer.  Windows will show that a driver was not able to be found.
+ECHO Hit enter once this has happened, then click "Install this driver software anyway"
+ECHO.
 PAUSE
 ECHO.
 ECHO Continuing the installation........................................
