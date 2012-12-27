@@ -64,12 +64,11 @@ IF %javafound%==n (
 	goto over
 )
 
-goto startDriver
+goto beginDriver
 
-:startDriver
+:beginDriver
 ECHO.
 ECHO Installing Arduino UNO Drivers (R2 and R3).........................
-%SystemRoot%\System32\InfDefaultInstall.exe %save%\libs\Drivers\Arduino_UNO.inf
 IF %sixtybit%==y (
 	set progSpot=%save%\libs\64-bit\devcon.exe
 ) ELSE (
