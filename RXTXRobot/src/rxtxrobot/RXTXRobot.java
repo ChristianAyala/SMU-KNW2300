@@ -140,10 +140,11 @@ public class RXTXRobot
 	 *
 	 * Set the port to the same port that the Arduino or XBee
 	 * is connected to on your computer.
-	 * For example:
-	 * 	On Windows, "COM3" (check device manager)
-	 * 	On Mac, "/dev/tty.usbmodem411" (run "ls /dev | grep usb")
-	 * 	On Linux, "/dev/ttyACM0"
+	 * <br /><br />
+	 * For example:<br />
+	 * 	On Windows, "COM3" (check device manager)<br />
+	 * 	On Mac, "/dev/tty.usbmodem411" (run "ls /dev | grep usb")<br />
+	 * 	On Linux, "/dev/ttyACM0"<br />
 	 *
 	 * @param p Port name that the Arduino/XBee is connected to.
 	 */
@@ -205,7 +206,7 @@ public class RXTXRobot
 	 * This method attempts to make a serial connection to the Arduino/XBee if
 	 * the port is correct.  If there is an error in connecting, then the
 	 * appropriate error message will be displayed.
-	 *
+	 * <br /><br />
 	 * This function will terminate runtime if an error is discovered.
 	 */
 	public final void connect()
@@ -362,7 +363,7 @@ public class RXTXRobot
 
 	/**
 	 * Refreshes the Analog pin cache from the robot.
-	 *
+	 * 
 	 * This must be called to refresh the data of the pins.
 	 */
 	public void refreshAnalogPins()
@@ -542,10 +543,10 @@ public class RXTXRobot
 	 *
 	 * Accepts either {@link #SERVO1 RXTXRobot.SERVO1} or {@link #SERVO2 RXTXRobot.SERVO2}
 	 * and an angular position between 0 and 180 inclusive.
-	 *
+	 * <br /><br />
 	 * The servo starts at 90 degrees, so a number &lt;90 will turn
 	 * it one way, and a number &gt;90 will turn it the other way.
-	 * 
+	 * <br /><br />
 	 * An error message will be displayed on error.
 	 *
 	 * @param servo The servo motor that you would like to move: {@link #SERVO1 RXTXRobot.SERVO1} or {@link #SERVO2 RXTXRobot.SERVO2}.
@@ -571,10 +572,10 @@ public class RXTXRobot
 	 * Accepts two angular positions between 0 and 180 inclusive and moves the servo 
 	 * motors to the corresponding angular position. {@link #SERVO1 SERVO1} moves {@code pos1} degrees and 
 	 * {@link #SERVO2 SERVO2} moves {@code pos2} degrees.
-	 *
+	 * <br /><br />
 	 * The servos start at 90 degrees, so a number &lt; 90 will turn
 	 * it one way, and a number &gt; 90 will turn it the other way.
-	 *
+	 * <br /><br />
 	 * An error message will be displayed on error.
 	 *
 	 * @param pos1 The angular position of RXTXRobot.SERVO1
@@ -597,14 +598,14 @@ public class RXTXRobot
 	 * or {@link #MOTOR4 RXTXRobot.MOTOR4}, the speed that the motor 
 	 * should run at (-255 - 255), and the time with which the motor 
 	 * should run (in milliseconds).
-	 *
+	 * <br /><br />
 	 * If speed is negative, the motor will run in reverse.
-	 *
+	 * <br /><br />
 	 * If time is 0, the motor will run infinitely until another call 
 	 * to that motor is made, even if the Java program terminates.
-	 *
+	 * <br /><br />
 	 * An error message will display on error.
-	 *
+	 * <br /><br />
 	 * Note: This method is a blocking method unless time = 0
 	 *
 	 * @param motor The DC motor you want to run: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
@@ -658,14 +659,14 @@ public class RXTXRobot
 	 * motor should run (-255 - 255), accepts another DC motor, the 
 	 * speed in which that motor should run, and the time with which 
 	 * both motors should run (in milliseconds).
-	 *
+	 * <br /><br />
 	 * If speed is negative for either motor, that motor will run in reverse.
-	 *
+	 * <br /><br />
 	 * If time is 0, the motors will run infinitely until another 
 	 * call to both specific motors is made, even if the Java program terminates.
-	 *
+	 * <br /><br />
 	 * An error message will display on error.
-	 *
+	 * <br /><br />
 	 * Note: This method is a blocking method unless time = 0
 	 *
 	 * @param motor1 The first DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
@@ -729,14 +730,14 @@ public class RXTXRobot
 	 * motor should run (-255 - 255), accepts another DC motor, 
 	 * the speed in which that motor should run, etc, and the 
 	 * time with which both motors should run (in milliseconds).
-	 *
+	 * <br /><br />
 	 * If speed is negative for any motor, that motor will run in reverse.
-	 *
+	 * <br /><br />
 	 * If time is 0, the motors will run infinitely until another 
 	 * call to both specific motors is made, even if the Java program terminates.
-	 *
+	 * <br /><br />
 	 * An error message will display on error.
-	 *
+	 * <br /><br />
 	 * Note: This method is a blocking method unless time = 0
 	 *
 	 * @param motor1 The first DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
@@ -798,12 +799,12 @@ public class RXTXRobot
 	 * {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, 
 	 * or {@link #MOTOR4 RXTXRobot.MOTOR4}), and the time with which the 
 	 * motor should run (in milliseconds).
-	 *
+	 * <br /><br />
 	 * If time is 0, the motor will run infinitely until a call to 
 	 * {@link #stopMixer(int) stopMixer}, even if the Java program terminates.
-	 *
+	 * <br /><br />
 	 * An error message will display on error.
-	 *
+	 * <br /><br />
 	 * Note: This method is a blocking method unless time = 0
 	 *
 	 * @param motor The motor that the mixer is on: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
@@ -830,7 +831,7 @@ public class RXTXRobot
 	/**
 	 * Stops the small, mixing motor if it is currently running.
 	 *
-	 * This method should be called if {@link #runMixer(int) runMixer} 
+	 * This method should be called if {@link #runMixer(int,int) runMixer} 
 	 * was called with a time of 0.  This method will stop the mixer.
 	 *
 	 * @param motor The motor that the mixer is on: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
