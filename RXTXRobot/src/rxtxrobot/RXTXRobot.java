@@ -11,26 +11,58 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
+/**
+ * @author Chris King
+ * @version 3.0.0
+ */
+
 public class RXTXRobot
 {
+	/* Constants - These should not change unless you know what you are doing */
 	final private static String API_VERSION = "3.0.0";
 	final private static boolean ONLY_ALLOW_TWO_MOTORS = true;
 	final private static int BAUD_RATE = 9600;
-
+	/**
+	 * Refers to the servo motor located in SERVO1
+	 */
 	final public static int SERVO1 = 1;
+	/**
+	 * Refers to the servo motor located in SERVO2
+	 */
 	final public static int SERVO2 = 0;
+	/**
+	 * Refers to the M1 DC MOTOR
+	 */
 	final public static int MOTOR1 = 0;
+	/**
+	 * Refers to the M2 DC MOTOR
+	 */
 	final public static int MOTOR2 = 1;
+	/**
+	 * Refers to the M3 DC Motor
+	 */
 	final public static int MOTOR3 = 2;
+	/**
+	 * Refers to the M4 DC Motor
+	 */
 	final public static int MOTOR4 = 3;
 	
+	/**
+	 * The maximum number of digital pins that can be read
+	 * from the Arduino (0 &lt; pins &lt; NUM_DIGITAL_PINS)
+	 */
 	final public static int NUM_DIGITAL_PINS = 1;
+	/**
+	 * The maximum number of analog pins that can be read
+	 * from the Arduino (0 &lt; pins &lt; NUM_ANALOG_PINS)
+	 */
 	final public static int NUM_ANALOG_PINS = 6;
 
-	private String port = "";
-	private boolean verbose = false;
-	private int[] analogPinCache = null;
-	private int[] digitalPinCache = null;
+	/* Private variables */
+	private String port;
+	private boolean verbose;
+	private int[] analogPinCache;
+	private int[] digitalPinCache;
 	private boolean[] motorsRunning = {false, false, false, false};
 
 	private InputStream in;
@@ -38,52 +70,123 @@ public class RXTXRobot
 	private SerialPort sPort;
 	private CommPort cPort;
 
+	/**
+	 * Creates a new RXTXRobot object.
+	 *
+	 * This constructor creates a new RXTXRobot object.
+	 */
 	public RXTXRobot()
 	{
+		port = "";
+		verbose = false;
+		analogPinCache = null;
+		digitalPinCache = null;
 	}
 
+	/**
+	 * Gets the version number of the API.
+	 *
+	 * @return A string with the version number
+	 */
 	public static String getVersion()
 	{
 		return API_VERSION;
 	}
 
+	/**
+	 * Sets the output PrintStream; System.out by default.
+	 *
+	 * This method lets you set the output stream from System.out
+	 * to somewhere else.  It shouldn't be used unless you know
+	 * what you are doing.
+	 *
+	 * @param p PrintStream to write output to.
+	 */
 	public void setOutStream(PrintStream p)
 	{
 		System.setOut(p);
 	}
-
+	
+	/**
+	 * Sets the error PrintStream; System.err by default.
+	 *
+	 * This method lets you set the error stream from System.err
+	 * to somewhere else.  It shouldn't be used unless you know
+	 * what you are doing.
+	 *
+	 * @param p PrintStream to write error to.
+	 */
 	public void setErrStream(PrintStream p)
 	{
 		System.setErr(p);
 	}
 
+	/**
+	 * Sets verbose output.
+	 *
+	 * Setting verbose output allows for easier debugging and
+	 * seeing what is happening behind the scenes.  Turn this
+	 * on to debug your code.
+	 *
+	 * @param v Boolean to set verbosity.
+	 */
 	public void setVerbose(boolean v)
 	{
 		this.verbose = v;
 	}
 
+	/**
+	 * Sets the port to connect to the Arduino or XBee.
+	 *
+	 * Set the port to the same port that the Arduino or XBee
+	 * is connected to on your computer.
+	 * For example:
+	 * 	On Windows, "COM3" (check device manager)
+	 * 	On Mac, "/dev/tty.usbmodem411" (run "ls /dev | grep usb")
+	 * 	On Linux, "/dev/ttyACM0"
+	 *
+	 * @param p Port name that the Arduino/XBee is connected to.
+	 */
 	public void setPort(String p)
 	{
 		this.port = p;
 	}
 
+	/**
+	 * Gets the port that the RXTXRobot is using.
+	 *
+	 * @return The port the RXTXRobot is using.
+	 */
 	public String getPort()
 	{
 		return this.port;
 	}
 
+	/**
+	 * Prints out debugging statements.
+	 *
+	 * If verbose is set to true, then debugging statements will
+	 * be printed out to the user.  If verbose is set to false,
+	 * then these statements will not print.
+	 *
+	 * @param str Message passed to debug
+	 */
 	private void debug(String str)
 	{
 		if (verbose)
 			System.out.println("--> " + str);
 	}
-	
-	private void debugErr(String str)
-	{
-		if (verbose)
-			System.err.println("--> " + str);
-	}
 
+	/**
+	 * Allows the robot to sleep for a time length (measured in milliseconds).
+	 *
+	 * Uses a standard {@link Thread#sleep(long) Thread.sleep(long)} function to pause
+	 * execution of the program for the specified milliseconds.
+	 * Displays an error if the thread is interrupted during
+	 * this process, but does not throw an Exception.  (1000 milliseconds = 1 second)
+	 *
+	 * @param amount The amount of time in milliseconds
+	 */
 	public void sleep(int amount)
 	{
 		try
@@ -96,6 +199,15 @@ public class RXTXRobot
 		}
 	}
 
+	/**
+	 * Attempts to connect to the Arduino/XBee.
+	 *
+	 * This method attempts to make a serial connection to the Arduino/XBee if
+	 * the port is correct.  If there is an error in connecting, then the
+	 * appropriate error message will be displayed.
+	 *
+	 * This function will terminate runtime if an error is discovered.
+	 */
 	public final void connect()
 	{
 		System.out.println("RXTXRobot API version " + RXTXRobot.getVersion());
@@ -172,12 +284,27 @@ public class RXTXRobot
 			System.exit(1);
 		}
 	}
-
+	
+	/**
+	 * Checks if the RXTXRobot object is connected to the Arduino/XBee.
+	 *
+	 * Returns true if the RXTXRobot object is successfully connected to the
+	 * Arduino/XBee.  Returns false otherwise.
+	 *
+	 * @return true/false value that specifies if the RXTXRobot object is connected to the Arduino/XBee.
+	 */
 	public final boolean isConnected()
 	{
 		return sPort != null && cPort != null && in != null && out != null;
 	}
 
+	/**
+	 * Closes the connection to the Arduino/XBee.
+	 *
+	 * This method closes the serial connection to the Arduino/XBee.
+	 * It deletes the mutual exclusion lock file, which is important,
+	 * so this should be done before the program is terminated.
+	 */
 	public final void close()
 	{
 		sleep(300);
@@ -189,12 +316,21 @@ public class RXTXRobot
 		out = null;
 	}
 
+	/**
+	 * Sends a string to the Arduino to be executed.
+	 *
+	 * If a serial connection is present, then it sends the String to the
+	 * Arduino to be executed.  If verbose is on, then the response from
+	 * the Arduino is displayed.
+	 *
+	 * @param str The command to send to the Arduino
+	 */
 	public String sendRaw(String str)
 	{
 		return sendRaw(str,100);
 	}
 	
-	public String sendRaw(String str, int sleep)
+	private String sendRaw(String str, int sleep)
 	{
 		debug("Sending command: " + str);
 		if (!isConnected())
@@ -223,6 +359,11 @@ public class RXTXRobot
 		}
 	}
 
+	/**
+	 * Refreshes the Analog pin cache from the robot.
+	 *
+	 * This must be called to refresh the data of the pins.
+	 */
 	public void refreshAnalogPins()
 	{
 		analogPinCache = new int[RXTXRobot.NUM_ANALOG_PINS];
@@ -263,6 +404,11 @@ public class RXTXRobot
 		}
 	}
 
+	/**
+	 * Refreshes the digital pin cache from the robot.
+	 *
+	 * This must be called to refresh the data of the pins.
+	 */
 	public void refreshDigitalPins()
 	{
 		digitalPinCache = new int[RXTXRobot.NUM_DIGITAL_PINS];
@@ -303,6 +449,15 @@ public class RXTXRobot
 		}
 	}
 
+	/**
+	 * Returns an AnalogPin object for the specified pin.
+	 *
+	 * This will get the value of the pin since the last time
+	 * {@link #refreshAnalogPins() refreshAnalogPins()} was called.
+	 *
+	 * @param x The number of the pin: 0 &lt; x &lt; {@link #NUM_ANALOG_PINS NUM_ANALOG_PINS}
+	 * @return AnalogPin object of the specified pin, or null if error.
+	 */
 	public AnalogPin getAnalogPin(int x)
 	{
 		if (analogPinCache == null)
@@ -315,6 +470,15 @@ public class RXTXRobot
 		return new AnalogPin(this, x, analogPinCache[x]);
 	}
 
+	/**
+	 * Returns a DigitalPin object for the specified pin.
+	 *
+	 * This will get the value of the pin since the last time
+	 * {@link #refreshDigitalPins() refreshDigitalPins()} was called.
+	 *
+	 * @param x The number of the pin: 0 &lt; x &lt; {@link #NUM_DIGITAL_PINS NUM_DIGITAL_PINS}
+	 * @return DigitalPin object of the specified pin, or null if error.
+	 */
 	public DigitalPin getDigitalPin(int x)
 	{
 		final int[][] mapping = {{13, 0}};
@@ -330,6 +494,14 @@ public class RXTXRobot
 		return null;
 	}
 
+	/**
+	 * Return the value of the temperature sensor on digital pin 2.
+	 *
+	 * An error is displayed if something goes wrong, but verbose is
+	 * required for more in-depth errors.
+	 *
+	 * @return Integer representing the temperature of the water in Celsius.
+	 */
 	public int getTemperature()
 	{
 		try
@@ -366,6 +538,20 @@ public class RXTXRobot
 		return -1;
 	}
 
+	/**
+	 * Moves the specified servo to the specified angular position.
+	 *
+	 * Accepts either {@link #SERVO1 RXTXRobot.SERVO1} or {@link #SERVO2 RXTXRobot.SERVO2}
+	 * and an angular position between 0 and 180 inclusive.
+	 *
+	 * The servo starts at 90 degrees, so a number &lt;90 will turn
+	 * it one way, and a number &gt;90 will turn it the other way.
+	 * 
+	 * An error message will be displayed on error.
+	 *
+	 * @param servo The servo motor that you would like to move: {@link #SERVO1 RXTXRobot.SERVO1} or {@link #SERVO2 RXTXRobot.SERVO2}.
+	 * @param position The position (in degrees) where you want the servo to turn to: 0 &lt; position &lt; 180.
+	 */
 	public void moveServo(int servo, int position)
 	{
 		if (servo != RXTXRobot.SERVO1 && servo != RXTXRobot.SERVO2)
@@ -380,6 +566,21 @@ public class RXTXRobot
 			sendRaw("v " + servo + " " + position);
 	}
 
+	/** 
+	 * Moves both servos simultaneously to the desired positions.
+	 *
+	 * Accepts two angular positions between 0 and 180 inclusive and moves the servo 
+	 * motors to the corresponding angular position. {@link #SERVO1 SERVO1} moves {@code pos1} degrees and 
+	 * {@link #SERVO2 SERVO2} moves {@code pos2} degrees.
+	 *
+	 * The servos start at 90 degrees, so a number &lt; 90 will turn
+	 * it one way, and a number &gt; 90 will turn it the other way.
+	 *
+	 * An error message will be displayed on error.
+	 *
+	 * @param pos1 The angular position of RXTXRobot.SERVO1
+	 * @param pos2 The angular position of RXTXRobot.SERVO2
+	 */
 	public void moveBothServos(int pos1, int pos2)
 	{
 		debug("Moving both servos to positions " + pos1 + " and " + pos2);
@@ -388,6 +589,29 @@ public class RXTXRobot
 		else
 			sendRaw("V " + pos1 + " " + pos2);
 	}
+
+	/**
+	 * Runs a DC motor at a specific speed for a specific time (Potential blocking method).
+	 *
+	 * Accepts a DC motor, either {@link #MOTOR1 RXTXRobot.MOTOR1}, 
+	 * {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, 
+	 * or {@link #MOTOR4 RXTXRobot.MOTOR4}, the speed that the motor 
+	 * should run at (-255 - 255), and the time with which the motor 
+	 * should run (in milliseconds).
+	 *
+	 * If speed is negative, the motor will run in reverse.
+	 *
+	 * If time is 0, the motor will run infinitely until another call 
+	 * to that motor is made, even if the Java program terminates.
+	 *
+	 * An error message will display on error.
+	 *
+	 * Note: This method is a blocking method unless time = 0
+	 *
+	 * @param motor The DC motor you want to run: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
+	 * @param speed The speed that the motor should run at (-255 - 255)
+	 * @param time The number of milliseconds the motor should run (0 for infinite) (may not be above 30,000 (30 seconds))
+	 */
 
 	public void runMotor(int motor, int speed, int time)
 	{
@@ -426,6 +650,31 @@ public class RXTXRobot
 			motorsRunning[motor] = false;
 	}
 
+	/**
+	 * Runs both DC motors at different speeds for the same amount of time. (Potential blocking method).
+	 *
+	 * Accepts a DC motor, either {@link #MOTOR1 RXTXRobot.MOTOR1}, 
+	 * {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, 
+	 * or {@link #MOTOR4 RXTXRobot.MOTOR4}, the speed in which that 
+	 * motor should run (-255 - 255), accepts another DC motor, the 
+	 * speed in which that motor should run, and the time with which 
+	 * both motors should run (in milliseconds).
+	 *
+	 * If speed is negative for either motor, that motor will run in reverse.
+	 *
+	 * If time is 0, the motors will run infinitely until another 
+	 * call to both specific motors is made, even if the Java program terminates.
+	 *
+	 * An error message will display on error.
+	 *
+	 * Note: This method is a blocking method unless time = 0
+	 *
+	 * @param motor1 The first DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
+	 * @param speed1 The speed that the first DC motor should run at
+	 * @param motor2 The second DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
+	 * @param speed2 The speed that the second DC motor should run at
+	 * @param time The amount of time that the DC motors should run (may not be more than 30,000 (30 seconds).
+	 */
 	public void runMotor(int motor1, int speed1, int motor2, int speed2, int time)
 	{
 		if (speed1 < -255 || speed1 > 255 || speed2 < -255 || speed2 > 255)
@@ -473,6 +722,34 @@ public class RXTXRobot
 		}
 	}
 
+	/**
+	 * Runs four DC motors at different speeds for the same amount of time. (Potential blocking method)
+	 * Accepts DC motors, either {@link #MOTOR1 RXTXRobot.MOTOR1}, 
+	 * {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, 
+	 * {@link #MOTOR4 RXTXRobot.MOTOR4}, the speed in which those 
+	 * motor should run (-255 - 255), accepts another DC motor, 
+	 * the speed in which that motor should run, etc, and the 
+	 * time with which both motors should run (in milliseconds).
+	 *
+	 * If speed is negative for any motor, that motor will run in reverse.
+	 *
+	 * If time is 0, the motors will run infinitely until another 
+	 * call to both specific motors is made, even if the Java program terminates.
+	 *
+	 * An error message will display on error.
+	 *
+	 * Note: This method is a blocking method unless time = 0
+	 *
+	 * @param motor1 The first DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
+	 * @param speed1 The speed that the first DC motor should run at
+	 * @param motor2 The second DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
+	 * @param speed2 The speed that the second DC motor should run at
+	 * @param motor3 The third DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
+	 * @param speed3 The speed that the third DC motor should run at
+	 * @param motor4 The fourth DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
+	 * @param speed4 The speed that the fourth DC motor should run at
+	 * @param time The amount of time that the DC motors should run
+	 */
 	public void runMotor(int motor1, int speed1, int motor2, int speed2, int motor3, int speed3, int motor4, int speed4, int time)
 	{
 		if (speed1 < -255 || speed1 > 255 || speed2 < -255 || speed2 > 255 || speed3 < -255 || speed3 > 255 || speed4 < -255 || speed4 > 255)
@@ -500,6 +777,7 @@ public class RXTXRobot
 			sleep(time);
 	}
 
+	/* This method just checks to make sure that only two DC motors are running */
 	private boolean checkRunningMotors()
 	{
 		int num = 0;
@@ -514,6 +792,24 @@ public class RXTXRobot
 		return true;
 	}
 
+	/**
+	 * Runs the small, mixing motor for a specific time. (Potential blocking method)
+	 *
+	 * Accepts a motor location ({@link #MOTOR1 RXTXRobot.MOTOR1}, 
+	 * {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, 
+	 * or {@link #MOTOR4 RXTXRobot.MOTOR4}), and the time with which the 
+	 * motor should run (in milliseconds).
+	 *
+	 * If time is 0, the motor will run infinitely until a call to 
+	 * {@link #stopMixer(int) stopMixer}, even if the Java program terminates.
+	 *
+	 * An error message will display on error.
+	 *
+	 * Note: This method is a blocking method unless time = 0
+	 *
+	 * @param motor The motor that the mixer is on: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
+	 * @param time The number of milliseconds the motor should run (0 for infinite)
+	 */
 	public void runMixer(int motor, int time)
 	{
 		final int MIXER_SPEED = 30;
@@ -531,6 +827,15 @@ public class RXTXRobot
 		if (!"".equals(sendRaw("d " + motor + " " + MIXER_SPEED + " " + time)))
 			sleep(time);
 	}
+
+	/**
+	 * Stops the small, mixing motor if it is currently running.
+	 *
+	 * This method should be called if {@link #runMixer(int) runMixer} 
+	 * was called with a time of 0.  This method will stop the mixer.
+	 *
+	 * @param motor The motor that the mixer is on: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
+	 */
 
 	public void stopMixer(int motor)
 	{
