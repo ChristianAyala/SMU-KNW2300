@@ -1,1169 +1,526 @@
 package rxtxrobot;
 
-import gnu.io.CommPort;
-import gnu.io.CommPortIdentifier;
-import gnu.io.NoSuchPortException;
-import gnu.io.PortInUseException;
-import gnu.io.SerialPort;
-import gnu.io.UnsupportedCommOperationException;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.net.ServerSocket;
-import java.net.Socket;
-
-/**
- * @author Chris King
- * @version 2.9.1
- */
 public class RXTXRobot
 {
-    /* Constants - These should not change unless you know what you are doing */
-    final private static String API_VERSION = "2.9.1";
-    final private static boolean ONLY_ALLOW_TWO_MOTORS = true;
-    /**
-     * Refers to the servo motor located in SERVO1
-     */
-    final public static int SERVO1 = 1;
-    /**
-     * Refers to the servo motor located in SERVO2
-     */
-    final public static int SERVO2 = 0;
-    /**
-     * Refers to the the M3 DC motor on the Arduino
-     */
-    final public static int MOTOR1 = 0;
-    /**
-     * Refers to the M4 DC motor on the Arduino
-     */
-    final public static int MOTOR2 = 1;
-    /**
-     * Refers to the M2 DC motor on the Arduino
-     */
-    final public static int MOTOR3 = 2;
-    /**
-     * Refers to the M1 DC motor on the Arduino
-     */
-    final public static int MOTOR4 = 3;
-    /**
-     * Refers to the M1/M2 Stepper motor on the Arduino
-     */
-    final public static int STEPPER1 = 0;
-    /**
-     * The maximum number of digital pins that can be read from the Arduino (0&nbsp;&le;&nbsp;pins&nbsp;&lt;&nbsp;NUM_DIGITAL_PINS)
-     */
-    final public static int NUM_DIGITAL_PINS = 1;
-    /**
-     * The maximum number of analog pins that can be read from the Arduino (0&nbsp;&le;&nbsp;pins&nbsp;&lt;&nbsp;NUM_ANALOG_PINS)
-     */
-    final public static int NUM_ANALOG_PINS = 6;
-    /* Private variables */
-    private String arduino_port;
-    private String labview_port;
-    private boolean verbose;
-    private OutputStream a_out;
-    private InputStream a_in;
-    private OutputStream l_out;
-    private InputStream l_in;
-    private byte[] buffer;
-    private String lastResponse;
-    private SerialPort a_serialPort;
-    private SerialPort l_serialPort;
-    private CommPort a_commPort;
-    private CommPort l_commPort;
-    private int stepsPerRotation;
-    private byte errorFlag = 0;
-    final private static int bufferSize = 1024;
-    
-    private ServerSocket labviewServerSocket;
-    private Socket labviewSocket;
-    private PrintWriter labviewWrite;
-    private BufferedReader labviewRead;
-    
-    private PrintStream error_stream;
-    private PrintStream out_stream;
-    private int[] analogPinCache = null;
-    private int[] digitalPinCache = null;
-    private boolean[] motorsRunning = {false, false, false, false};
-    /**
-     * Accepts the arduino port.
-     * 
-     * Accepts a port name for the Arduino, does not connect to LabView, and sets the verbose debugging
-     * to false. 
-     * 
-     * <br /><br />The port name will be:<br />
-     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Windows:</b> "COM3" (or "COM4" or "COM5", check device manager to see)<br />
-     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Mac/Linux:</b> "/dev/ttyACM0"
-     * 
-     * @param arduino_port Port name the Arduino/XBee is connected to.
-     */
-    public RXTXRobot(String arduino_port)
-    {
-        this.arduino_port = arduino_port;
-        this.labview_port = "";
-        this.stepsPerRotation = -1;
-        this.verbose = false;
-        setOutStream(System.out);
-        setErrStream(System.err);
-        connect();
-    }
-    /**
-     * Accepts the arduino port, and verbose debugging boolean.
-     * 
-     * <br /><br />The port name will be:<br />
-     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Windows:</b> "COM3" (or "COM4" or "COM5", check device manager to see)<br />
-     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Mac/Linux:</b> "/dev/ttyACM0"
-     * 
-     * @param arduino_port Port name the Arduino/XBee is connected to
-     * @param verbose Boolean value that allows for descriptive debugging messages
-     */
-    public RXTXRobot(String arduino_port, boolean verbose)
-    {
-        this.arduino_port = arduino_port;
-        this.labview_port = "";
-        this.stepsPerRotation = -1;
-        this.verbose = verbose;
-        setOutStream(System.out);
-        setErrStream(System.err);
-        connect();
-    }
-    /**
-     * Accepts the arduino port, and the labview port.
-     * 
-     * Accepts a port name for the Arduino, a port name for LabView, and sets the verbose debugging
-     * to false. 
-     * 
-     * <br /><br />The port name will be:<br />
-     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Windows:</b> "COM3" (or "COM4" or "COM5", check device manager to see)<br />
-     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Mac/Linux:</b> "/dev/ttyACM0"
-     * 
-     * @param arduino_port Port name the Arduino/XBee is connected to.
-     * @param labview_port Port name the LabView/XBee is connected to.
-     */
-    public RXTXRobot(String arduino_port, String labview_port)
-    {
-        this.arduino_port = arduino_port;
-        this.labview_port = labview_port;
-        this.stepsPerRotation = -1;
-        this.verbose = false;
-        setOutStream(System.out);
-        setErrStream(System.err);
-        connectLabView();
-        connect();
-    }
-    /**
-     * Accepts the arduino port, and the labview port, and verbose debugging boolean.
-     * 
-     * <br /><br />The port name will be:<br />
-     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Windows:</b> "COM3" (or "COM4" or "COM5", check device manager to see)<br />
-     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Mac/Linux:</b> "/dev/ttyACM0"
-     * 
-     * @param arduino_port Port name the Arduino/XBee is connected to
-     * @param labview_port Port name the LabView/XBee is connected to
-     * @param verbose Boolean value that allows for descriptive debugging messages
-     */
-    public RXTXRobot(String arduino_port, String labview_port, boolean verbose)
-    {
-        this.arduino_port = arduino_port;
-        this.labview_port = labview_port;
-        this.verbose = verbose;
-        this.stepsPerRotation = -1;
-        setOutStream(System.out);
-        setErrStream(System.err);
-        connectLabView();
-        connect();
-    }
-    
-    private void connectLabView()
-    {
-        try 
-        {
-            this.labview_port = "";
-            labviewServerSocket = new ServerSocket(1337);
-            out_stream.println("Waiting for labview to connect... Make sure Labview is trying to the correct IP address");
-            labviewSocket = labviewServerSocket.accept();
-            labviewWrite = new PrintWriter(labviewSocket.getOutputStream(), true);
-            labviewRead = new BufferedReader(new InputStreamReader(labviewSocket.getInputStream()));
-            out_stream.println("Labview connected!  Starting to run program...");
-        }
-        catch(Exception e)
-        {
-            System.err.println("An error occurred waiting for labview:" + e + "\n\nStacktrace: ");
-            e.printStackTrace(error_stream);
-            System.exit(0);
-        }
-    }
-    /**
-     * 
-     * Sets the output PrintStream; System.out by default.
-     * 
-     * This method lets you set the output stream from System.out to somewhere else.  It shouldn't be used unless you know what you are doing.
-     * 
-     * @param o PrintStream to write output to.
-     */
-    public final void setOutStream(PrintStream o)
-    {
-        out_stream = o;
-    }
-    
-    /**
-     * 
-     * Sets the error PrintStream; System.err by default.
-     * 
-     * This method lets you set the output stream from System.err to somewhere else.  It shouldn't be used unless you know what you are doing.
-     * 
-     * @param e PrintStream to write error to.
-     */
-    
-    public final void setErrStream(PrintStream e)
-    {
-        error_stream = e;
-    }
-    
-    /**
-     * Gets the version number of the API.
-     * 
-     * @return A string with the version number
-     */
-    public String getVersion()
-    {
-        return RXTXRobot.API_VERSION;
-    }
-    
-    /**
-     * 
-     * Attempts to connect to the Arduino/XBee and the LabView/XBee.
-     * 
-     * This method identifies the port that is currently being used by the Arduino/XBee 
-     * and makes a serial connection to the Arduino if the port is not already in use.
-     * If there is an error in connecting, then a different error message will be 
-     * displayed to the user for each case.  This method is automatically called from the
-     * constructor.  Only use it if you have detected the connection is closed from {@link #isConnected() isConnected()}
-     * or if you called {@link #close() close()} before.
-     * 
-     * This function does not terminate runtime if an error is discovered.  See the
-     * function {@link #isConnected() isConnected()} to test for an active connection.
-     * 
-     */
-    public final void connect()
-    {
-        System.setOut(out_stream);
-        System.setErr(error_stream);
-        out_stream.println("RXTXRobot API version " + RXTXRobot.API_VERSION);
-        out_stream.println("Starting up robot, please wait (typically takes 3 seconds)...");
-        if (!isConnected())
-        {
-            try
-            {
-                CommPortIdentifier a_portIdentifier = CommPortIdentifier.getPortIdentifier(arduino_port);
-                CommPortIdentifier l_portIdentifier = null;
-                if (!labview_port.equals(""))
-                    l_portIdentifier = CommPortIdentifier.getPortIdentifier(labview_port);
-                if (a_portIdentifier.isCurrentlyOwned())
-                {
-                    System.err.println("Error: Arduino port ("+arduino_port+") is currently owned by "+a_portIdentifier.getCurrentOwner());
-                }
-                else if (!labview_port.equals("") && l_portIdentifier.isCurrentlyOwned())
-                {
-                    System.err.println("Error: Labview port ("+labview_port+") is currently owned by "+l_portIdentifier.getCurrentOwner());
-                }
-                else
-                {
-                        a_commPort = a_portIdentifier.open("RXTXRobot",2000);
-                        if (!labview_port.equals(""))
-                            l_commPort = l_portIdentifier.open("LabView",2000);
-                        if ( a_commPort instanceof SerialPort && (labview_port.equals("") || l_commPort instanceof SerialPort ))
-                        {
-                            a_serialPort = (SerialPort) a_commPort;
-                            if (!labview_port.equals(""))
-                                l_serialPort = (SerialPort) l_commPort;
-                            a_serialPort.setSerialPortParams(9600,SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.PARITY_NONE);
-                            if (!labview_port.equals(""))
-                                l_serialPort.setSerialPortParams(9600,SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.PARITY_NONE);
-                            debug("Sleeping and resetting...");
-                            Thread.sleep(3000);
-                            debug("Waking up...");
-                            a_in = a_serialPort.getInputStream();
-                            a_out = a_serialPort.getOutputStream();
-                            if (!labview_port.equals(""))
-                            {
-                                l_in = l_serialPort.getInputStream();
-                                l_out = l_serialPort.getOutputStream();
-                            }
-                            out_stream.println("Connected...");
-                        }
-                }
-            }
-            catch(NoSuchPortException e)
-            {
-                System.err.println("Invalid port (NoSuchPortException). Check to make sure that the correct port is set at the objects initialization.");
-                if (verbose)
-                {
-                    System.err.println("Error Message: " + e.toString()+"\n\nError StackTrace:\n");
-                    e.printStackTrace(error_stream);
-                }
-            }
-            catch(PortInUseException e)
-            {
-                System.err.println("Port is already being used by a different application (PortInUseException). Did you stop a previously running instance of this program?");
-                if (verbose)
-                {
-                    System.err.println("Error Message: " + e.toString()+"\n\nError StackTrace:\n");
-                    e.printStackTrace(error_stream);
-                }
-            }
-            catch(UnsupportedCommOperationException e)
-            {
-                System.err.println("Comm Operation is unsupported (UnsupportedCommOperationException).  This error shouldn't really happen, ever.  If you see this, ask a TA for assistance");
-                if (verbose)
-                {
-                    System.err.println("Error Message: " + e.toString()+"\n\nError StackTrace:\n");
-                    e.printStackTrace(error_stream);
-                }
-            }
-            catch(InterruptedException e)
-            {
-                System.err.println("Thread was interrupted (InterruptedException).  Something stopped the Thread from executing (early termination of program?).  If you meant to terminate the program, ignore this error.");
-                if (verbose)
-                {
-                    System.err.println("Error Message: " + e.toString()+"\n\nError StackTrace:\n");
-                    e.printStackTrace(error_stream);
-                }
-            }
-            catch(IOException e)
-            {
-                System.err.println("Could not assign Input and Output streams (IOException).  You may be calling the \"close()\" method before this one.  Make sure you only call \"close()\" at the very end of your program.");
-                if (verbose)
-                {
-                    System.err.println("Error Message: " + e.toString()+"\n\nError StackTrace:\n");
-                    e.printStackTrace(error_stream);
-                }
-            }
-        }
-        else
-            System.err.println("connect() - RXTXRobot is already connected.");
-    }
-    /**
-     * 
-     * Checks if the RXTXRobot object is connected to the Arduino/XBee AND LabView/XBee.
-     * 
-     * Returns true if the RXTXRobot object is successfully connected to the Arduino/XBee and LabView/XBee.  Returns false otherwise.
-     * 
-     * @return true/false value that specifies if the RXTXRobot object is connected to the Arduino/XBee and LabView/XBee
-     */
-    public final boolean isConnected()
-    {
-        return a_serialPort != null && a_commPort != null && (labview_port.equals("") || (l_serialPort != null && l_commPort != null));
-    }
-    /**
-     * 
-     * Closes the connection to the Arduino/XBee and LabView/XBee.
-     * 
-     * This method closes the serial connection to the Arduino/XBee and LabView/XBee.  It deletes the mutual exclusion lock
-     * file which is important, so this should be done before the program is terminated.
-     * 
-     */
-    public final void close()
-    {
-        sleep(300);
-        try {
-            labviewSocket.close();
-            labviewServerSocket.close();
-        } catch(Exception e) {}
-        debug("Resetting servos to position of 90 degrees for next run's use");
-        this.moveBothServos(90,90);
-        if (a_serialPort != null)
-            a_serialPort.close();
-        if (a_commPort != null)
-            a_commPort.close();
-        if (!"".equals(labview_port))
-        {
-            if (l_serialPort != null)
-                l_serialPort.close();
-            if (l_commPort != null)
-                l_commPort.close();
-        }
-    }
-    
-    /**
-     * Prints out debugging statements.
-     * 
-     * If verbose is set to true in the constructor then debugging statements will 
-     * be printed out to the user. If verbose is set to false then these statements 
-     * will not print. 
-     * 
-     * @param s message passed to debug
-     */
-    private void debug(String s)
-    {
-        if (verbose)
-            out_stream.println("----> " + s);
-    }
-    /**
-     * 
-     * Sends a string to the Arduino to be executed.
-     * 
-     * If a serial connection is present, then it sends the string s to the Arduino to be executed.
-     * If verbose is true then the response from the Arduino is read into lastResponse. 
-     * 
-     * @param str The command sent to the Arduino 
-     */
-    public void sendRaw(String str)
-    {
-        sendRaw(str,200);
-    }
-    
-    private void sendRaw(String str,int sleep)
-    {
-        if (errorFlag != 2)
-            errorFlag = 0;
-        debug("Sending command: " + str);
-        try
-        {
-            if (a_out != null && a_in != null && isConnected())
-            {
-                a_out.write((str+"\r\n").getBytes());
-                //if (verbose && errorFlag != 2)
-                //{  
-                buffer = new byte[bufferSize];
-                sleep(sleep);
-                //a_in.read(buffer, 0, Math.min(a_in.available(), buffer.length));
-                int bytesRead = a_in.read(buffer);
-                lastResponse = (new String(buffer)).trim();
-                debug("Received " + bytesRead + " bytes from Arduino: " + lastResponse);
-                //}
-            }
-            else
-                errorFlag = 1;
-        }
-        catch(IOException e)
-        {
-            if (errorFlag != 2)
-            {
-                errorFlag = 1;
-                System.err.println("Could not read or use Input and Output streams (IOException).");
-                if (verbose)
-                {
-                    System.err.println("Error Message: " + e.toString()+"\n\nError StackTrace:\n");
-                    e.printStackTrace(error_stream);
-                }
-            }
-        }
-    }
-    /**
-     * Reads the Wii remote data from LabView through XBees and returns one 3D coordinate.
-     * 
-     * @return The response from LabView in a {@link Coord} object or null on error.
-     */
-    public Coord readFromLabView3D()
-    {
-        if (labview_port.equals(""))
-        {
-            System.err.println("A connection to labview was not made.  Cannot read from labview.");
-            return null;
-        }
-        String command = "s";
-        debug("Sending command: " + command);
-        try
-        {
-            if (l_out != null && l_in != null && isConnected())
-            {
-                this.sendRaw(command,800);
-                if (lastResponse.indexOf(",")==-1)
-                {
-                    System.err.println("No response from LabView.  Returning a null object");
-                    return null;
-                }
-                lastResponse = lastResponse.substring(lastResponse.indexOf("[")+1, lastResponse.indexOf("]"));
-                String[] parts = lastResponse.split(",");
-                debug("Creating Coord: ("+parts[0]+", "+parts[1]+", "+parts[2]+")");
-                return new Coord(Double.parseDouble(parts[0]),Double.parseDouble(parts[1]),Double.parseDouble(parts[2]));
-            }
-        }
-        catch(NumberFormatException e)
-        {
-            debug("Labview returned: " + lastResponse + " and determined it not to be a number.");
-            return null;
-        }
-        catch(Exception e)
-        {
-            System.err.println("A generic error occurred: Error: " + e.toString());
-        }
-        return null;
-    }
-    /**
-     * Reads the Wii remote data from LabView through XBees and returns two 2D coordinates.
-     * 
-     * @return The response from LabView in a {@link Coord} object (z-attribute = -1) or an array of length 2 of null objects.
-     */
-    public Coord[] readFromLabView2D()
-    {
-        if (labview_port.equals(""))
-        {
-            System.err.println("A connection to labview was not made.  Cannot read from labview.");
-            return new Coord[2];
-        }
-        String command = "s";
-        debug("Sending command: " + command);
-        try
-        {
-            if (l_out != null && l_in != null && isConnected())
-            {
-                this.sendRaw(command,800);
-                if (lastResponse.indexOf(",")==-1)
-                {
-                    System.err.println("No response from LabView.  Returning an empty Coord array.");
-                    Coord[] ans = {new Coord(-1.0,-1.0,-1.0), new Coord(-1.0,-1.0,-1.0)};
-                    return ans;
-                }
-                lastResponse = lastResponse.substring(lastResponse.indexOf("[")+1, lastResponse.indexOf("]"));
-                String[] parts = lastResponse.split(",");
-                debug("Creating 2 Coords:  ("+parts[0]+", "+parts[1]+") and ("+parts[2]+", "+parts[3]+")");
-                Coord[] ans = {new Coord(Double.parseDouble(parts[0]),Double.parseDouble(parts[1]),-1.0),new Coord(Double.parseDouble(parts[2]),Double.parseDouble(parts[3]),-1.0)};
-                return ans;
-            }
-        }
-        catch(NumberFormatException e)
-        {
-            debug("Labview returned: " + lastResponse + " and determined it not to be a number.");
-            return new Coord[2];
-        }
-        catch(Exception e)
-        {
-            System.err.println("A generic error occurred: Error: " + e.toString());
-        }
-        return new Coord[2];
-    }
-    
-    /**
-     * Reads the Wii remote data from LabView through sockets and returns one 3D coordinate.
-     * 
-     * @return The response from LabView in a {@link Coord} object or null on error.
-     */
-    public Coord readFromLabView()
-    {
-        if (!labviewSocket.isConnected())
-        {
-            System.err.println("The connection to labview was apparently lost...");
-            return null;
-        }
-        String command = "s";
-        debug("Sending command: " + command);
-        try
-        {
-            labviewWrite.write("s");
-            labviewWrite.flush();
-            lastResponse = "";
-            this.sleep(200);
-            while (labviewRead.ready())
-                lastResponse += (char)labviewRead.read();
-            lastResponse = lastResponse.substring(lastResponse.indexOf("[")+1, lastResponse.indexOf("]"));
-            String[] parts = lastResponse.split(",");
-            debug("Creating Coord: ("+parts[0]+", "+parts[1]+", "+parts[2]+")");
-            return new Coord(Double.parseDouble(parts[0]),Double.parseDouble(parts[1]),Double.parseDouble(parts[2]));
-        }
-        catch(NumberFormatException e)
-        {
-            debug("Labview returned: " + lastResponse + " and determined it not to be a number.");
-            return null;
-        }
-        catch(Exception e)
-        {
-            System.err.println("A generic error occurred: Error: " + e.toString());
-        }
-        return null;
-    }
-    /**
-     * 
-     * Returns the last response sent from the Arduino.
-     * 
-     * <br /><br /><b>This should only be relied on when verbose mode is set.</b>
-     * 
-     * @return The last response sent from the Arduino.
-     */
-    public String getLastResponse()
-    {
-        return lastResponse;
-    }
-    /**
-     * 
-     * Allows the robot to sleep for time length measured in milliseconds.
-     * 
-     * Uses a standard {@link Thread#sleep(long) Thread.sleep(long)} function to pause execution of the program for the 
-     * specified milliseconds. Displays an error if the thread is interrupted during 
-     * this process, but does not throw an Exception. (1000 milliseconds = 1 second)
-     * 
-     * @param length The amount of time in milliseconds
-     */
-    public void sleep(int length)
-    {
-        try
-        {
-            Thread.sleep(length);
-        }
-        catch(InterruptedException e)
-        {
-            System.err.println("Thread was interrupted (InterruptedException). Error: " + e.toString());
-        }
-    }
-    
-    /**
-     * Refreshes the analog pin cache from the robot.
-     * 
-     * This must be called to refresh the data of the pins.
-     */
-    public void refreshAnalogPins()
-    {
-        analogPinCache = this.getAnalogPins();
-    }
-    
-    /**
-     * Refreshes the digital pin cache from the robot.
-     * 
-     * This must be called to refresh the data of the pins.
-     */
-    public void refreshDigitalPins()
-    {
-        digitalPinCache = this.getDigitalPins();
-    }
-    
-    /**
-     * Returns an AnalogPin object for the specified pin.
-     * 
-     * This will get the value of the pin since the last time {@link #refreshAnalogPins() refreshAnalogPins()} was called.
-     * 
-     * @param x The number of the pin: 0 &le; x &lt; {@link #NUM_ANALOG_PINS NUM_ANALOG_PINS}
-     * @return AnalogPin object of the specified pin, or null if error.
-     */
-    public AnalogPin getAnalogPin(int x)
-    {
-        if (analogPinCache == null)
-            this.refreshAnalogPins();
-        if (x >= analogPinCache.length || x < 0)
-        {
-            System.err.println("ERROR: Analog pin " + x + " doesn't exist.");
-            return null;
-        }
-        return new AnalogPin(this, x, analogPinCache[x]);
-    }
-    
-    /**
-     * Returns a DigitalPin object for the specified pin.
-     * 
-     * This will get the value of the pin since the last time {@link #refreshDigitalPins() refreshDigitalPins()} was called.
-     * 
-     * @param x The number of the pin: 13
-     * @return DigitalPin object of the specified pin, or null if error.
-     */
-    public DigitalPin getDigitalPin(int x)
-    {
-        // Mapping is an array to match the pin number to the actual returned array from the Arduino:
-        //      pin_number, location_array
-        final int[][] mapping = {{13, 0}};
-        if (digitalPinCache == null)
-            this.refreshDigitalPins();
-        int get_pin = -1;
-        for (int y=0;y<mapping.length;++y)
-        {
-            if (mapping[y][0] == x)
-            {
-                get_pin = mapping[y][1];
-                break;
-            }
-        }
-        if (get_pin == -1)
-        {
-            System.err.append("You may not read from pin " + x + ".  You can only read from pin 13");
-            return null;
-        }
-        return new DigitalPin(this, x, digitalPinCache[get_pin]);
-    }
-    /**
-     * 
-     * Returns the 6 analog pins from the Arduino in an Integer array. <br /><br />
-     * 
-     * Each pin's value is returned in a zero-indexed integer array.
-     * 
-     * An error is displayed if something goes wrong, but verbose is required for more in-depth errors.
-     * 
-     * @return Integer array of size {@link #NUM_ANALOG_PINS RXTXRobot.NUM_ANALOG_PINS} filled with the Analog pin's value (or -1 on error).
-     */
-    private int[] getAnalogPins()
-    {
-        int[] ans = new int[RXTXRobot.NUM_ANALOG_PINS];
-        for (int x=0;x<ans.length;++x)
-            ans[x] = -1;
-        try
-        {
-            sendRaw("r a");
-            String[] split = this.getLastResponse().split("\\s+");
-            if (split.length <= 1)
-            {
-                System.err.println("getAnalogPins() - No response was received from the Arduino.  Try again");
-                return ans;
-            }
-            if (split.length-1 != RXTXRobot.NUM_ANALOG_PINS)
-            {
-                System.err.println("getAnalogPins() - Incorrect length returned: " + split.length);
-                if (verbose)
-                    for (int x=0;x<split.length;++x)
-                        System.err.println("["+x+"] = " + split[x]);
-                return ans;
-            }
-            for (int x=1;x<split.length;++x)
-            {
-                ans[x-1] = Integer.parseInt(split[x]);
-            }
-            return ans;
-        }
-        catch (NumberFormatException e)
-        {
-            System.err.println("getAnalogPins() - Returned string could not be parsed into Integers");
-        }
-        catch (Exception e)
-        {
-            System.err.println("An error occurred with getAnalogPins.");
-            if (verbose)
-            {
-                System.err.println("Stacktrace: ");
-                e.printStackTrace(error_stream);
-            }
-        }
-        return ans;
-    }
-    /**
-     * 
-     * Returns the 12 digital pins from the Arduino in an Integer array. <br /><br />
-     * 
-     * Each pin's value is returned in a zero-indexed integer array.
-     * 
-     * An error is displayed if something goes wrong, but verbose is required for more in-depth errors.
-     * 
-     * @return Integer array of size {@link #NUM_DIGITAL_PINS RXTXRobot.NUM_DIGITAL_PINS} filled with the Digital pin's value (or -1 on error)
-     */
-    private int[] getDigitalPins()
-    {
-        int[] ans = new int[RXTXRobot.NUM_DIGITAL_PINS];
-        for (int x=0;x<ans.length;++x)
-            ans[x] = -1;
-        try
-        {
-            this.sendRaw("r d");
-            String[] split = this.getLastResponse().split("\\s+");
-            if (split.length <= 1)
-            {
-                System.err.println("getDigitalPins() - No response was received from the Arduino.  Try again");
-                return ans;
-            }
-            if (split.length-1 != RXTXRobot.NUM_DIGITAL_PINS)
-            {
-                System.err.println("getDigitalPins() - Incorrect length returned: " + split.length);
-                if (verbose)
-                    for (int x=0;x<split.length;++x)
-                        System.err.println("["+x+"] = " + split[x]);
-                return ans;
-            }
-            for (int x=1;x<split.length;++x)
-            {
-                ans[x-1] = Integer.parseInt(split[x]);
-            }
-            return ans;
-        }
-        catch (NumberFormatException e)
-        {
-            System.err.println("getDigitalPins() - Returned string could not be parsed into Integers");
-        }
-        catch (Exception e)
-        {
-            System.err.println("An error occurred with getDigitalsPins.");
-            if (verbose)
-            {
-                System.err.println("Stacktrace: ");
-                e.printStackTrace(error_stream);
-            }
-        }
-        return ans;
-    }
-    
-    /**
-     * 
-     * Returns the value of the temperature sensor <b>on digital pin 2</b>. <br /><br />
-     * 
-     * An error is displayed if something goes wrong, but verbose is required for more in-depth errors.
-     * 
-     * @return Integer representing the temperature of the water in Celsius.
-     */
-    public int getTemperature()
-    {
-        int ans = -1;
-        try
-        {
-            this.sendRaw("r t");
-            String[] split = this.getLastResponse().split("\\s+");
-            if (split.length <= 1)
-            {
-                System.err.println("getTemperature() - No response was received from the Arduino.  Try again");
-                return ans;
-            }
-            if (split.length-1 != 1)
-            {
-                System.err.println("getTemperature() - Incorrect length returned: " + split.length);
-                if (verbose)
-                    for (int x=0;x<split.length;++x)
-                        System.err.println("["+x+"] = " + split[x]);
-                return ans;
-            }
-            ans = Integer.parseInt(split[1]);
-            return ans;
-        }
-        catch (NumberFormatException e)
-        {
-            System.err.println("getTemperature() - Returned string could not be parsed into Integer");
-        }
-        catch (Exception e)
-        {
-            System.err.println("An error occurred with getTemperature.");
-            if (verbose)
-            {
-                System.err.println("Stacktrace: ");
-                e.printStackTrace(error_stream);
-            }
-        }
-        return ans;
-    }
-    
-    /**
-     * 
-     * Moves the specified servo to the specified angular position.
-     * 
-     * Accepts either {@link #SERVO1 RXTXRobot.SERVO1} or {@link #SERVO2 RXTXRobot.SERVO2} and an angular position between 0 and 180 inclusive.
-     * <br /><br />
-     * The servo starts at 90 degrees, so a number &lt; 90 will turn it one way, and a number &gt; 90 will turn
-     * it the other way.  An error message will be displayed on error.
-     * 
-     * @param servo The servo motor that you would like to move: {@link #SERVO1 RXTXRobot.SERVO1} or {@link #SERVO2 RXTXRobot.SERVO2}.
-     * @param position The position (in degrees) where you want the servo to turn to: 0 &le; position &le; 180.
-     */
-    public void moveServo(int servo, int position)
-    {
-        if (servo != RXTXRobot.SERVO1 && servo != RXTXRobot.SERVO2)
-        {
-            System.err.println("ERROR: moveServo: Invalid servo argument (RXTXRobot.SERVO1 or RXTXRobot.SERVO2");
-            return;
-        }
-        debug("Moving servo " + servo + " to position " + position);
-        if (position < 0 || position > 180)
-            System.err.println("ERROR: moveServo position must be  >=0 and <=180.  You supplied " + position + ", which is invalid.");
-        else
-            sendRaw("v " + servo + " " + position);
-    }
-    /**
-     * 
-     * Moves both servos simultaneously to the desired positions.
-     * 
-     * Accepts two angular positions between 0 and 180 inclusive and moves the servo 
-     * motors to the corresponding angular position. {@link #SERVO1 SERVO1} moves {@code pos1} degrees and 
-     * {@link #SERVO2 SERVO2} moves {@code pos2} degrees.
-     * <br /><br />
-     * The servos start at 90 degrees, so a number &lt; 90 will turn it one way, and a number &gt; 90 will turn
-     * it the other way.  An error message will be displayed on error.
-     * 
-     * @param pos1 The angular position of RXTXRobot.SERVO1
-     * @param pos2 The angular position of RXTXRobot.SERVO2
-     */
-    public void moveBothServos(int pos1, int pos2)
-    {
-        debug("Moving both servos to positions " + pos1 + " and " + pos2);
-        if (pos1 < 0 || pos1 > 180 || pos2 < 0 || pos2 > 180)
-            System.err.println("ERROR: moveBothServos positions must be >=0 and <=180.  You supplied " + pos1 + " and " + pos2 + ".  One or more are invalid.");
-        else
-            sendRaw("V " + pos1 + " " + pos2);
-    }
-    /**
-     * 
-     * Move the stepper motor a specified number of steps (<b>Blocking method</b>).
-     * 
-     * Accepts a stepper motor and a number of steps
-     * that the stepper motor should turn.  Negative steps will rotate
-     * counter-clockwise and positive steps will rotate clockwise.<br /><br />
-     * 
-     * Typically, one step = 15 degrees. (<i>IE: 24 steps for one full revolution</i>) (<i>Note: Some stepper motors are different.  Try through experimenting</i>)<br /><br />
-     * 
-     * <b>Note: This method is a blocking method.</b>
-     * 
-     * @param stepper The stepper motor that you want to move ({@link #STEPPER1 RXTXRobot.STEPPER1})
-     * @param steps The number of steps you want the motor to move
-     */
-    public void moveStepper(int stepper, int steps)
-    {
-        if(stepper != RXTXRobot.STEPPER1){
-            System.err.println("ERROR: moveStepper was not given the correct stepper argument (RXTXRobot.STEPPER1)");
-            return;
-        }
-        debug("Moving stepper " + stepper + " " + steps + " steps");
-        errorFlag = 2;
-        sendRaw("p " + stepper + " " + steps);
-        if (errorFlag == 2)
-            errorFlag = 0;
-        if (errorFlag == 0)
-        {
-            if(stepsPerRotation < 0)
-                sleep((int)(Math.abs(steps)*60*1000*((24.0/100))/(24*30))); // Old sleep method
-            else
-                sleep((int)((Math.abs(steps)*60000)/(30*stepsPerRotation))); // steps * (1 rot/# steps) * (1 min / 30 rot) * (60 sec / 1 min) * (1000 ms / 1 sec)
-        }
-    }
-    /**
-     * 
-     * Runs a DC motor at a specific speed for a specific time. (<b>Potential blocking method</b>)
-     *   
-     * Accepts a DC motor, either {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}, the speed 
-     * that the motor should run at (-255 - 255), and the time with which the motor should run (in milliseconds).
-     * <br /><br />
-     * If speed is negative, the motor will run in reverse.
-     * <br /><br />
-     * If time is 0, the motor will run infinitely until another call to that motor is made, even if the Java program terminates.
-     * 
-     * <br /><br />An error message will display on error.<br /><br />
-     * 
-     * <b>Note: This method is a blocking method <u>unless</u> time = 0</b>
-     * 
-     * @param motor The DC motor you want to run: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
-     * @param speed The speed that the motor should run at (-255 - 255)
-     * @param time The number of milliseconds the motor should run (0 for infinite) (may not be above 30,000 (30 seconds))
-     */
-    public void runMotor(int motor, int speed, int time)
-    {
-        if (speed < -255 || speed > 255)
-        {
-            System.err.println("ERROR: You must give the motors a speed between -255 and 255 (inclusive)");
-            return;
-        }
-        if (RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
-        {
-            boolean prev = motorsRunning[motor];
-            if (speed == 0)
-                motorsRunning[motor] = false;
-            else
-                motorsRunning[motor] = true;
+	final private static String API_VERSION = "3.0.0";
+	final private static boolean ONLY_ALLOW_TWO_MOTORS = true;
+	final private static int BAUD_RATE = 9600;
 
-            if (!checkRunningMotors())
-            {
-                motorsRunning[motor] = prev;
-                return;
-            }
-        }
-        if (time < 0 || time > 30000)
-        {
-            System.err.println("ERROR: runMotor was not given a time that is 0 <= time <= 30000");
-            return;
-        }
-        if (motor != RXTXRobot.MOTOR1 && motor != RXTXRobot.MOTOR2 && motor != RXTXRobot.MOTOR3 && motor != RXTXRobot.MOTOR4)
-        {
-            System.err.println("ERROR: runMotor was not given a correct motor argument");
-            return;
-        }
-        debug("Running motor " + motor + " at speed " + speed + " for time of " + time);
-        sendRaw("d " + motor + " "  + speed + " " + time);
-        if (errorFlag == 0)
-            sleep(time);
-        if (time != 0)
-            motorsRunning[motor] = false;
-    }
-    /**
-     * 
-     * Runs both DC motors at different speeds for the same amount of time. (<b>Potential blocking method</b>)
-     *   
-     * Accepts a DC motor, either {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}, the speed 
-     * in which that motor should run (-255 - 255), accepts another DC motor, the speed in which
-     * that motor should run, and the time with which both motors should run (in milliseconds).
-     * <br /><br />
-     * If speed is negative for either motor, that motor will run in reverse.
-     * <br /><br />
-     * If time is 0, the motors will run infinitely until another call to both specific motors is made, even if the Java program terminates.
-     * 
-     * <br /><br />An error message will display on error.<br /><br />
-     * 
-     * <b>Note: This method is a blocking method <u>unless</u> time = 0</b>
-     * 
-     * @param motor1 The first DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
-     * @param speed1 The speed that the first DC motor should run at
-     * @param motor2 The second DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
-     * @param speed2 The speed that the second DC motor should run at
-     * @param time The amount of time that the DC motors should run (may not be more than 30,000 (30 seconds))
-     */
-    public void runMotor(int motor1, int speed1, int motor2, int speed2, int time)
-    {
-        if (speed1 < -255 || speed1 > 255 || speed2 < -255 || speed2 > 255)
-        {
-            System.err.println("ERROR: You must give the motors a speed between -255 and 255 (inclusive)");
-            return;
-        }
-        if (RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
-        {
-            boolean prev1 = motorsRunning[motor1];
-            boolean prev2 = motorsRunning[motor2];
-            if (speed1 == 0)
-                motorsRunning[motor1] = false;
-            else
-                motorsRunning[motor1] = true;
-            
-            if (speed2 == 0)
-                motorsRunning[motor2] = false;
-            else
-                motorsRunning[motor2] = true;
-            
-            if (!checkRunningMotors())
-            {
-                motorsRunning[motor1] = prev1;
-                motorsRunning[motor2] = prev2;
-                return;
-            }
-        }
-        if (time < 0 || time > 30000)
-        {
-            System.err.println("ERROR: runMotor was not given a time that is 0 <= time <= 30000");
-            return;
-        }
-        if ((motor1 < 0 || motor1 > 3) || (motor2 < 0 || motor2 > 3))
-        {
-            System.err.println("ERROR: runMotor was not given a correct motor argument");
-            return;
-        }
-        debug("Running two motors, motor " + motor1 + " at speed " + speed1 + " and motor " + motor2 + " at speed " + speed2 + " for time of " + time);
-        sendRaw("D " + motor1 + " " + speed1 +" " + motor2 + " " + speed2 + " " + time);
-        if (errorFlag == 0)
-            sleep(time);
-        if (time != 0)
-        {
-            motorsRunning[motor1] = false;
-            motorsRunning[motor2] = false;
-        }
-    }
-    /**
-     * 
-     * Runs four DC motors at different speeds for the same amount of time. (<b>Potential blocking method</b>)
-     *   
-     * Accepts DC motors, either {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, {@link #MOTOR4 RXTXRobot.MOTOR4}, the speed 
-     * in which those motor should run (-255 - 255), accepts another DC motor, the speed in which
-     * that motor should run, etc, and the time with which both motors should run (in milliseconds).
-     * <br /><br />
-     * If speed is negative for any motor, that motor will run in reverse.
-     * <br /><br />
-     * If time is 0, the motors will run infinitely until another call to both specific motors is made, even if the Java program terminates.
-     * 
-     * <br /><br />An error message will display on error.<br /><br />
-     * 
-     * <b>Note: This method is a blocking method <u>unless</u> time = 0</b>
-     * 
-     * @param motor1 The first DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
-     * @param speed1 The speed that the first DC motor should run at
-     * @param motor2 The second DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
-     * @param speed2 The speed that the second DC motor should run at
-     * @param motor3 The third DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
-     * @param speed3 The speed that the third DC motor should run at
-     * @param motor4 The fourth DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
-     * @param speed4 The speed that the fourth DC motor should run at
-     * @param time The amount of time that the DC motors should run
-     */
-    public void runMotor(int motor1, int speed1, int motor2, int speed2, int motor3, int speed3, int motor4, int speed4, int time)
-    {
-        if (speed1 < -255 || speed1 > 255 || speed2 < -255 || speed2 > 255 || speed3 < -255 || speed3 > 255 || speed4 < -255 || speed4 > 255)
-        {
-            System.err.println("ERROR: You must give the motors a speed between -255 and 255 (inclusive)");
-            return;
-        }
-        if (RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
-        {
-            System.err.println("ERROR: You may only run two DC motors at a time, so you cannot use this method!");
-            return;
-        }
-        if (time < 0)
-        {
-            System.err.println("ERROR: runMotor was not given a time that is >=0");
-            return;
-        }
-        if ((motor1 < 0 || motor1 > 3) || (motor2 < 0 || motor2 > 3) || (motor3 < 0 || motor3 > 3) || (motor4 < 0 || motor4 > 3))
-        {
-            System.err.println("ERROR: runMotor was not given a correct motor argument");
-            return;
-        }
-        debug("Running four motors, motor " + motor1 + " at speed " + speed1 + " and motor " + motor2 + " at speed " + speed2 + " and motor " + motor3 + " at speed " + speed3 + " and motor " + motor4 + " at speed " + speed4 + " for time of " + time);
-        sendRaw("F " + motor1 + " " + speed1 +" " + motor2 + " " + speed2 + " " + motor3 + " " + speed3 + " " + motor4 + " " + speed4 + " " + time);
-        if (errorFlag == 0)
-            sleep(time);
-    }
-    
-    /* This method just checks to make sure that only two DC motors are running */
-    private boolean checkRunningMotors()
-    {
-        int num = 0;
-        for (int x=0; x < motorsRunning.length; ++x)
-            if (motorsRunning[x])
-                ++num;
-        if (num > 2)
-        {
-            System.err.println("ERROR: You may not run more than two motors at any given time!");
-            return false;
-        }
-        return true;
-    }
-    
-    /**
-     * 
-     * Runs the small, mixing motor for a specific time. (<b>Potential blocking method</b>)
-     *   
-     * Accepts a motor location ({@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}), and the time with which the motor should run (in milliseconds).
-     * <br /><br />
-     * If time is 0, the motor will run infinitely until a call to {@link #stopMixer(int) stopMixer}, even if the Java program terminates.
-     * 
-     * <br /><br />An error message will display on error.<br /><br />
-     * 
-     * <b>Note: This method is a blocking method <u>unless</u> time = 0</b>
-     * 
-     * @param motor The motor that the mixer is on: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
-     * @param time The number of milliseconds the motor should run (0 for infinite)
-     */
-    public void runMixer(int motor, int time)
-    {
-        final int MIXER_SPEED = 30;
-        if (motor != RXTXRobot.MOTOR1 && motor != RXTXRobot.MOTOR2 && motor != RXTXRobot.MOTOR3 && motor != RXTXRobot.MOTOR4)
-        {
-            System.err.println("ERROR: You must supply a valid motor port: RXTXRobot.MOTOR1, MOTOR2, MOTOR3, or MOTOR4.");
-            return;
-        }
-        if (time < 0)
-        {
-            System.err.println("ERROR: You must supply a positive time.");
-            return;
-        }
-        debug("Running mixer on port " + motor + " at speed " + MIXER_SPEED + " for time of " + time);
-        sendRaw("d " + motor + " "  + MIXER_SPEED + " " + time);
-        if (errorFlag == 0)
-            sleep(time);
-    }
-    
-    /**
-     * 
-     * Stops the small, mixing motor if it is currently running.
-     * 
-     * This method should be called if {@link #runMixer(int) runMixer} was called with a time of 0.  This method will stop the mixer.
-     * 
-     * @param motor The motor that the mixer is on: {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or {@link #MOTOR4 RXTXRobot.MOTOR4}
-     */
-    public void stopMixer(int motor)
-    {
-        if (motor != RXTXRobot.MOTOR1 && motor != RXTXRobot.MOTOR2 && motor != RXTXRobot.MOTOR3 && motor != RXTXRobot.MOTOR4)
-        {
-            System.err.println("ERROR: You must supply a valid motor port: RXTXRobot.MOTOR1, MOTOR2, MOTOR3, or MOTOR4.");
-            return;
-        }
-        debug("Stopping mixer on port " + motor);
-        sendRaw("d " + motor + " 0 0");
-    }
+	final public static int SERVO1 = 1;
+	final public static int SERVO2 = 0;
+	final public static int MOTOR1 = 0;
+	final public static int MOTOR2 = 1;
+	final public static int MOTOR3 = 2;
+	final public static int MOTOR4 = 3;
+	
+	final public static int NUM_DIGITAL_PINS = 1;
+	final public static int NUM_ANALOG_PINS = 6;
+
+	private String port = "";
+	private boolean verbose = false;
+	private int[] analogPinCache = null;
+	private int[] digitalPinCache = null;
+	private boolean[] motorsRunning = {false, false, false, false};
+
+	private InputStream in;
+	private OutputStream out;
+	private SerialPort sPort;
+	private CommPort cPort;
+
+	public RXTXRobot()
+	{
+	}
+
+	public static String getVersion()
+	{
+		return API_VERSION;
+	}
+
+	public void setOutStream(PrintStream p)
+	{
+		System.setOut(p);
+	}
+
+	public void setErrStream(PrintStream p)
+	{
+		System.setErr(p);
+	}
+
+	public void setVerbose(boolean v)
+	{
+		this.verbose = v;
+	}
+
+	private void debug(String str)
+	{
+		if (verbose)
+			System.out.println("--> " + str);
+	}
+	
+	private void debugErr(String str)
+	{
+		if (verbose)
+			System.err.println("--> " + str);
+	}
+
+	public void sleep(int amount)
+	{
+		try
+		{
+			Thread.sleep(amount);
+		}
+		catch(Exception e)
+		{
+			System.err.println("FATAL ERROR: Thread was interrupted! (method: sleep())");
+		}
+	}
+
+	public final void connect(String p)
+	{
+		this.port = p;
+		System.out.println("RXTXRobot API version " + RXTXRobot.getVersion());
+		System.out.println("---------------------------\n");
+		System.out.println("Starting up robot, please wait...");
+		if ("".equals(port))
+		{
+			System.err.println("FATAL ERROR: No port was specified to connect to! (method: connect())");
+			System.exit(1);
+		}
+		if (isConnected())
+		{
+			System.err.println("ERROR: Robot is already connected! (method: connect())");
+			return;
+		}
+		try
+		{
+			CommPortIdentifier pIdent = CommPortIdentifier.getPortIdentifier(this.port);
+			if (pIdent.isCurrentlyOwned())
+			{
+				System.err.println("FATAL ERROR: Arduino port ("+this.port+") is currently owned by " + pIdent.getCurrentOwner() + "! (method: connect())");
+				System.exit(1);
+			}
+			cPort = pIdent.open("RXTXRobot", 2000);
+			if (cPort instanceof SerialPort)
+			{
+				sPort = (SerialPort)cPort;
+				sPort.setSerialPortParams(RXTXRobot.BAUD_RATE, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+				debug("Resetting robot...");
+				sleep(500);
+				in = sPort.getInputStream();
+				out = sPort.getOutputStream();
+				System.out.println("Connected...\n");
+			}
+		}
+		catch(NoSuchPortException e)
+		{
+			System.err.println("FATAL ERROR: Invalid port (NoSuchPortException).  Check to make sure the correct port is set at the object's initialization. (method: connect())");
+			if (this.verbose)
+			{
+				System.err.println("Error Message: " + e.toString() + "\n\nError StackTrace:\n");
+				e.printStackTrace(System.getErr);
+			}
+			System.exit(1);
+		}
+		catch(PortInUseException e)
+		{
+			System.err.println("FATAL ERROR: Port is already being used by a different application (PortInUseException).  Did you stop a previously running instance of this program? (method: connect())");
+			if (this.verbose)
+			{
+				System.err.println("Error Message: " + e.toString() + "\n\nError StackTrace:\n");
+				e.printStackTrace(System.getErr());
+			}
+			System.exit(1);
+		}
+		catch(UnsupportedCommOperationException e)
+		{
+			System.err.println("FATAL ERROR: Comm Operation is unsupported (UnsupportedCommOperationException).  This shouldn't ever happen.  If you see this, ask a TA for assistance (method: connect())");
+			if (this.verbose)
+			{
+				System.err.println("Error Message: " + e.toString() + "\n\nError StackTrace:\n");
+				e.printStackTrace(System.getErr());
+			}
+			System.exit(1);
+		}
+		catch(IOException e)
+		{
+			System.err.println("FATAL ERROR: Could not assign Input and Output streams (IOException).  You may be calling the \"close()\" method before this one.  Make sure you only call \"close()\" at the very end of your program. (method: connect())");
+			if (this.verbose)
+			{
+				System.err.println("Error Message: " + e.toString() + "\n\nError StackTrace:\n");
+				e.printStackTrace(System.getErr());
+			}
+			System.exit(1);
+		}
+	}
+
+	public final boolean isConnected()
+	{
+		return sPort != null && cPort != null && in != null && out != null;
+	}
+
+	public final void close()
+	{
+		sleep(300);
+		if (sPort != null)
+			sPort.close();
+		if (cPort != null)
+			cPort.close();
+		in = null;
+		out = null;
+	}
+
+	public String sendRaw(String str)
+	{
+		return sendRaw(str,100);
+	}
+	
+	public String sendRaw(String str, int sleep)
+	{
+		debug("Sending command: " + str);
+		if (!isConnected())
+		{
+			System.err.println("ERROR: Cannot send command because the robot is not connected! (method: sendRaw())");
+			return "";
+		}
+		try 
+		{
+			out.write((str+"\r\n").getBytes());
+			byte[] buffer = new byte[1024];
+			sleep(sleep);
+			int bytesRead = in.read(buffer);
+			String ret = (new String(buffer)).trim();
+			debug("Received " + bytesRead + " bytes from the Arduino: " + ret);
+			return ret;
+		}
+		catch(IOException e)
+		{
+			System.err.println("ERROR: Could not read or use Input or Output streams (IOException).  (method: sendRaw())");
+			if (this.verbose)
+			{
+				System.err.println("Error Message: " + e.toString() + "\n\nError StackTrace:\n");
+				e.printStackTrace(System.getErr());
+			}
+		}
+	}
+
+	public void refreshAnalogPins()
+	{
+		analogPinCache = new int[RXTXRobot.NUM_ANALOG_PINS];
+		for (int x=0; x < analogPinCache.length; ++x)
+			analogPinCache[x] = -1;
+		try
+		{
+			String[] split = sendRaw("r a").split("\\s+");
+			if (split.length <= 1)
+			{
+				System.err.println("ERROR: No response was received from the Arduino.  Try again. (method: refreshAnalogPins())");
+				return;
+			}
+			if (split.length-1 != RXTXRobot.NUM_ANALOG_PINS)
+			{
+				System.err.println("ERROR: Incorrect length returned: " + split.length + ".  (method: refreshAnalogPins())");
+				if (this.verbose)
+					for (int x=0; x < split.length; ++x)
+						System.err.println("["+x+"] = " + split[x]);
+				return;
+			}
+			for (int x=1; x < split.length; ++x)
+				analogPinCache[x-1] = Integer.parseInt(split[x]);
+			return;
+		}
+		catch (NumberFormatException e)
+		{
+			System.err.println("ERROR: Returned string could not be parsed into Integers.  (method: refreshAnalogPins())");
+		}
+		catch (Exception e)
+		{
+			System.err.println("ERROR: An error occurred with getAnalogPins.");
+			if (this.verbose)
+			{
+				System.err.println("Stacktrace: ");
+				e.printStackTrace(System.getErr());
+			}
+		}
+	}
+
+	public void refreshDigitalPins()
+	{
+		digitalPinCache = new int[RXTXRobot.NUM_DIGITAL_PINS];
+		for (int x=0; x < digitalPinCache.length; ++x)
+			digitalPinCache[x] = -1;
+		try
+		{
+			String[] split = sendRaw("r d").split("\\s+");
+			if (split.length <= 1)
+			{
+				System.err.println("ERROR: No response was received from the Arduino.  Try again. (method: refreshDigitalPins())");
+				return;
+			}
+			if (split.length-1 != RXTXRobot.NUM_DIGITAL_PINS)
+			{
+				System.err.println("ERROR: Incorrect length returned: " + split.length + ".  (method: refreshDigitalPins())");
+				if (this.verbose)
+					for (int x=0; x < split.length; ++x)
+						System.err.println("["+x+"] = " + split[x]);
+				return;
+			}
+			for (int x=1; x < split.length; ++x)
+				digitalPinCache[x-1] = Integer.parseInt(split[x]);
+			return;
+		}
+		catch (NumberFormatException e)
+		{
+			System.err.println("ERROR: Returned string could not be parsed into Integers.  (method: refreshDigitalPins())");
+		}
+		catch (Exception e)
+		{
+			System.err.println("ERROR: An error occurred with getDigitalPins.");
+			if (this.verbose)
+			{
+				System.err.println("Stacktrace: ");
+				e.printStackTrace(System.getErr());
+			}
+		}
+	}
+
+	public AnalogPin getAnalogPin(int x)
+	{
+		if (analogPinCache == null)
+			this.refreshAnalogPins();
+		if (x >= analogPinCache.length || x < 0)
+		{
+			System.err.println("ERROR: Analog pin " + x + " doesn't exist.  (method: getAnalogPin())");
+			return null;
+		}
+		return new AnalogPin(this, x, analogPinCache[x]);
+	}
+
+	public DigitalPin getDigitalPin(int x)
+	{
+		final int[][] mapping = {{13, 0}};
+		if (digitalPinCache == null)
+			this.refreshDigitalPins();
+		int get_pin = -1;
+		for (int y=0; y < mapping.length; ++y)
+		{
+			if (mapping[y][0] == x)
+				return new DigitalPin(this, x, digitalPinCache[mapping[y][1]]);
+		}
+		System.err.println("ERROR: Digital pin " + x + " doesn't exist.  (method: getDigitalPin())");
+		return null;
+	}
+
+	public int getTemperature()
+	{
+		try
+		{
+			String[] split = sendRaw("r t").split("\\s+");
+			if (split.length <= 1)
+			{
+				System.err.println("No response was received from the Arduino.  Try again.  (method: getTemperature())");
+				return -1;
+			}
+			if (split.length-1 != 1)
+			{
+				System.err.println("Incorrect length returned: " + split.length + ".  (method: getTemperature())");
+				if (this.verbose)
+					for (int x=0; x < split.length; ++x)
+						System.err.println("["+x+"] = " + split[x]);
+				return -1;
+			}
+			return Integer.parseInt(split[1]);
+		}
+		catch (NumberFormatException e)
+		{
+			System.err.println("ERROR: Returned string could not be parsed into an Integer.  (method: getTemperature())");
+		}
+		catch (Exception e)
+		{
+			System.err.println("ERROR: An error occurred with getTemperature()");
+			if (this.verbose)
+			{
+				System.err.println("Stacktrace: ");
+				e.printStackTrace(System.getErr());
+			}
+		}
+		return -1;
+	}
+
+	public void moveServo(int servo, int position)
+	{
+		if (servo != RXTXRobot.SERVO1 && servo != RXTXRobot.SERVO2)
+		{
+			System.err.println("ERROR: Invalid servo argument (RXTXRobot.SERVO1 or RXTXRobot.SERVO2).  (method: moveServo())");
+			return;
+		}
+		debug("Moving servo " + servo + " to position " + position);
+		if (position < 0 || position > 180)
+			System.err.println("ERROR: Position must be >=0 and <=180.  You supplied " + position + ", which is invalid.  (method: moveServo())");
+		else
+			sendRaw("v " + servo + " " + position);
+	}
+
+	public void moveBothServos(int pos1, int pos2)
+	{
+		debug("Moving both servos to positions " + pos1 + " and " + pos2);
+		if (pos1 < 0 || pos1 > 180 || pos2 < 0 || pos2 > 180)
+			System.err.println("ERROR: Positions must be >=0 and <=180.  You supplied " + pos1 + " and " + pos2 + ".  One or more are invalid.  (method: moveBothServos())");
+		else
+			sendRaw("V " + pos1 + " " + pos2);
+	}
+
+	public void runMotor(int motor, int speed, int time)
+	{
+		if (speed < -255 || speed > 255)
+		{
+			System.err.println("ERROR: You must give the motors a speed between -255 and 255 (inclusive).  (method: runMotor())");
+			return;
+		}
+		if (RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
+		{
+			boolean prev = motorsRunning[motor];
+			if (speed == 0)
+				motorsRunning[motor] = false;
+			else
+				motorsRunning[motor] = true;
+			if (!checkRunningMotors())
+			{
+				motorsRunning[motor] = prev;
+				return;
+			}
+		}
+		if (time < 0 || time > 30000)
+		{
+			System.err.println("ERROR: runMotor was not given a time that is 0 <= time <= 30000.  (method: runMotor())");
+			return;
+		}
+		if (motor < RXTXRobot.MOTOR1 || motor > RXTXRobot.MOTOR4)
+		{
+			System.err.println("ERROR: runMotor was not given a correct motor argument.  (method: runMotor())");
+			return;
+		}
+		debug("Running motor " + motor + " at speed " + speed + " for time of " + time);
+		if (!"".equals(sendRaw("d " + motor + " " + speed + " " + time)))
+			sleep(time);
+		if (time != 0)
+			motorsRunning[motor] = false;
+	}
+
+	public void runMotor(int motor1, int speed1, int motor2, int speed2, int time)
+	{
+		if (speed1 < -255 || speed1 > 255 || speed2 < -255 || speed2 > 255)
+		{
+			System.err.println("ERROR: You must give the motors a speed between -255 and 255 (inclusive).  (method: runMotor())");
+			return;
+		}
+		if (RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
+		{
+			boolean prev1 = motorsRunning[motor1];
+			boolean prev2 = motorsRunning[motor2];
+			if (speed1 == 0)
+				motorsRunning[motor1] = false;
+			else
+				motorsRunning[motor1] = true;
+
+			if (speed2 == 0)
+				motorsRunning[motor2] = false;
+			else
+				motorsRunning[motor2] = true;
+
+			if (!checkRunningMotors())
+			{
+				motorsRunning[motor1] = prev1;
+				motorsRunning[motor2] = prev2;
+				return;
+			}
+		}
+		if (time < 0 || time > 30000)
+		{
+			System.err.println("ERROR: runMotor was not given a time that is 0 <= time <= 30000.  (method: runMotor())");
+			return;
+		}
+		if ((motor1 < RXTXRobot.MOTOR1 || motor1 > RXTXRobot.MOTOR4) || (motor2 < RXTXRobot.MOTOR1 || motor2 > RXTXRobot.MOTOR4))
+		{
+			System.err.println("ERROR: runMotor was not given a correct motor argument.  (method: runMotor())");
+		}
+		debug("Running two motors, motor " + motor1 + " at speed " + speed1 + " and motor " + motor2 + " at speed " + speed2 + " for time of " + time);
+		if (!"".equals(sendRaw("D " + motor1 + " " + speed1 + " " + motor2 + " " + speed2 + " " + time)))
+			sleep(time);
+		if (time != 0)
+		{
+			motorsRunning[motor1] = false;
+			motorsRunning[motor2] = false;
+		}
+	}
+
+	public void runMotor(int motor1, int speed1, int motor2, int speed2, int motor3, int speed3, int motor4, int speed4, int time)
+	{
+		if (speed1 < -255 || speed1 > 255 || speed2 < -255 || speed2 > 255 || speed3 < -255 || speed3 > 255 || speed4 < -255 || speed4 > 255)
+		{
+			System.err.println("ERROR: You must give the motors a speed between -255 and 255 (inclusive).  (method: runMotor())");
+			return;
+		}
+		if (RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
+		{
+			System.err.println("ERROR: You may only run two DC motors at a time, so you cannot use this method!  (method: runMotor())");
+			return;
+		}
+		if (time < 0)
+		{
+			System.err.println("ERROR: runMotor was not given a time that is >=0.  (method: runMotor())");
+			return;
+		}
+		if ((motor1 < 0 || motor1 > 3) || (motor2 < 0 || motor2 > 3) || (motor3 < 0 || motor3 > 3) || (motor4 < 0 || motor4 > 3))
+		{
+			System.err.println("ERROR: runMotor was not given a correct motor argument.  (method: runMotor())");
+			return;
+		}
+		debug("Running four motors, motor " + motor1 + " at speed " + speed1 + " and motor " + motor2 + " at speed " + speed2 + " and motor " + motor3 + " at speed " + speed3 + " and motor " + motor4 + " at speed " + speed4 + " for time of " + time);
+		if (!"".equals(sendRaw("F " + motor1 + " " + speed1 +" " + motor2 + " " + speed2 + " " + motor3 + " " + speed3 + " " + motor4 + " " + speed4 + " " + time)))
+			sleep(time);
+	}
+
+	private boolean checkRunningMotors()
+	{
+		int num = 0;
+		for (int x=0; x < motorsRunning.length; ++x)
+			if (motorsRunning[x])
+				++num;
+		if (num > 2)
+		{
+			System.err.println("ERROR: You may not run more than two motors at any given time!");
+			return false;
+		}
+		return true;
+	}
+
+	public void runMixer(int motor, int time)
+	{
+		final int MIXER_SPEED = 30;
+		if (motor < RXTXRobot.MOTOR1 || motor > RXTXRobot.MOTOR4)
+		{
+			System.err.println("ERROR: You must supply a valid motor port: RXTXRobot.MOTOR1, MOTOR2, MOTOR3, or MOTOR4.  (method: runMixer())");
+			return;
+		}
+		if (time < 0)
+		{
+			System.err.println("ERROR: You must supply a positive time.  (method: runMixer())");
+			return;
+		}
+		debug("Running mixer on port " + motor + " at speed " + MIXER_SPEED + " for time of " + time);
+		if (!"".equals(sendRaw("d " + motor + " " + MIXER_SPEED + " " + time)))
+			sleep(time);
+	}
+
+	public void stopMixer(int motor)
+	{
+		if (motor < RXTXRobot.MOTOR1 || motor > RXTXRobot.MOTOR4)
+		{
+			System.err.println("ERROR: You must supply a valid motor port: RXTXRobot.MOTOR1, MOTOR2, MOTOR3, or MOTOR4.  (method: stopMixer())");
+			return;
+		}
+		debug("Stopping mixer on port " + motor);
+		sendRaw("d " + motor + " 0 0");
+	}
 }
 
