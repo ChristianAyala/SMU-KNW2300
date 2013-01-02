@@ -249,7 +249,7 @@ public class RXTXRobot
 			if (this.verbose)
 			{
 				System.err.println("Error Message: " + e.toString() + "\n\nError StackTrace:\n");
-				e.printStackTrace(System.getErr);
+				e.printStackTrace(System.err);
 			}
 			System.exit(1);
 		}
@@ -259,7 +259,7 @@ public class RXTXRobot
 			if (this.verbose)
 			{
 				System.err.println("Error Message: " + e.toString() + "\n\nError StackTrace:\n");
-				e.printStackTrace(System.getErr());
+				e.printStackTrace(System.err);
 			}
 			System.exit(1);
 		}
@@ -269,7 +269,7 @@ public class RXTXRobot
 			if (this.verbose)
 			{
 				System.err.println("Error Message: " + e.toString() + "\n\nError StackTrace:\n");
-				e.printStackTrace(System.getErr());
+				e.printStackTrace(System.err);
 			}
 			System.exit(1);
 		}
@@ -279,7 +279,7 @@ public class RXTXRobot
 			if (this.verbose)
 			{
 				System.err.println("Error Message: " + e.toString() + "\n\nError StackTrace:\n");
-				e.printStackTrace(System.getErr());
+				e.printStackTrace(System.err);
 			}
 			System.exit(1);
 		}
@@ -354,7 +354,7 @@ public class RXTXRobot
 			if (this.verbose)
 			{
 				System.err.println("Error Message: " + e.toString() + "\n\nError StackTrace:\n");
-				e.printStackTrace(System.getErr());
+				e.printStackTrace(System.err);
 			}
 		}
 	}
@@ -399,7 +399,7 @@ public class RXTXRobot
 			if (this.verbose)
 			{
 				System.err.println("Stacktrace: ");
-				e.printStackTrace(System.getErr());
+				e.printStackTrace(System.err);
 			}
 		}
 	}
@@ -444,7 +444,7 @@ public class RXTXRobot
 			if (this.verbose)
 			{
 				System.err.println("Stacktrace: ");
-				e.printStackTrace(System.getErr());
+				e.printStackTrace(System.err);
 			}
 		}
 	}
@@ -532,7 +532,7 @@ public class RXTXRobot
 			if (this.verbose)
 			{
 				System.err.println("Stacktrace: ");
-				e.printStackTrace(System.getErr());
+				e.printStackTrace(System.err);
 			}
 		}
 		return -1;
