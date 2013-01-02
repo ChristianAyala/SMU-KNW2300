@@ -357,6 +357,7 @@ public class RXTXRobot
 				e.printStackTrace(System.err);
 			}
 		}
+                return "";
 	}
 
 	/**
