@@ -388,7 +388,6 @@ public class RXTXRobot
 			}
 			for (int x=1; x < split.length; ++x)
 				analogPinCache[x-1] = Integer.parseInt(split[x]);
-			return;
 		}
 		catch (NumberFormatException e)
 		{
@@ -433,7 +432,6 @@ public class RXTXRobot
 			}
 			for (int x=1; x < split.length; ++x)
 				digitalPinCache[x-1] = Integer.parseInt(split[x]);
-			return;
 		}
 		catch (NumberFormatException e)
 		{
