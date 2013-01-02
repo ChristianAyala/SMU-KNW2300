@@ -51,6 +51,16 @@ public class RXTXRobot
 		this.verbose = v;
 	}
 
+	public void setPort(String p)
+	{
+		this.port = p;
+	}
+
+	public String getPort()
+	{
+		return this.port;
+	}
+
 	private void debug(String str)
 	{
 		if (verbose)
@@ -75,9 +85,8 @@ public class RXTXRobot
 		}
 	}
 
-	public final void connect(String p)
+	public final void connect()
 	{
-		this.port = p;
 		System.out.println("RXTXRobot API version " + RXTXRobot.getVersion());
 		System.out.println("---------------------------\n");
 		System.out.println("Starting up robot, please wait...");
