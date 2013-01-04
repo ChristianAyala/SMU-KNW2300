@@ -40,7 +40,9 @@ public abstract class SerialCommunication
         /**
          * Gets an Array of the possible acceptable ports to connect a device.
          *
-         * An array of the ports that might be the device you wish to connect to.
+         * An array of the ports that might be the device you wish to connect
+         * to.
+         *
          * @return An array of Strings of the acceptable ports
          */
         public static String[] checkValidPorts()
