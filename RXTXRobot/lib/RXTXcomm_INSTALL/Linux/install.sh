@@ -87,7 +87,7 @@ sudo usermod -a -G lock,uucp,dialout "$USER" &> /dev/null
 echo "User \"$USER\" added to the \"lock\", \"uucp\", and \"dialout\" groups successfully!"
 echo ""
 echo "Setting the lock file permissions..."
-sudo mkdir -p /lock && sudo chmod -R 777 /lock
+sudo mkdir -p /lock && sudo chmod -R 777 /lock && sudo chmod -R 777 /run/lock && sudo chmod -R 777 /var/lock 2> /dev/null
 echo "Permissions set and complete!"
 echo ""
 echo ""
