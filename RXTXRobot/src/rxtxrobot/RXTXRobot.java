@@ -347,7 +347,7 @@ public class RXTXRobot extends SerialCommunication
 			System.err.println("ERROR: Analog pin " + x + " doesn't exist.  (method: getAnalogPin())");
 			return null;
 		}
-		return new AnalogPin(this, x, analogPinCache[x]);
+		return new AnalogPin(x, analogPinCache[x]);
 	}
 
 	/**
@@ -368,7 +368,7 @@ public class RXTXRobot extends SerialCommunication
 		for (int y=0; y < mapping.length; ++y)
 		{
 			if (mapping[y][0] == x)
-				return new DigitalPin(this, x, digitalPinCache[mapping[y][1]]);
+				return new DigitalPin(x, digitalPinCache[mapping[y][1]]);
 		}
 		System.err.println("ERROR: Digital pin " + x + " doesn't exist.  (method: getDigitalPin())");
 		return null;

@@ -1,5 +1,9 @@
 package rxtxrobot;
 
+/**
+ * @author Chris King
+ * @version 3.0.0
+ */
 public class Coord
 {
     private double x;

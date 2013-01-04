@@ -2,31 +2,53 @@ package rxtxrobot;
 
 /**
  * @author Chris King
- * @version 2.9.1
+ * @version 3.0.0
  */
 public class DigitalPin
 {
-    private RXTXRobot parent;
-    private int pinNum;
-    private int pinVal;
-    /**
-     * Initialize DigitalPin with the pin number and the pin value.
-     * @param p RXTXRobot parent object to this pin
-     * @param pin Digital pin number
-     * @param val Value to this Digital pin
-     */
-    public DigitalPin(RXTXRobot p, int pin, int val)
-    {
-        parent = p;
-        pinNum = pin;
-        pinVal = val;
-    }
-    /**
-     * Get the value of the pin,
-     * @return The pin's value
-     */
-    public int getValue()
-    {
-        return pinVal;
-    }
+        private int pinNum;
+        private int pinVal;
+
+        /**
+         * Initialize DigitalPin with the pin number and the pin value.
+         *
+         * @param pin Digital pin number
+         * @param val Value to this Digital pin
+         */
+        public DigitalPin(int pin, int val)
+        {
+                pinNum = pin;
+                pinVal = val;
+        }
+
+        /**
+         * Get the number of the pin,
+         *
+         * @return The pin's identifying number
+         */
+        public int getNumber()
+        {
+                return pinNum;
+        }
+
+        /**
+         * Get the value of the pin,
+         *
+         * @return The pin's value
+         */
+        public int getValue()
+        {
+                return pinVal;
+        }
+
+        /**
+         * Displays the pin in a readable form
+         *
+         * @return A string that is a readable representation of the pin object
+         */
+        @Override
+        public String toString()
+        {
+                return "Pin  #" + getNumber() + ": " + getValue();
+        }
 }
