@@ -3,11 +3,9 @@ package rxtxrobot;
 import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
 import gnu.io.SerialPort;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -15,11 +13,11 @@ import java.net.Socket;
  * @author Chris King
  * @version 3.0.0
  */
-public class Labview
+public class Labview extends SerialCommunication
 {
-	private String port;
-	private boolean verbose;
-	private int BAUD_RATE = 9600;
+	public static int MODE_PARALLEL = 1;
+	public static int MODE_2D = 2;
+	public static int MODE_3D = 3;
 
 	private SerialPort sPort;
 	private CommPort cPort;
@@ -27,64 +25,43 @@ public class Labview
 	private Socket socket;
 	private PrintWriter write;
 	private BufferedReader read;
-	private OutputStream out;
-	private InputStream in;
 
 	public Labview()
 	{
-		port = "";
-		verbose = false;
+		super();
 	}
 
-	public void setVerbose(boolean v)
-	{
-		this.verbose = v;
-	}
-	public void setPort(String p)
-	{
-		this.port = p;
-	}
-	public String getPort()
-	{
-		return this.port;
-	}
-	public void debug(String str)
-	{
-		if (verbose)
-			System.err.println("--> " + str);
-	}
+        @Override
         public boolean isConnected()
         {
-            return sPort != null && cPort != null;
+            return sPort != null && cPort != null && socket.isConnected();
         }
-	public final void setOutStream(PrintStream o)
-	{
-		System.setOut(o);
-	}
-	public final void setErrStream(PrintStream e)
-	{
-		System.setErr(e);
-	}
+
+        @Override
         public void close()
         {
-            try
-            {
-                sSocket.close();
-            }
-            catch(Exception e) {}
-            try
-            {
-                socket.close();
-            }
-            catch(Exception e) {}
-            if (cPort != null)
-                cPort.close();
-            if (sPort != null)
-                sPort.close();
+		try
+		{
+			sSocket.close();
+		}
+		catch(Exception e) {}
+		try
+		{
+			socket.close();
+		}
+		catch(Exception e) {}
+		if (cPort != null)
+			cPort.close();
+		if (sPort != null)
+			sPort.close();
+		cPort = null;
+		sPort = null;
         }
+
+        @Override
 	public void connect()
 	{
-		if ("".equals(port))
+		if ("".equals(getPort()))
 		{
 			System.err.println("FATAL ERROR: No port was specified for Labview to connect to!  (method: connect())");
 			System.exit(1);
@@ -111,20 +88,17 @@ public class Labview
 		}
 		try
 		{
-			CommPortIdentifier pIdent = CommPortIdentifier.getPortIdentifier(port);
+			CommPortIdentifier pIdent = CommPortIdentifier.getPortIdentifier(getPort());
 			if (pIdent.isCurrentlyOwned())
 			{
-				System.err.println("FATAL ERROR: Labview port ("+port+") is currently owned by "+pIdent.getCurrentOwner());
+				System.err.println("FATAL ERROR: Labview port ("+getPort()+") is currently owned by "+pIdent.getCurrentOwner());
 				System.exit(1);
 			}
 			cPort = pIdent.open("LabView", 2000);
 			if (cPort instanceof SerialPort)
 			{
 				sPort = (SerialPort)cPort;
-				sPort.setSerialPortParams(BAUD_RATE, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
-				Thread.sleep(300);
-				in = sPort.getInputStream();
-				out = sPort.getOutputStream();
+				sPort.setSerialPortParams(getBaudRate(), SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
 			}
 			System.out.println("Labview is now ready!");
 		}
@@ -132,6 +106,54 @@ public class Labview
 		{
 			System.err.println("ERROR: There was an error connecting LabView");
 		}
+	}
+
+	public Coord[] read(int mode)
+	{
+		if (mode < Labview.MODE_PARALLEL || mode > Labview.MODE_2D)
+		{
+			System.err.println("ERROR: Invalid MODE was given.  (method: read())");
+			return null;
+		}
+		if (!socket.isConnected() || !isConnected())
+		{
+			System.err.println("ERROR: The connection to labview was apparently lost...  (method: read())");
+			return null;
+		}
+		String command = "s";
+		debug("Sending command: " + command);
+		String lastResponse = "";
+		try
+		{
+			write.write(command);
+			write.flush();
+			sleep(200);
+			while (read.ready())
+				lastResponse += (char)read.read();
+			lastResponse = lastResponse.substring(lastResponse.indexOf("[")+1, lastResponse.indexOf("]"));
+			String[] parts = lastResponse.split(",");
+			if (mode == Labview.MODE_PARALLEL)
+			{
+				debug("Creating Coord (Parallel mode): ("+parts[0]+", "+parts[1]+", "+parts[2]+")");
+				Coord[] ans = {new Coord(Double.parseDouble(parts[0]), Double.parseDouble(parts[1]), Double.parseDouble(parts[2]))};
+				return ans;
+			}
+			else if (mode == Labview.MODE_2D)
+			{
+				debug("Creating two Coords (2D mode): ("+parts[0]+", "+parts[1]+") and ("+parts[2]+", "+parts[3]+")");
+				Coord[] ans = {new Coord(Double.parseDouble(parts[0]), Double.parseDouble(parts[1]),-1.0), new Coord(Double.parseDouble(parts[2]), Double.parseDouble(parts[3]), -1.0)};
+				return ans;
+			}
+		}
+		catch(NumberFormatException e)
+		{
+			debug("Labview returned: " + lastResponse + " and determined it not to be a number.  (method: read())");
+		}
+		catch(Exception e)
+		{
+			System.err.println("ERROR: A generic error occurred!  Error: " + e.toString());
+		}
+		return null;
 	}
 }
 
