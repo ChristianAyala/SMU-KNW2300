@@ -8,6 +8,7 @@ import java.io.PrintStream;
  */
 public abstract class SerialCommunication
 {
+        /* Private variables */
         final private static String API_VERSION = "3.0.0";
 	private String port;
 	private boolean verbose;
@@ -171,9 +172,33 @@ public abstract class SerialCommunication
 		}
 	}
 
+        /**
+	 * Checks if the object is connected to the device.
+	 *
+	 * Returns true if the object is successfully connected to the
+	 * device.  Returns false otherwise.
+	 *
+	 * @return true/false value that specifies if the Labview object is connected to the Labview device.
+	 */
 	public abstract boolean isConnected();
 
+        /**
+	 * Closes the connection to the device.
+	 *
+	 * This method closes the serial connection to the device.
+	 * It deletes the mutual exclusion lock file, which is important,
+	 * so this should be done before the program is terminated.
+	 */
 	public abstract void close();
 
+        /**
+	 * Attempts to connect to the device.
+	 *
+	 * This method attempts to make a serial connection to the device if
+	 * the port is correct.  If there is an error in connecting, then the
+	 * appropriate error message will be displayed.
+	 * <br /><br />
+	 * This function will terminate runtime if an error is discovered.
+	 */
 	public abstract void connect();
 }

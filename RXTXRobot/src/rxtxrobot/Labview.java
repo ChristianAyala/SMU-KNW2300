@@ -15,9 +15,8 @@ import java.net.Socket;
  */
 public class Labview extends SerialCommunication
 {
-	public static int MODE_PARALLEL = 1;
+	public static int MODE_3D = 1;
 	public static int MODE_2D = 2;
-	public static int MODE_3D = 3;
 
 	private SerialPort sPort;
 	private CommPort cPort;
@@ -31,12 +30,27 @@ public class Labview extends SerialCommunication
 		super();
 	}
 
+        /**
+	 * Checks if the Labview object is connected to the Labview device.
+	 *
+	 * Returns true if the Labview object is successfully connected to the
+	 * Labview device.  Returns false otherwise.
+	 *
+	 * @return true/false value that specifies if the Labview object is connected to the Labview device.
+	 */
         @Override
         public boolean isConnected()
         {
             return sPort != null && cPort != null && socket.isConnected();
         }
 
+        /**
+	 * Closes the connection to the Labview device.
+	 *
+	 * This method closes the serial connection to the Labview device.
+	 * It deletes the mutual exclusion lock file, which is important,
+	 * so this should be done before the program is terminated.
+	 */
         @Override
         public void close()
         {
@@ -58,6 +72,15 @@ public class Labview extends SerialCommunication
 		sPort = null;
         }
 
+        /**
+	 * Attempts to connect to Labview.
+	 *
+	 * This method attempts to make a serial connection to Labview if
+	 * the port is correct.  If there is an error in connecting, then the
+	 * appropriate error message will be displayed.
+	 * <br /><br />
+	 * This function will terminate runtime if an error is discovered.
+	 */
         @Override
 	public void connect()
 	{
@@ -110,7 +133,7 @@ public class Labview extends SerialCommunication
 
 	public Coord[] read(int mode)
 	{
-		if (mode < Labview.MODE_PARALLEL || mode > Labview.MODE_2D)
+		if (mode < Labview.MODE_3D || mode > Labview.MODE_2D)
 		{
 			System.err.println("ERROR: Invalid MODE was given.  (method: read())");
 			return null;
@@ -132,9 +155,9 @@ public class Labview extends SerialCommunication
 				lastResponse += (char)read.read();
 			lastResponse = lastResponse.substring(lastResponse.indexOf("[")+1, lastResponse.indexOf("]"));
 			String[] parts = lastResponse.split(",");
-			if (mode == Labview.MODE_PARALLEL)
+			if (mode == Labview.MODE_3D)
 			{
-				debug("Creating Coord (Parallel mode): ("+parts[0]+", "+parts[1]+", "+parts[2]+")");
+				debug("Creating Coord (3D mode): ("+parts[0]+", "+parts[1]+", "+parts[2]+")");
 				Coord[] ans = {new Coord(Double.parseDouble(parts[0]), Double.parseDouble(parts[1]), Double.parseDouble(parts[2]))};
 				return ans;
 			}
