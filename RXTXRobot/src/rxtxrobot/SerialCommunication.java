@@ -55,7 +55,9 @@ public abstract class SerialCommunication
                         if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL)
                                 list.add(portId.getName());
                 }
-                return (String[]) list.toArray();
+                String[] a = new String[list.size()];
+                a = list.toArray(a);
+                return a;
         }
 
         /**
