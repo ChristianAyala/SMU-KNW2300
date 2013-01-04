@@ -65,6 +65,7 @@ public class RXTXRobot extends SerialCommunication
         {
                 false, false, false, false
         };
+        private int mixerSpeed;
         private InputStream in;
         private OutputStream out;
         private SerialPort sPort;
@@ -80,6 +81,7 @@ public class RXTXRobot extends SerialCommunication
                 super();
                 analogPinCache = null;
                 digitalPinCache = null;
+                mixerSpeed = 30;
         }
 
         private String displayPossiblePorts()
@@ -773,7 +775,6 @@ public class RXTXRobot extends SerialCommunication
                         System.err.println("ERROR: Robot is not connected!");
                         return;
                 }
-                final int MIXER_SPEED = 30;
                 if (motor < RXTXRobot.MOTOR1 || motor > RXTXRobot.MOTOR4)
                 {
                         System.err.println("ERROR: You must supply a valid motor port: RXTXRobot.MOTOR1, MOTOR2, MOTOR3, or MOTOR4.  (method: runMixer())");
@@ -784,8 +785,8 @@ public class RXTXRobot extends SerialCommunication
                         System.err.println("ERROR: You must supply a positive time.  (method: runMixer())");
                         return;
                 }
-                debug("Running mixer on port " + motor + " at speed " + MIXER_SPEED + " for time of " + time);
-                if (!"".equals(sendRaw("d " + motor + " " + MIXER_SPEED + " " + time)))
+                debug("Running mixer on port " + motor + " at speed " + getMixerSpeed() + " for time of " + time);
+                if (!"".equals(sendRaw("d " + motor + " " + getMixerSpeed() + " " + time)))
                         sleep(time);
         }
 
@@ -813,5 +814,37 @@ public class RXTXRobot extends SerialCommunication
                 }
                 debug("Stopping mixer on port " + motor);
                 sendRaw("d " + motor + " 0 0");
+        }
+
+        /**
+         * Sets the speed for the mixer.
+         *
+         * This method sets the speed for the mixer.  Default is 30, but the value must be between 0 and 255.
+         *
+         * @param speed Integer representing the speed (0 - 255)
+         */
+        public void setMixerSpeed(int speed)
+        {
+                if (speed > 255)
+                {
+                        System.err.println("WARNING: The speed supplied ("+speed+") is > 255.  Resetting it to 255.  (method: setMixerSpeed())");
+                        speed = 255;
+                }
+                if (speed < 0)
+                {
+                        System.err.println("WARNING: The speed supplied ("+speed+") is < 0.  Resetting it to 0.  (method: setMixerSpeed())");
+                        speed = 0;
+                }
+                this.mixerSpeed = speed;
+        }
+
+        /**
+         * Gets the speed for the mixer.
+         *
+         * @return Integer representing the speed.
+         */
+        public int getMixerSpeed()
+        {
+                return this.mixerSpeed;
         }
 }
