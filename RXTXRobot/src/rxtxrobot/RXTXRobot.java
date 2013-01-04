@@ -9,19 +9,16 @@ import gnu.io.UnsupportedCommOperationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PrintStream;
 
 /**
  * @author Chris King
  * @version 3.0.0
  */
 
-public class RXTXRobot
+public class RXTXRobot extends SerialCommunication
 {
 	/* Constants - These should not change unless you know what you are doing */
-	final private static String API_VERSION = "3.0.0";
 	final private static boolean ONLY_ALLOW_TWO_MOTORS = true;
-	final private static int BAUD_RATE = 9600;
 	/**
 	 * Refers to the servo motor located in SERVO1
 	 */
@@ -59,8 +56,6 @@ public class RXTXRobot
 	final public static int NUM_ANALOG_PINS = 6;
 
 	/* Private variables */
-	private String port;
-	private boolean verbose;
 	private int[] analogPinCache;
 	private int[] digitalPinCache;
 	private boolean[] motorsRunning = {false, false, false, false};
@@ -77,127 +72,9 @@ public class RXTXRobot
 	 */
 	public RXTXRobot()
 	{
-		port = "";
-		verbose = false;
+                super();
 		analogPinCache = null;
 		digitalPinCache = null;
-	}
-
-	/**
-	 * Gets the version number of the API.
-	 *
-	 * @return A string with the version number
-	 */
-	public static String getVersion()
-	{
-		return API_VERSION;
-	}
-
-	/**
-	 * Sets the output PrintStream; System.out by default.
-	 *
-	 * This method lets you set the output stream from System.out
-	 * to somewhere else.  It shouldn't be used unless you know
-	 * what you are doing.
-	 *
-	 * @param p PrintStream to write output to.
-	 */
-	public void setOutStream(PrintStream p)
-	{
-		System.setOut(p);
-	}
-	
-	/**
-	 * Sets the error PrintStream; System.err by default.
-	 *
-	 * This method lets you set the error stream from System.err
-	 * to somewhere else.  It shouldn't be used unless you know
-	 * what you are doing.
-	 *
-	 * @param p PrintStream to write error to.
-	 */
-	public void setErrStream(PrintStream p)
-	{
-		System.setErr(p);
-	}
-
-	/**
-	 * Sets verbose output.
-	 *
-	 * Setting verbose output allows for easier debugging and
-	 * seeing what is happening behind the scenes.  Turn this
-	 * on to debug your code.
-	 *
-	 * @param v Boolean to set verbosity.
-	 */
-	public void setVerbose(boolean v)
-	{
-		this.verbose = v;
-	}
-
-	/**
-	 * Sets the port to connect to the Arduino or XBee.
-	 *
-	 * Set the port to the same port that the Arduino or XBee
-	 * is connected to on your computer.
-	 * <br /><br />
-	 * For example:<br />
-	 * 	On Windows, "COM3" (check device manager)<br />
-	 * 	On Mac, "/dev/tty.usbmodem411" (run "ls /dev | grep usb")<br />
-	 * 	On Linux, "/dev/ttyACM0"<br />
-	 *
-	 * @param p Port name that the Arduino/XBee is connected to.
-	 */
-	public void setPort(String p)
-	{
-		this.port = p;
-	}
-
-	/**
-	 * Gets the port that the RXTXRobot is using.
-	 *
-	 * @return The port the RXTXRobot is using.
-	 */
-	public String getPort()
-	{
-		return this.port;
-	}
-
-	/**
-	 * Prints out debugging statements.
-	 *
-	 * If verbose is set to true, then debugging statements will
-	 * be printed out to the user.  If verbose is set to false,
-	 * then these statements will not print.
-	 *
-	 * @param str Message passed to debug
-	 */
-	private void debug(String str)
-	{
-		if (verbose)
-			System.out.println("--> " + str);
-	}
-
-	/**
-	 * Allows the robot to sleep for a time length (measured in milliseconds).
-	 *
-	 * Uses a standard {@link Thread#sleep(long) Thread.sleep(long)} function to pause
-	 * execution of the program for the specified milliseconds.
-	 * Displays an error if the thread is interrupted during
-	 * this process, but does not throw an Exception.  (1000 milliseconds = 1 second)
-	 *
-	 * @param amount The amount of time in milliseconds
-	 */
-	public void sleep(int amount)
-	{
-		try
-		{
-			Thread.sleep(amount);
-		}
-		catch(Exception e)
-		{
-			System.err.println("FATAL ERROR: Thread was interrupted! (method: sleep())");
-		}
 	}
 
 	/**
@@ -209,12 +86,13 @@ public class RXTXRobot
 	 * <br /><br />
 	 * This function will terminate runtime if an error is discovered.
 	 */
+        @Override
 	public final void connect()
 	{
-		System.out.println("RXTXRobot API version " + RXTXRobot.getVersion());
+		System.out.println("RXTXRobot API version " + getVersion());
 		System.out.println("---------------------------\n");
 		System.out.println("Starting up robot, please wait...");
-		if ("".equals(port))
+		if ("".equals(getPort()))
 		{
 			System.err.println("FATAL ERROR: No port was specified to connect to! (method: connect())");
 			System.exit(1);
@@ -226,17 +104,17 @@ public class RXTXRobot
 		}
 		try
 		{
-			CommPortIdentifier pIdent = CommPortIdentifier.getPortIdentifier(this.port);
+			CommPortIdentifier pIdent = CommPortIdentifier.getPortIdentifier(getPort());
 			if (pIdent.isCurrentlyOwned())
 			{
-				System.err.println("FATAL ERROR: Arduino port ("+this.port+") is currently owned by " + pIdent.getCurrentOwner() + "! (method: connect())");
+				System.err.println("FATAL ERROR: Arduino port ("+getPort()+") is currently owned by " + pIdent.getCurrentOwner() + "! (method: connect())");
 				System.exit(1);
 			}
 			cPort = pIdent.open("RXTXRobot", 2000);
 			if (cPort instanceof SerialPort)
 			{
 				sPort = (SerialPort)cPort;
-				sPort.setSerialPortParams(RXTXRobot.BAUD_RATE, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+				sPort.setSerialPortParams(getBaudRate(), SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
 				debug("Resetting robot...");
 				sleep(500);
 				in = sPort.getInputStream();
@@ -247,7 +125,7 @@ public class RXTXRobot
 		catch(NoSuchPortException e)
 		{
 			System.err.println("FATAL ERROR: Invalid port (NoSuchPortException).  Check to make sure the correct port is set at the object's initialization. (method: connect())");
-			if (this.verbose)
+			if (getVerbose())
 			{
 				System.err.println("Error Message: " + e.toString() + "\n\nError StackTrace:\n");
 				e.printStackTrace(System.err);
@@ -257,7 +135,7 @@ public class RXTXRobot
 		catch(PortInUseException e)
 		{
 			System.err.println("FATAL ERROR: Port is already being used by a different application (PortInUseException).  Did you stop a previously running instance of this program? (method: connect())");
-			if (this.verbose)
+			if (getVerbose())
 			{
 				System.err.println("Error Message: " + e.toString() + "\n\nError StackTrace:\n");
 				e.printStackTrace(System.err);
@@ -267,7 +145,7 @@ public class RXTXRobot
 		catch(UnsupportedCommOperationException e)
 		{
 			System.err.println("FATAL ERROR: Comm Operation is unsupported (UnsupportedCommOperationException).  This shouldn't ever happen.  If you see this, ask a TA for assistance (method: connect())");
-			if (this.verbose)
+			if (getVerbose())
 			{
 				System.err.println("Error Message: " + e.toString() + "\n\nError StackTrace:\n");
 				e.printStackTrace(System.err);
@@ -277,7 +155,7 @@ public class RXTXRobot
 		catch(IOException e)
 		{
 			System.err.println("FATAL ERROR: Could not assign Input and Output streams (IOException).  You may be calling the \"close()\" method before this one.  Make sure you only call \"close()\" at the very end of your program. (method: connect())");
-			if (this.verbose)
+			if (getVerbose())
 			{
 				System.err.println("Error Message: " + e.toString() + "\n\nError StackTrace:\n");
 				e.printStackTrace(System.err);
@@ -294,6 +172,7 @@ public class RXTXRobot
 	 *
 	 * @return true/false value that specifies if the RXTXRobot object is connected to the Arduino/XBee.
 	 */
+        @Override
 	public final boolean isConnected()
 	{
 		return sPort != null && cPort != null && in != null && out != null;
@@ -306,6 +185,7 @@ public class RXTXRobot
 	 * It deletes the mutual exclusion lock file, which is important,
 	 * so this should be done before the program is terminated.
 	 */
+        @Override
 	public final void close()
 	{
 		sleep(300);
@@ -352,7 +232,7 @@ public class RXTXRobot
 		catch(IOException e)
 		{
 			System.err.println("ERROR: Could not read or use Input or Output streams (IOException).  (method: sendRaw())");
-			if (this.verbose)
+			if (getVerbose())
 			{
 				System.err.println("Error Message: " + e.toString() + "\n\nError StackTrace:\n");
 				e.printStackTrace(System.err);
@@ -382,7 +262,7 @@ public class RXTXRobot
 			if (split.length-1 != RXTXRobot.NUM_ANALOG_PINS)
 			{
 				System.err.println("ERROR: Incorrect length returned: " + split.length + ".  (method: refreshAnalogPins())");
-				if (this.verbose)
+				if (getVerbose())
 					for (int x=0; x < split.length; ++x)
 						System.err.println("["+x+"] = " + split[x]);
 				return;
@@ -397,7 +277,7 @@ public class RXTXRobot
 		catch (Exception e)
 		{
 			System.err.println("ERROR: An error occurred with getAnalogPins.");
-			if (this.verbose)
+			if (getVerbose())
 			{
 				System.err.println("Stacktrace: ");
 				e.printStackTrace(System.err);
@@ -426,7 +306,7 @@ public class RXTXRobot
 			if (split.length-1 != RXTXRobot.NUM_DIGITAL_PINS)
 			{
 				System.err.println("ERROR: Incorrect length returned: " + split.length + ".  (method: refreshDigitalPins())");
-				if (this.verbose)
+				if (getVerbose())
 					for (int x=0; x < split.length; ++x)
 						System.err.println("["+x+"] = " + split[x]);
 				return;
@@ -441,7 +321,7 @@ public class RXTXRobot
 		catch (Exception e)
 		{
 			System.err.println("ERROR: An error occurred with getDigitalPins.");
-			if (this.verbose)
+			if (getVerbose())
 			{
 				System.err.println("Stacktrace: ");
 				e.printStackTrace(System.err);
@@ -515,7 +395,7 @@ public class RXTXRobot
 			if (split.length-1 != 1)
 			{
 				System.err.println("Incorrect length returned: " + split.length + ".  (method: getTemperature())");
-				if (this.verbose)
+				if (getVerbose())
 					for (int x=0; x < split.length; ++x)
 						System.err.println("["+x+"] = " + split[x]);
 				return -1;
@@ -529,7 +409,7 @@ public class RXTXRobot
 		catch (Exception e)
 		{
 			System.err.println("ERROR: An error occurred with getTemperature()");
-			if (this.verbose)
+			if (getVerbose())
 			{
 				System.err.println("Stacktrace: ");
 				e.printStackTrace(System.err);
