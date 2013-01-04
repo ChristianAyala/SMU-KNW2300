@@ -272,6 +272,11 @@ public class RXTXRobot extends SerialCommunication
                 analogPinCache = new int[RXTXRobot.NUM_ANALOG_PINS];
                 for (int x = 0; x < analogPinCache.length; ++x)
                         analogPinCache[x] = -1;
+                if (!isConnected())
+                {
+                        System.err.println("ERROR: Robot is not connected!");
+                        return;
+                }
                 try
                 {
                         String[] split = sendRaw("r a").split("\\s+");
@@ -316,6 +321,11 @@ public class RXTXRobot extends SerialCommunication
                 digitalPinCache = new int[RXTXRobot.NUM_DIGITAL_PINS];
                 for (int x = 0; x < digitalPinCache.length; ++x)
                         digitalPinCache[x] = -1;
+                if (!isConnected())
+                {
+                        System.err.println("ERROR: Robot is not connected!");
+                        return;
+                }
                 try
                 {
                         String[] split = sendRaw("r d").split("\\s+");
@@ -412,6 +422,11 @@ public class RXTXRobot extends SerialCommunication
          */
         public int getTemperature()
         {
+                if (!isConnected())
+                {
+                        System.err.println("ERROR: Robot is not connected!");
+                        return -1;
+                }
                 try
                 {
                         String[] split = sendRaw("r t").split("\\s+");
@@ -463,6 +478,11 @@ public class RXTXRobot extends SerialCommunication
          */
         public void moveServo(int servo, int position)
         {
+                if (!isConnected())
+                {
+                        System.err.println("ERROR: Robot is not connected!");
+                        return;
+                }
                 if (servo != RXTXRobot.SERVO1 && servo != RXTXRobot.SERVO2)
                 {
                         System.err.println("ERROR: Invalid servo argument (RXTXRobot.SERVO1 or RXTXRobot.SERVO2).  (method: moveServo())");
@@ -491,6 +511,11 @@ public class RXTXRobot extends SerialCommunication
          */
         public void moveBothServos(int pos1, int pos2)
         {
+                if (!isConnected())
+                {
+                        System.err.println("ERROR: Robot is not connected!");
+                        return;
+                }
                 debug("Moving both servos to positions " + pos1 + " and " + pos2);
                 if (pos1 < 0 || pos1 > 180 || pos2 < 0 || pos2 > 180)
                         System.err.println("ERROR: Positions must be >=0 and <=180.  You supplied " + pos1 + " and " + pos2 + ".  One or more are invalid.  (method: moveBothServos())");
@@ -521,6 +546,11 @@ public class RXTXRobot extends SerialCommunication
          */
         public void runMotor(int motor, int speed, int time)
         {
+                if (!isConnected())
+                {
+                        System.err.println("ERROR: Robot is not connected!");
+                        return;
+                }
                 if (speed < -255 || speed > 255)
                 {
                         System.err.println("ERROR: You must give the motors a speed between -255 and 255 (inclusive).  (method: runMotor())");
@@ -585,6 +615,11 @@ public class RXTXRobot extends SerialCommunication
          */
         public void runMotor(int motor1, int speed1, int motor2, int speed2, int time)
         {
+                if (!isConnected())
+                {
+                        System.err.println("ERROR: Robot is not connected!");
+                        return;
+                }
                 if (speed1 < -255 || speed1 > 255 || speed2 < -255 || speed2 > 255)
                 {
                         System.err.println("ERROR: You must give the motors a speed between -255 and 255 (inclusive).  (method: runMotor())");
@@ -664,6 +699,11 @@ public class RXTXRobot extends SerialCommunication
          */
         public void runMotor(int motor1, int speed1, int motor2, int speed2, int motor3, int speed3, int motor4, int speed4, int time)
         {
+                if (!isConnected())
+                {
+                        System.err.println("ERROR: Robot is not connected!");
+                        return;
+                }
                 if (speed1 < -255 || speed1 > 255 || speed2 < -255 || speed2 > 255 || speed3 < -255 || speed3 > 255 || speed4 < -255 || speed4 > 255)
                 {
                         System.err.println("ERROR: You must give the motors a speed between -255 and 255 (inclusive).  (method: runMotor())");
@@ -728,6 +768,11 @@ public class RXTXRobot extends SerialCommunication
          */
         public void runMixer(int motor, int time)
         {
+                if (!isConnected())
+                {
+                        System.err.println("ERROR: Robot is not connected!");
+                        return;
+                }
                 final int MIXER_SPEED = 30;
                 if (motor < RXTXRobot.MOTOR1 || motor > RXTXRobot.MOTOR4)
                 {
@@ -756,6 +801,11 @@ public class RXTXRobot extends SerialCommunication
          */
         public void stopMixer(int motor)
         {
+                if (!isConnected())
+                {
+                        System.err.println("ERROR: Robot is not connected!");
+                        return;
+                }
                 if (motor < RXTXRobot.MOTOR1 || motor > RXTXRobot.MOTOR4)
                 {
                         System.err.println("ERROR: You must supply a valid motor port: RXTXRobot.MOTOR1, MOTOR2, MOTOR3, or MOTOR4.  (method: stopMixer())");
