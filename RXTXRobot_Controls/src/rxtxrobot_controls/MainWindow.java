@@ -3,119 +3,107 @@
  * and open the template in the editor.
  */
 package rxtxrobot_controls;
-import gnu.io.*;
+
 import java.awt.Color;
 import java.awt.Point;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
 import rxtxrobot.*;
+
 /**
  *
  * @author raikia
  */
-public final class MainWindow extends javax.swing.JFrame {
+public final class MainWindow extends javax.swing.JFrame
+{
+        /**
+         * Creates new form MainWindow
+         */
+        private Interaction main_obj;
+        private static PrintStream outPs;
+        private static PrintStream errPs;
+        private static Style errStyle;
+        private static Style outStyle;
+        private Thread updateSerial;
+        private Thread robotThread;
 
-    /**
-     * Creates new form MainWindow
-     */
-    private Interaction main_obj;
-    private static PrintStream outPs;
-    private static PrintStream errPs;
-    private static Style errStyle;
-    private static Style outStyle;
-    private Thread updateSerial;
-    private Thread robotThread;
-    public MainWindow() {
-        outPs = new PrintStream(System.out)
+        public MainWindow()
         {
-            @Override
-            public void println(String x)
-            {
-                try
+                outPs = new PrintStream(System.out)
                 {
-                    verbose_output.getStyledDocument().insertString(verbose_output.getStyledDocument().getLength(), "\n"+x, outStyle);
-                }
-                catch(Exception e)
+                        @Override
+                        public void println(String x)
+                        {
+                                try
+                                {
+                                        verbose_output.getStyledDocument().insertString(verbose_output.getStyledDocument().getLength(), "\n" + x, outStyle);
+                                }
+                                catch (Exception e)
+                                {
+                                        JOptionPane.showMessageDialog(null, "Failed System.out printing verbosely", "PrintStream failed", JOptionPane.ERROR_MESSAGE);
+                                }
+                        }
+                };
+                errPs = new PrintStream(System.out)
                 {
-                    JOptionPane.showMessageDialog(null,"Failed System.out printing verbosely", "PrintStream failed", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        };
-        errPs = new PrintStream(System.out)
-        {
-            @Override
-            public void println(String x)
-            {
-                try
-                {
-                    verbose_output.getStyledDocument().insertString(verbose_output.getStyledDocument().getLength(), "\n"+x, errStyle);
-                }
-                catch(Exception e)
-                {
-                    JOptionPane.showMessageDialog(null,"Failed System.err printing verbosely", "PrintStream failed", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        };
-        List<String> available_ports = checkForPorts();
-        initComponents();
-        verbose_container.setVisible(false);
-        this.pack();
-        errStyle = verbose_output.addStyle("error",null);
-        StyleConstants.setForeground(errStyle, Color.red);
-        outStyle = verbose_output.addStyle("out", null);
-        StyleConstants.setForeground(outStyle, Color.green);
-        System.setOut(outPs);
-        System.setErr(errPs);
-        enableAll(false);
-        updatePortList(available_ports);
-        updateSerial = new Thread(new Refresh_Serial(this));
-        updateSerial.start();
-    }
+                        @Override
+                        public void println(String x)
+                        {
+                                try
+                                {
+                                        verbose_output.getStyledDocument().insertString(verbose_output.getStyledDocument().getLength(), "\n" + x, errStyle);
+                                }
+                                catch (Exception e)
+                                {
+                                        JOptionPane.showMessageDialog(null, "Failed System.err printing verbosely", "PrintStream failed", JOptionPane.ERROR_MESSAGE);
+                                }
+                        }
+                };
+                String[] available_ports = SerialCommunication.checkValidPorts();
+                initComponents();
+                verbose_container.setVisible(false);
+                this.pack();
+                errStyle = verbose_output.addStyle("error", null);
+                StyleConstants.setForeground(errStyle, Color.red);
+                outStyle = verbose_output.addStyle("out", null);
+                StyleConstants.setForeground(outStyle, Color.green);
+                System.setOut(outPs);
+                System.setErr(errPs);
+                enableAll(false);
+                updatePortList(available_ports);
+                updateSerial = new Thread(new Refresh_Serial(this));
+                updateSerial.start();
+        }
 
-    
-    private List<String> checkForPorts()
-    {
-        List<String> list = new ArrayList<String>();
-        Enumeration e = CommPortIdentifier.getPortIdentifiers();
-        while (e.hasMoreElements())
+        public void updatePortList()
         {
-            CommPortIdentifier portId = (CommPortIdentifier)e.nextElement();
-            if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL)
-                list.add(portId.getName());
+                String[] list = SerialCommunication.checkValidPorts();
+                updatePortList(list);
         }
-        return list;
-    }
-    public void updatePortList()
-    {
-        List<String> list = checkForPorts();
-        updatePortList(list);
-    }
-    private void updatePortList(List<String> list)
-    {
-        port_model.removeAllElements();
-        for (int x=0; x < list.size(); ++x)
-            port_model.addElement(list.get(x));
-    }
-    
-    private void notifyRobot()
-    {
-        synchronized(main_obj)
+
+        private void updatePortList(String[] list)
         {
-            main_obj.notify();
+                port_model.removeAllElements();
+                for (int x = 0; x < list.length; ++x)
+                        port_model.addElement(list[x]);
         }
-    }
-    
-    /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
-     */
-    @SuppressWarnings("unchecked")
+
+        private void notifyRobot()
+        {
+                synchronized (main_obj)
+                {
+                        main_obj.notify();
+                }
+        }
+
+        /**
+         * This method is called from within the constructor to initialize the
+         * form. WARNING: Do NOT modify this code. The content of this method is
+         * always regenerated by the Form Editor.
+         */
+        @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
@@ -727,214 +715,234 @@ public final class MainWindow extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void arduino_connect_btn_actionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_arduino_connect_btn_actionPerformed
-        if (arduino_connect_btn.getText().equalsIgnoreCase("connect"))
-        {
-            if (arduino_port.getSelectedIndex() == -1)
+            if (arduino_connect_btn.getText().equalsIgnoreCase("connect"))
             {
-                JOptionPane.showMessageDialog(this, "No Arduino port was selected.", "Arduino Port Error", JOptionPane.ERROR_MESSAGE);
+                    if (arduino_port.getSelectedIndex() == -1)
+                    {
+                            JOptionPane.showMessageDialog(this, "No Arduino port was selected.", "Arduino Port Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                    else
+                    {
+                            System.out.println("Connecting to port: " + (String) arduino_port.getSelectedItem());
+                            main_obj = new Interaction(this, (String) arduino_port.getSelectedItem(), outPs, errPs);
+                            robotThread = new Thread(main_obj);
+                            updateSerial.stop();
+                            updateSerial = new Thread(new Refresh_Serial(this));
+                            robotThread.start();
+                    }
             }
             else
             {
-                System.out.println("Connecting to port: " + (String)arduino_port.getSelectedItem());
-                main_obj = new Interaction(this, (String)arduino_port.getSelectedItem(),outPs, errPs);
-                robotThread = new Thread(main_obj);
-                updateSerial.stop();
-                updateSerial = new Thread(new Refresh_Serial(this));
-                robotThread.start();
+                    main_obj.stopRunning();
+                    notifyRobot();
+                    updateSerial.start();
             }
-        }
-        else
-        {
-            main_obj.stopRunning();
-            notifyRobot();
-            updateSerial.start();
-        }
     }//GEN-LAST:event_arduino_connect_btn_actionPerformed
 
-    public void enableAll(boolean a)
-    {
-        m1_btn.setEnabled(a);
-        m1_speed.setEnabled(a);
-        m2_btn.setEnabled(a);
-        m2_speed.setEnabled(a);
-        m3_btn.setEnabled(a);
-        m3_speed.setEnabled(a);
-        m4_btn.setEnabled(a);
-        m4_speed.setEnabled(a);
-        analog_read_btn.setEnabled(a);
-        digital_read_btn.setEnabled(a);
-        reset_all.setEnabled(a);
-        servo1_btn.setEnabled(a);
-        servo1_position.setEnabled(a);
-        servo2_btn.setEnabled(a);
-        servo2_position.setEnabled(a);
-        start_all.setEnabled(a);
-    }
+        public void enableAll(boolean a)
+        {
+                m1_btn.setEnabled(a);
+                m1_speed.setEnabled(a);
+                m2_btn.setEnabled(a);
+                m2_speed.setEnabled(a);
+                m3_btn.setEnabled(a);
+                m3_speed.setEnabled(a);
+                m4_btn.setEnabled(a);
+                m4_speed.setEnabled(a);
+                analog_read_btn.setEnabled(a);
+                digital_read_btn.setEnabled(a);
+                reset_all.setEnabled(a);
+                servo1_btn.setEnabled(a);
+                servo1_position.setEnabled(a);
+                servo2_btn.setEnabled(a);
+                servo2_position.setEnabled(a);
+                start_all.setEnabled(a);
+        }
     private void set_verbose_btn_actionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_set_verbose_btn_actionPerformed
-        Point pre = this.getLocation();
-        verbose_container.setVisible(set_verbose_btn.isSelected());
-        this.pack();
-        this.setLocation(pre);
-        this.pack();
-        //this.setLocation(pre);
+            Point pre = this.getLocation();
+            verbose_container.setVisible(set_verbose_btn.isSelected());
+            this.pack();
+            this.setLocation(pre);
+            this.pack();
+            //this.setLocation(pre);
     }//GEN-LAST:event_set_verbose_btn_actionPerformed
 
     private void dc_motor_1_actionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dc_motor_1_actionPerformed
-        if (m1_btn.getText().equalsIgnoreCase("start"))
-        {
-            m1_btn.setText("Stop");
-            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR1, m1_speed.getValue(),0);
-        }
-        else
-        {
-            m1_btn.setText("Start");
-            main_obj.execute(Interaction.RUN_MOTOR,RXTXRobot.MOTOR1, 0,0);
-        }
-        notifyRobot();
+            if (m1_btn.getText().equalsIgnoreCase("start"))
+            {
+                    m1_btn.setText("Stop");
+                    main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR1, m1_speed.getValue(), 0);
+            }
+            else
+            {
+                    m1_btn.setText("Start");
+                    main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR1, 0, 0);
+            }
+            notifyRobot();
     }//GEN-LAST:event_dc_motor_1_actionPerformed
 
     private void dc_motor_2_actionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dc_motor_2_actionPerformed
-        if (m2_btn.getText().equalsIgnoreCase("start"))
-        {
-            m2_btn.setText("Stop");
-            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR1, m2_speed.getValue(),0);
-        }
-        else
-        {
-            m2_btn.setText("Start");
-            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR1, 0,0);
-        }
-        notifyRobot();
+            if (m2_btn.getText().equalsIgnoreCase("start"))
+            {
+                    m2_btn.setText("Stop");
+                    main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR1, m2_speed.getValue(), 0);
+            }
+            else
+            {
+                    m2_btn.setText("Start");
+                    main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR1, 0, 0);
+            }
+            notifyRobot();
     }//GEN-LAST:event_dc_motor_2_actionPerformed
 
     private void dc_motor_3_actionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dc_motor_3_actionPerformed
-        if (m3_btn.getText().equalsIgnoreCase("start"))
-        {
-            m3_btn.setText("Stop");
-            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR3, m3_speed.getValue(),0);
-        }
-        else
-        {
-            m3_btn.setText("Start");
-            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR3, 0,0);
-        }
-        notifyRobot();
+            if (m3_btn.getText().equalsIgnoreCase("start"))
+            {
+                    m3_btn.setText("Stop");
+                    main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR3, m3_speed.getValue(), 0);
+            }
+            else
+            {
+                    m3_btn.setText("Start");
+                    main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR3, 0, 0);
+            }
+            notifyRobot();
     }//GEN-LAST:event_dc_motor_3_actionPerformed
 
     private void dc_motor_4_actionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dc_motor_4_actionPerformed
-        if (m4_btn.getText().equalsIgnoreCase("start"))
-        {
-            m4_btn.setText("Stop");
-            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR4, m4_speed.getValue(),0);
-        }
-        else
-        {
-            m4_btn.setText("Start");
-            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR4, 0,0);
-        }
-        notifyRobot();
+            if (m4_btn.getText().equalsIgnoreCase("start"))
+            {
+                    m4_btn.setText("Stop");
+                    main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR4, m4_speed.getValue(), 0);
+            }
+            else
+            {
+                    m4_btn.setText("Start");
+                    main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR4, 0, 0);
+            }
+            notifyRobot();
     }//GEN-LAST:event_dc_motor_4_actionPerformed
 
     private void servo_1_actionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_servo_1_actionPerformed
-        main_obj.execute(Interaction.MOVE_SERVO, RXTXRobot.SERVO1, servo1_position.getValue());
-        notifyRobot();
+            main_obj.execute(Interaction.MOVE_SERVO, RXTXRobot.SERVO1, servo1_position.getValue());
+            notifyRobot();
     }//GEN-LAST:event_servo_1_actionPerformed
 
     private void servo_2_actionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_servo_2_actionPerformed
-        main_obj.execute(Interaction.MOVE_SERVO, RXTXRobot.SERVO2, servo2_position.getValue());
-        notifyRobot();
+            main_obj.execute(Interaction.MOVE_SERVO, RXTXRobot.SERVO2, servo2_position.getValue());
+            notifyRobot();
     }//GEN-LAST:event_servo_2_actionPerformed
 
     private void analog_read_btn_actionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_analog_read_btn_actionPerformed
-        main_obj.execute(Interaction.READ_ANALOG);
-        notifyRobot();
+            main_obj.execute(Interaction.READ_ANALOG);
+            notifyRobot();
     }//GEN-LAST:event_analog_read_btn_actionPerformed
 
     private void digital_read_btn_actionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_digital_read_btn_actionPerformed
-        main_obj.execute(Interaction.READ_DIGITAL);
-        notifyRobot();
+            main_obj.execute(Interaction.READ_DIGITAL);
+            notifyRobot();
     }//GEN-LAST:event_digital_read_btn_actionPerformed
 
     private void start_all_actionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_start_all_actionPerformed
-        m1_btn.setText("Stop");
-        main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR1, m1_speed.getValue(),0);
-        m2_btn.setText("Stop");
-        main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR2, m2_speed.getValue(),0);
-        m3_btn.setText("Stop");
-        main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR3, m3_speed.getValue(),0);
-        m4_btn.setText("Stop");
-        main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR4, m4_speed.getValue(),0);
-        main_obj.execute(Interaction.MOVE_SERVO, RXTXRobot.SERVO1, servo1_position.getValue());
-        main_obj.execute(Interaction.MOVE_SERVO, RXTXRobot.SERVO2, servo2_position.getValue());
-        notifyRobot();
+            m1_btn.setText("Stop");
+            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR1, m1_speed.getValue(), 0);
+            m2_btn.setText("Stop");
+            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR2, m2_speed.getValue(), 0);
+            m3_btn.setText("Stop");
+            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR3, m3_speed.getValue(), 0);
+            m4_btn.setText("Stop");
+            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR4, m4_speed.getValue(), 0);
+            main_obj.execute(Interaction.MOVE_SERVO, RXTXRobot.SERVO1, servo1_position.getValue());
+            main_obj.execute(Interaction.MOVE_SERVO, RXTXRobot.SERVO2, servo2_position.getValue());
+            notifyRobot();
     }//GEN-LAST:event_start_all_actionPerformed
 
     private void reset_all_actionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_reset_all_actionPerformed
-        
-        m1_btn.setText("Start");
-        main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR1, 0,0);
-        m2_btn.setText("Start");
-        main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR2, 0,0);
-        m3_btn.setText("Start");
-        main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR3, 0,0);
-        m4_btn.setText("Start");
-        main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR4, 0,0);
-        m1_speed.setValue(0);
-        m2_speed.setValue(0);
-        m3_speed.setValue(0);
-        m4_speed.setValue(0);
-        servo1_position.setValue(90);
-        servo2_position.setValue(90);
-        main_obj.execute(Interaction.MOVE_SERVO, RXTXRobot.SERVO1, 90);
-        main_obj.execute(Interaction.MOVE_SERVO, RXTXRobot.SERVO2, 90);
-        analog_textbox.setText("N/A");
-        digital_textbox.setText("N/A");
-        notifyRobot();
+
+            m1_btn.setText("Start");
+            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR1, 0, 0);
+            m2_btn.setText("Start");
+            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR2, 0, 0);
+            m3_btn.setText("Start");
+            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR3, 0, 0);
+            m4_btn.setText("Start");
+            main_obj.execute(Interaction.RUN_MOTOR, RXTXRobot.MOTOR4, 0, 0);
+            m1_speed.setValue(0);
+            m2_speed.setValue(0);
+            m3_speed.setValue(0);
+            m4_speed.setValue(0);
+            servo1_position.setValue(90);
+            servo2_position.setValue(90);
+            main_obj.execute(Interaction.MOVE_SERVO, RXTXRobot.SERVO1, 90);
+            main_obj.execute(Interaction.MOVE_SERVO, RXTXRobot.SERVO2, 90);
+            analog_textbox.setText("N/A");
+            digital_textbox.setText("N/A");
+            notifyRobot();
     }//GEN-LAST:event_reset_all_actionPerformed
 
     private void about_menuitem_actionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_about_menuitem_actionPerformed
-        JOptionPane.showMessageDialog(this,"This tool was written by:\n\nChris King <ccking@smu.edu>\n\nhttp://lyle.smu.edu/fyd", "About this tool", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "This tool was written by:\n\nChris King <ccking@smu.edu>\n\nhttp://lyle.smu.edu/fyd", "About this tool", JOptionPane.INFORMATION_MESSAGE);
     }//GEN-LAST:event_about_menuitem_actionPerformed
 
     private void quit_menuitem_actionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_quit_menuitem_actionPerformed
-        if (JOptionPane.showConfirmDialog(this,"Are you sure you want to quit?", "Confirm Exit", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION)
-            this.dispose();
+            if (JOptionPane.showConfirmDialog(this, "Are you sure you want to quit?", "Confirm Exit", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION)
+                    this.dispose();
     }//GEN-LAST:event_quit_menuitem_actionPerformed
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+        /**
+         * @param args the command line arguments
          */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
+        public static void main(String args[])
+        {
+                /*
+                 * Set the Nimbus look and feel
+                 */
+                //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /*
+                 * If Nimbus (introduced in Java SE 6) is not available, stay
+                 * with the default look and feel. For details see
+                 * http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
+                 */
+                try
+                {
+                        for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels())
+                        {
+                                if ("Nimbus".equals(info.getName()))
+                                {
+                                        javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                                        break;
+                                }
+                        }
                 }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
+                catch (ClassNotFoundException ex)
+                {
+                        java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+                }
+                catch (InstantiationException ex)
+                {
+                        java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+                }
+                catch (IllegalAccessException ex)
+                {
+                        java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+                }
+                catch (javax.swing.UnsupportedLookAndFeelException ex)
+                {
+                        java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+                }
+                //</editor-fold>
 
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new MainWindow().setVisible(true);
-            }
-        });
-    }
+                /*
+                 * Create and display the form
+                 */
+                java.awt.EventQueue.invokeLater(new Runnable()
+                {
+                        public void run()
+                        {
+                                new MainWindow().setVisible(true);
+                        }
+                });
+        }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuItem about_menuitem;
     private javax.swing.JButton analog_read_btn;
@@ -995,5 +1003,5 @@ public final class MainWindow extends javax.swing.JFrame {
     private javax.swing.JScrollPane verbose_container;
     private javax.swing.JTextPane verbose_output;
     // End of variables declaration//GEN-END:variables
-    private javax.swing.DefaultComboBoxModel<String> port_model;
+        private javax.swing.DefaultComboBoxModel<String> port_model;
 }
