@@ -2,13 +2,16 @@ package rxtxrobot;
 
 import java.io.PrintStream;
 
+/**
+ * @author Chris King
+ * @version 3.0.0
+ */
 public abstract class SerialCommunication
 {
         final private static String API_VERSION = "3.0.0";
 	private String port;
 	private boolean verbose;
 	private int baud_rate;
-
 
 	public SerialCommunication()
 	{
