@@ -110,7 +110,7 @@ public class RXTXRobot extends SerialCommunication
                 System.out.println("Connecting to robot, please wait...\n");
                 if ("".equals(getPort()))
                 {
-                        System.err.println("FATAL ERROR: No port was specified to connect to! (method: connect())");
+                        System.err.println("FATAL ERROR: No port was specified to connect to! (method: connect())\n");
                         System.err.println(displayPossiblePorts());
                         System.exit(1);
                 }
@@ -133,7 +133,7 @@ public class RXTXRobot extends SerialCommunication
                         System.setOut(originalStream);
                         if (pIdent.isCurrentlyOwned())
                         {
-                                System.err.println("FATAL ERROR: Arduino port (" + getPort() + ") is currently owned by " + pIdent.getCurrentOwner() + "! (method: connect())");
+                                System.err.println("FATAL ERROR: Arduino port (" + getPort() + ") is currently owned by " + pIdent.getCurrentOwner() + "! (method: connect())\n");
                                 System.err.println(displayPossiblePorts());
                                 System.exit(1);
                         }
@@ -151,7 +151,7 @@ public class RXTXRobot extends SerialCommunication
                 }
                 catch (NoSuchPortException e)
                 {
-                        System.err.println("FATAL ERROR: Invalid port (NoSuchPortException).  Check to make sure the correct port is set at the object's initialization. (method: connect())");
+                        System.err.println("FATAL ERROR: Invalid port (NoSuchPortException).  Check to make sure the correct port is set at the object's initialization. (method: connect())\n");
                         System.err.println(displayPossiblePorts());
                         if (getVerbose())
                         {
@@ -162,7 +162,7 @@ public class RXTXRobot extends SerialCommunication
                 }
                 catch (PortInUseException e)
                 {
-                        System.err.println("FATAL ERROR: Port is already being used by a different application (PortInUseException).  Did you stop a previously running instance of this program? (method: connect())");
+                        System.err.println("FATAL ERROR: Port is already being used by a different application (PortInUseException).  Did you stop a previously running instance of this program? (method: connect())\n");
                         System.err.println(displayPossiblePorts());
                         if (getVerbose())
                         {
