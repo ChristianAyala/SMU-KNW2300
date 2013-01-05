@@ -89,27 +89,27 @@ public class Labview extends SerialCommunication
         {
                 if ("".equals(getPort()))
                 {
-                        System.err.println("FATAL ERROR: No port was specified for Labview to connect to!  (method: connect())");
+                        this.getErrStream().println("FATAL ERROR: No port was specified for Labview to connect to!  (method: connect())");
                         System.exit(1);
                 }
                 if (isConnected())
                 {
-                        System.err.println("ERROR: Labview is already connected!  (method: connect())");
+                        this.getErrStream().println("ERROR: Labview is already connected!  (method: connect())");
                         return;
                 }
                 try
                 {
                         sSocket = new ServerSocket(1337);
-                        System.out.println("Waiting for labview to connect... Make sure Labview is connecting to the correct IP address on port 1337");
+                        this.getOutStream().println("Waiting for labview to connect... Make sure Labview is connecting to the correct IP address on port 1337");
                         socket = sSocket.accept();
                         write = new PrintWriter(socket.getOutputStream(), true);
                         read = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                        System.out.println("Labview connected!  Starting to run program...");
+                        this.getOutStream().println("Labview connected!  Starting to run program...");
                 }
                 catch (Exception e)
                 {
-                        System.err.println("An error occurred waiting for labview:" + e + "\n\nStacktrace: ");
-                        e.printStackTrace(System.err);
+                        this.getErrStream().println("An error occurred waiting for labview:" + e + "\n\nStacktrace: ");
+                        e.printStackTrace(this.getErrStream());
                         System.exit(1);
                 }
                 try
@@ -117,7 +117,7 @@ public class Labview extends SerialCommunication
                         CommPortIdentifier pIdent = CommPortIdentifier.getPortIdentifier(getPort());
                         if (pIdent.isCurrentlyOwned())
                         {
-                                System.err.println("FATAL ERROR: Labview port (" + getPort() + ") is currently owned by " + pIdent.getCurrentOwner());
+                                this.getErrStream().println("FATAL ERROR: Labview port (" + getPort() + ") is currently owned by " + pIdent.getCurrentOwner());
                                 System.exit(1);
                         }
                         cPort = pIdent.open("LabView", 2000);
@@ -126,11 +126,11 @@ public class Labview extends SerialCommunication
                                 sPort = (SerialPort) cPort;
                                 sPort.setSerialPortParams(getBaudRate(), SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
                         }
-                        System.out.println("Labview is now ready!");
+                        this.getOutStream().println("Labview is now ready!");
                 }
                 catch (Exception e)
                 {
-                        System.err.println("ERROR: There was an error connecting LabView");
+                        this.getErrStream().println("ERROR: There was an error connecting LabView");
                 }
         }
 
@@ -138,12 +138,12 @@ public class Labview extends SerialCommunication
         {
                 if (mode < Labview.MODE_3D || mode > Labview.MODE_2D)
                 {
-                        System.err.println("ERROR: Invalid MODE was given.  (method: read())");
+                        this.getErrStream().println("ERROR: Invalid MODE was given.  (method: read())");
                         return null;
                 }
                 if (!socket.isConnected() || !isConnected())
                 {
-                        System.err.println("ERROR: The connection to labview was apparently lost...  (method: read())");
+                        this.getErrStream().println("ERROR: The connection to labview was apparently lost...  (method: read())");
                         return null;
                 }
                 String command = "s";
@@ -183,7 +183,7 @@ public class Labview extends SerialCommunication
                 }
                 catch (Exception e)
                 {
-                        System.err.println("ERROR: A generic error occurred!  Error: " + e.toString());
+                        this.getErrStream().println("ERROR: A generic error occurred!  Error: " + e.toString());
                 }
                 return null;
         }

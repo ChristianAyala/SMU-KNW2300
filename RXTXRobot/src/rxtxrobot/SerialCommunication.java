@@ -19,11 +19,15 @@ public abstract class SerialCommunication
         private String port;
         private boolean verbose;
         private int baud_rate;
+        private PrintStream out_stream;
+        private PrintStream err_stream;
 
         public SerialCommunication()
         {
-                System.out.println("   RXTXRobot API version " + SerialCommunication.getVersion());
-                System.out.println("---------------------------------\n");
+                this.setOutStream(System.out);
+                this.setErrStream(System.err);
+                this.getOutStream().println("   RXTXRobot API version " + SerialCommunication.getVersion());
+                this.getOutStream().println("---------------------------------\n");
                 baud_rate = 9600;
                 port = "";
                 verbose = false;
@@ -156,7 +160,7 @@ public abstract class SerialCommunication
         protected void debug(String str)
         {
                 if (this.verbose)
-                        System.out.println("--> " + str);
+                        this.getOutStream().println("--> " + str);
         }
 
         /**
@@ -166,11 +170,23 @@ public abstract class SerialCommunication
          * somewhere else. It shouldn't be used unless you know what you are
          * doing.
          *
-         * @param p PrintStream to write output to.
+         * @param o PrintStream to write output to.
          */
-        public void setOutStream(PrintStream o)
+        public final void setOutStream(PrintStream o)
         {
-                System.setOut(o);
+                this.out_stream = o;
+        }
+
+        /**
+         * Gets the output PrintStream; System.out by default.
+         *
+         * This method returns the output stream that is being used.
+         *
+         * @return PrintStream that is being used for output
+         */
+        public final PrintStream getOutStream()
+        {
+                return out_stream;
         }
 
         /**
@@ -180,11 +196,23 @@ public abstract class SerialCommunication
          * somewhere else. It shouldn't be used unless you know what you are
          * doing.
          *
-         * @param p PrintStream to write error to.
+         * @param e PrintStream to write error to.
          */
-        public void setErrStream(PrintStream e)
+        public final void setErrStream(PrintStream e)
         {
-                System.setErr(e);
+                this.err_stream = e;
+        }
+
+        /**
+         * Gets the error PrintStream; System.err by default.
+         *
+         * This method returns the error stream that is being used.
+         *
+         * @return PrintStream that is being used for error output
+         */
+        public final PrintStream getErrStream()
+        {
+                return err_stream;
         }
 
         /**
@@ -207,7 +235,7 @@ public abstract class SerialCommunication
                 }
                 catch (InterruptedException e)
                 {
-                        System.err.println("ERROR: Thread was interrupted (InterruptedException).  Error: " + e.toString());
+                        this.getErrStream().println("ERROR: Thread was interrupted (InterruptedException).  Error: " + e.toString());
                 }
         }
 
