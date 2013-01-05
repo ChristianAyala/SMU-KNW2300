@@ -107,9 +107,7 @@ public class RXTXRobot extends SerialCommunication
         @Override
         public final void connect()
         {
-                System.out.println("RXTXRobot API version " + SerialCommunication.getVersion());
-                System.out.println("---------------------------\n");
-                System.out.println("Starting up robot, please wait...");
+                System.out.println("Connecting to robot, please wait...\n");
                 if ("".equals(getPort()))
                 {
                         System.err.println("FATAL ERROR: No port was specified to connect to! (method: connect())");
@@ -148,7 +146,7 @@ public class RXTXRobot extends SerialCommunication
                                 sleep(500);
                                 in = sPort.getInputStream();
                                 out = sPort.getOutputStream();
-                                System.out.println("Connected...\n");
+                                System.out.println("Connected!\n");
                         }
                 }
                 catch (NoSuchPortException e)

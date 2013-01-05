@@ -22,6 +22,8 @@ public abstract class SerialCommunication
 
         public SerialCommunication()
         {
+                System.out.println("   RXTXRobot API version " + SerialCommunication.getVersion());
+                System.out.println("---------------------------------\n");
                 baud_rate = 9600;
                 port = "";
                 verbose = false;
