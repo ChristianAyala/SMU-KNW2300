@@ -39,6 +39,7 @@ public final class MainWindow extends javax.swing.JFrame
                                 try
                                 {
                                         verbose_output.getStyledDocument().insertString(verbose_output.getStyledDocument().getLength(), x + "\n", outStyle);
+                                        verbose_output.setCaretPosition(verbose_output.getText().length()-1);
                                 }
                                 catch (Exception e)
                                 {
@@ -54,6 +55,7 @@ public final class MainWindow extends javax.swing.JFrame
                                 try
                                 {
                                         verbose_output.getStyledDocument().insertString(verbose_output.getStyledDocument().getLength(), x + "\n", errStyle);
+                                        verbose_output.setCaretPosition(verbose_output.getText().length()-1);
                                 }
                                 catch (Exception e)
                                 {
