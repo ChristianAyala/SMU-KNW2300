@@ -123,7 +123,16 @@ public class RXTXRobot extends SerialCommunication
                 }
                 try
                 {
+                        java.io.PrintStream originalStream = System.out;
+                        System.setOut(new java.io.PrintStream(new java.io.OutputStream() {
+                                @Override
+                                public void write(int i) throws IOException
+                                {
+                                        // Do nothing to silence the mismatch warning.
+                                }
+                        }));
                         CommPortIdentifier pIdent = CommPortIdentifier.getPortIdentifier(getPort());
+                        System.setOut(originalStream);
                         if (pIdent.isCurrentlyOwned())
                         {
                                 System.err.println("FATAL ERROR: Arduino port (" + getPort() + ") is currently owned by " + pIdent.getCurrentOwner() + "! (method: connect())");

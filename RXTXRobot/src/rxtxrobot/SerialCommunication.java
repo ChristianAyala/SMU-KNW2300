@@ -47,6 +47,15 @@ public abstract class SerialCommunication
          */
         public static String[] checkValidPorts()
         {
+                java.io.PrintStream originalStream = System.out;
+                System.setOut(new java.io.PrintStream(new java.io.OutputStream()
+                {
+                        @Override
+                        public void write(int i) throws java.io.IOException
+                        {
+                                // Do nothing to silence the mismatch warning.
+                        }
+                }));
                 List<String> list = new ArrayList<String>();
                 Enumeration e = CommPortIdentifier.getPortIdentifiers();
                 while (e.hasMoreElements())
@@ -57,6 +66,7 @@ public abstract class SerialCommunication
                 }
                 String[] a = new String[list.size()];
                 a = list.toArray(a);
+                System.setOut(originalStream);
                 return a;
         }
 
