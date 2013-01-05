@@ -109,6 +109,7 @@ public final class Interaction implements Runnable
                 robot.setVerbose(true);
                 robot.setErrStream(err);
                 robot.setOutStream(out);
+                robot.connect();
                 if (robot.isConnected())
                 {
                         parent.arduino_connect_btn.setText("Disconnect");
