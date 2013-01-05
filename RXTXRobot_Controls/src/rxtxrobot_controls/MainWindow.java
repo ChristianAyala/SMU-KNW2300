@@ -38,7 +38,7 @@ public final class MainWindow extends javax.swing.JFrame
                         {
                                 try
                                 {
-                                        verbose_output.getStyledDocument().insertString(verbose_output.getStyledDocument().getLength(), "\n" + x, outStyle);
+                                        verbose_output.getStyledDocument().insertString(verbose_output.getStyledDocument().getLength(), x + "\n", outStyle);
                                 }
                                 catch (Exception e)
                                 {
@@ -53,7 +53,7 @@ public final class MainWindow extends javax.swing.JFrame
                         {
                                 try
                                 {
-                                        verbose_output.getStyledDocument().insertString(verbose_output.getStyledDocument().getLength(), "\n" + x, errStyle);
+                                        verbose_output.getStyledDocument().insertString(verbose_output.getStyledDocument().getLength(), x + "\n", errStyle);
                                 }
                                 catch (Exception e)
                                 {
