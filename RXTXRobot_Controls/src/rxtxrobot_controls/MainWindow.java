@@ -720,6 +720,7 @@ public final class MainWindow extends javax.swing.JFrame
                     if (arduino_port.getSelectedIndex() == -1)
                     {
                             JOptionPane.showMessageDialog(this, "No Arduino port was selected.", "Arduino Port Error", JOptionPane.ERROR_MESSAGE);
+                            errPs.println("Error: No Arduino port was selected.");
                     }
                     else
                     {
@@ -886,63 +887,12 @@ public final class MainWindow extends javax.swing.JFrame
 
     private void quit_menuitem_actionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_quit_menuitem_actionPerformed
             if (JOptionPane.showConfirmDialog(this, "Are you sure you want to quit?", "Confirm Exit", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION)
+            {
                     this.dispose();
+                    System.exit(0);
+            }
     }//GEN-LAST:event_quit_menuitem_actionPerformed
 
-        /**
-         * @param args the command line arguments
-         */
-        public static void main(String args[])
-        {
-                /*
-                 * Set the Nimbus look and feel
-                 */
-                //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /*
-                 * If Nimbus (introduced in Java SE 6) is not available, stay
-                 * with the default look and feel. For details see
-                 * http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
-                 */
-                try
-                {
-                        for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels())
-                        {
-                                if ("Nimbus".equals(info.getName()))
-                                {
-                                        javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                                        break;
-                                }
-                        }
-                }
-                catch (ClassNotFoundException ex)
-                {
-                        java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-                }
-                catch (InstantiationException ex)
-                {
-                        java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-                }
-                catch (IllegalAccessException ex)
-                {
-                        java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-                }
-                catch (javax.swing.UnsupportedLookAndFeelException ex)
-                {
-                        java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-                }
-                //</editor-fold>
-
-                /*
-                 * Create and display the form
-                 */
-                java.awt.EventQueue.invokeLater(new Runnable()
-                {
-                        public void run()
-                        {
-                                new MainWindow().setVisible(true);
-                        }
-                });
-        }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuItem about_menuitem;
     private javax.swing.JButton analog_read_btn;
