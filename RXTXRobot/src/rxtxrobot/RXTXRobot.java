@@ -65,6 +65,7 @@ public class RXTXRobot extends SerialCommunication
         {
                 false, false, false, false
         };
+        private boolean resetOnClose;
         private int mixerSpeed;
         private InputStream in;
         private OutputStream out;
@@ -82,6 +83,7 @@ public class RXTXRobot extends SerialCommunication
                 analogPinCache = null;
                 digitalPinCache = null;
                 mixerSpeed = 30;
+                resetOnClose = true;
         }
 
         private String displayPossiblePorts()
@@ -122,7 +124,8 @@ public class RXTXRobot extends SerialCommunication
                 try
                 {
                         java.io.PrintStream originalStream = System.out;
-                        System.setOut(new java.io.PrintStream(new java.io.OutputStream() {
+                        System.setOut(new java.io.PrintStream(new java.io.OutputStream()
+                        {
                                 @Override
                                 public void write(int i) throws IOException
                                 {
@@ -219,12 +222,22 @@ public class RXTXRobot extends SerialCommunication
         public final void close()
         {
                 sleep(300);
+                this.getOutStream().println("");
+                this.getOutStream().println("Closing robot connection...");
+                if (getResetOnClose())
+                {
+                        this.getOutStream().println("Resetting servos and motors...");
+                        this.moveBothServos(90, 90);
+                        this.runMotor(RXTXRobot.MOTOR1, 0, RXTXRobot.MOTOR2, 0, 0);
+                        this.runMotor(RXTXRobot.MOTOR3, 0, RXTXRobot.MOTOR4, 0, 0);
+                }
                 if (sPort != null)
                         sPort.close();
                 if (cPort != null)
                         cPort.close();
                 in = null;
                 out = null;
+                this.getOutStream().println("Connection closed!");
         }
 
         /**
@@ -826,7 +839,8 @@ public class RXTXRobot extends SerialCommunication
         /**
          * Sets the speed for the mixer.
          *
-         * This method sets the speed for the mixer.  Default is 30, but the value must be between 0 and 255.
+         * This method sets the speed for the mixer. Default is 30, but the
+         * value must be between 0 and 255.
          *
          * @param speed Integer representing the speed (0 - 255)
          */
@@ -834,12 +848,12 @@ public class RXTXRobot extends SerialCommunication
         {
                 if (speed > 255)
                 {
-                        this.getErrStream().println("WARNING: The speed supplied ("+speed+") is > 255.  Resetting it to 255.  (method: setMixerSpeed())");
+                        this.getErrStream().println("WARNING: The speed supplied (" + speed + ") is > 255.  Resetting it to 255.  (method: setMixerSpeed())");
                         speed = 255;
                 }
                 if (speed < 0)
                 {
-                        this.getErrStream().println("WARNING: The speed supplied ("+speed+") is < 0.  Resetting it to 0.  (method: setMixerSpeed())");
+                        this.getErrStream().println("WARNING: The speed supplied (" + speed + ") is < 0.  Resetting it to 0.  (method: setMixerSpeed())");
                         speed = 0;
                 }
                 this.mixerSpeed = speed;
@@ -853,5 +867,30 @@ public class RXTXRobot extends SerialCommunication
         public int getMixerSpeed()
         {
                 return this.mixerSpeed;
+        }
+
+        /**
+         * Sets whether to reset the Servos and Motors when the connection is
+         * closed.
+         *
+         * Default is true.
+         *
+         * @param r Boolean representing whether to reset motors or not.
+         */
+        public void setResetOnClose(boolean r)
+        {
+                this.resetOnClose = r;
+        }
+
+        /**
+         * Gets whether the robot will reset the motors when the connection is
+         * closed.
+         *
+         * @return Boolean representing if the robot will reset the motors when
+         * the connection is closed.
+         */
+        public boolean getResetOnClose()
+        {
+                return this.resetOnClose;
         }
 }
