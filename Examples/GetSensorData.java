@@ -6,9 +6,11 @@ public class GetSensorData
     {    
         // All sensor data will be read from the analog pins
 	
-        RXTXRobot r = new RXTXRobot("COM5"); //Create object on COM5
+        RXTXRobot r = new RXTXRobot(); //Create RXTXRobot object
+
+	r.setPort("COM5"); // Sets the port to COM5
 	
-	r.refreshAnalogPins();
+	r.refreshAnalogPins(); // Cache the Analog pin information
 
 	for (int x=0; x < RXTXRobot.NUM_ANALOG_PINS; ++x)
 	{
