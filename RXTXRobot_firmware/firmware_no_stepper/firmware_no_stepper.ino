@@ -1,13 +1,14 @@
 /* 
- ---- Modification to SimpleMessageSystem to Include Motor Commands ----
- 
+----------------------------------------
+|          RXTXRobot Firmware          |
+----------------------------------------
+
+
  Control Arduino board functions with the following messages:
  
  r a -> read analog pins
  r d -> read digital pins
  r t -> read temperature sensor
- w d [pin] [value] -> write digital pin
- w a [pin] [value] -> write analog pin
  
  v [num] [position] -> move servo number [num] to position [position] (position is (0,180)
  p [num] [steps] -> move stepper motor [num] in direction [direction] [steps] steps
@@ -18,495 +19,310 @@
  P [num1] [steps1] [num2] [steps2]-> move 2 stepper motors [num] in direction [direction] [steps] steps
  D [num1] [speed1] [num2] [speed2] [t] -> set dc motor number [num] to speed [speed] for time [t], if t=0 then keep on.
  
+ The next 1 does the same thing but for 4 motors as close to simultaneously as possible:
  F [num1] [speed1] [num2] [speed2] [num3] [speed3] [num4] [speed4] [t] -> set dc motor number [num] to speed [speed] for time [t], if t=0 then keep on
 
  
+Authors:
  Base: Thomas Ouellet Fredericks 
  Additions: Alexandre Quessy
  Motor Additions: Marc Christensen
+ Temperature addition: Chris King
+ Cleanup and complete rewrite: Chris King
  
  */
 
-// Include de SimpleMessageSystem library
-// REMOVE THE FOLLOWING LINE IF USING WIRING
-#include <SimpleMessageSystem.h> 
+#define BAUD_RATE 9600
 
-// Needed for Servos
+
+#include <SimpleMessageSystem.h>
 #include <Servo.h>
-
-// Needed for DC motors
 #include <AFMotor.h>
-
-// Needed for temperature sensors
 #include <OneWire.h>
 
-//Set up our global motor types
-	AF_DCMotor motor0(1);
-	AF_DCMotor motor1(2);
+
+AF_DCMotor motor0(1);
+AF_DCMotor motor1(2);
 AF_DCMotor motor2(3);
 AF_DCMotor motor3(4);
-Servo myservo0;
-Servo myservo1;
-OneWire ds(2); // Make temperature sensor on digital pin 2
-// create an instance of the stepper class, 
+
+AF_DCMotor dc_motors[] = { motor0, motor1, motor2, motor3 };
+int dc_motors_length = 4;
+
+Servo servo0;
+Servo servo1;
+
+Servo servos[] = { servo0, servo1 };
+int servos_length = 2;
+
+OneWire temp0(2);
 
 void setup()
 {
-  
-  // The following command initiates the serial port at 9600 baud. Please note this is VERY SLOW!!!!!! 
-  // I suggest you use higher speeds in your own code. You can go up to 115200 with the USB version, that's 12x faster
-  Serial.begin(9600); //Baud set at 9600 for compatibility, CHANGE!
-  myservo0.attach(9); // attach the sevo on pin 9 to servo object
-  myservo1.attach(10); // attach the servo on pin 10 to servo object
-	 motor0.setSpeed(0);
-	 motor1.setSpeed(0);
-	 motor0.run(FORWARD);
-	 motor1.run(FORWARD);
-//  motor0.setSpeed(0); // initialize motor speeds
-//  motor1.setSpeed(0); // initialize motor speeds
-  motor2.setSpeed(0); // initialize motor speeds
-  motor3.setSpeed(0); // initialize motor speeds
-//  motor0.run(FORWARD);
-//  motor1.run(FORWARD);
-  motor2.run(FORWARD);
-  motor3.run(FORWARD);
-  //Note the steppers and DC are mutually exclusive, so I need to impliment a setup string to cause one or the other to be called
+	Serial.begin(BAUD_RATE);
+	servo0.attach(9);
+	servo1.attach(10);
+	for (int x=0; x < dc_motors_length; ++x)
+	{
+		dc_motors[x].setSpeed(0);
+		dc_motors[x].run(FORWARD);
+	}
 }
 
 void loop()
 {
-
-  if (messageBuild() > 0) { // Checks to see if the message is complete and erases any previous messages
-    switch (messageGetChar()) { // Gets the first word as a character
-    case 'r': // Read pin (analog or digital)
-      readpin(); // Call the readpin function
-      break; // Break from the switch
-    case 'w': // Write pin
-      writepin(); // Call the writepin function
-      break; // Break from the switch
-    case 'v': // Servo Motor
-      moveservo(); // Call the servomove function
-      break; // Break from the switch
-    case 'p': // Stepper Motor
-      movestepper(); // Call the servomove function
-      break; // Break from the switch
-    case 'd': // DC Motor
-      moveDCmotor(); // Call the moveDCmotor function
-      break; // Break from the switch
-    case 'V': // 2 Servo Motor
-      move2servo(); // Call the servo2move function
-      break; // Break from the switch
-    case 'D': // 2 DC Motor
-      move2DCmotor(); // Call the move2DCmotor function
-      break; // Break from the switch
-    case 'F':
-      move4DCmotor();
-      break;
-    }
-  }
-}
-
-void moveDCmotor(){ // move DC motor
-  int pin; // motor number
-  int s; // speed
-  int t; //time; 0 -> keep on until speed zero called
-  int i; //counter
-  int dir; //direction;
-    messageSendChar('d');  // Echo what is being read
-    pin=messageGetInt(); // Get motor number
-    messageSendInt(pin); // Echo what is being read
-    s=messageGetInt(); // Get speed
-    messageSendInt(s); // Echo what is being read
-    t=messageGetInt(); // Get time
-    messageSendInt(t); // Echo what is being read
-    messageEnd(); // Terminate the message being sent
-    dir=FORWARD;
-    if (s<0) {s=-s;dir=BACKWARD;}
-    	if (pin==0) motor0.run(dir);
-	if (pin==1) motor1.run(dir);
-    if (pin==2) motor2.run(dir);
-    if (pin==3) motor3.run(dir);
-    if (t==0) {
-	    if (pin==0) { motor0.setSpeed(s);}
-	    if (pin==1) { motor1.setSpeed(s);}
-      if (pin==2) {motor2.setSpeed(s);}// insert move dc command here //
-      if (pin==3) {motor3.setSpeed(s);}// insert move dc command here //
-    }
-    else 
-    {
-	    if (pin==0) {motor0.setSpeed(s);}
-	    if (pin==1) {motor1.setSpeed(s);}
-      if (pin==2) {motor2.setSpeed(s);}// insert move dc command here //
-      if (pin==3) {motor3.setSpeed(s);}// insert move dc command here //
-      for (i=0;i<t;i++) delay(1);
-      	   if (pin==0) motor0.setSpeed(0);
-	   if (pin==1) motor1.setSpeed(0);
-//      if (pin==0) motor0.setSpeed(0);// insert move dc command here //
-//      if (pin==1) motor1.setSpeed(0);// insert move dc command here //
-      if (pin==2) motor2.setSpeed(0);// insert move dc command here //
-      if (pin==3) motor3.setSpeed(0);// insert move dc command here //
-    }
-}
-
-void move2DCmotor(){ // move DC motor
-  int pin1; // motor number
-  int s1; // speed
-  int pin2; // motor number
-  int s2; // speed
-  int t; //time; 0 -> keep on until speed zero called
-  int i; //counter
-  int dir1; // direction 1
-  int dir2; //direction 2
-    messageSendChar('D');  // Echo what is being read
-    pin1=messageGetInt(); // Get motor number
-    messageSendInt(pin1); // Echo what is being read
-    s1=messageGetInt(); // Get speed
-    messageSendInt(s1); // Echo what is being read
-    pin2=messageGetInt(); // Get motor number
-    messageSendInt(pin2); // Echo what is being read
-    s2=messageGetInt(); // Get speed
-    messageSendInt(s2); // Echo what is being readt=messageGetInt(); // Get time
-    t=messageGetInt(); // Get time
-    messageSendInt(t); // Echo what is being read
-    messageEnd(); // Terminate the message being sent
-    dir1=FORWARD;
-    if (s1<0) {s1=-s1;dir1=BACKWARD;}
-    dir2=FORWARD;
-    if (s2<0) {s2=-s2;dir2=BACKWARD;}
-    	if (pin1==0) motor0.run(dir1);
-	if (pin1==1) motor1.run(dir1);
-	if (pin2==0) motor0.run(dir2);
-	if (pin2==1) motor1.run(dir2);
-    if (pin1==2) motor2.run(dir1);
-    if (pin1==3) motor3.run(dir1);
-    if (pin2==2) motor2.run(dir2);
-    if (pin2==3) motor3.run(dir2);
-   // messageSendChar('D');messageSendInt(pin1);messageSendInt(dir1);messageSendInt(s1);
-   // messageSendInt(pin2);messageSendInt(dir2);messageSendInt(s2);
-    //messageSendInt(t);messageEnd();
-     if (t==0) {
-	     if (pin1==0) motor0.setSpeed(s1);
-	     if (pin1==1) motor1.setSpeed(s1);
-	     if (pin2==0) motor0.setSpeed(s2);
-	     if (pin2==1) motor1.setSpeed(s2);
-     // if (pin1==0) motor0.setSpeed(s1);// insert move dc command here //
-     // if (pin1==1) motor1.setSpeed(s1);// insert move dc command here //
-      if (pin1==2) motor2.setSpeed(s1);// insert move dc command here //
-      if (pin1==3) motor3.setSpeed(s1);// insert move dc command here //
-     // if (pin2==0) motor0.setSpeed(s2);// insert move dc command here //
-     // if (pin2==1) motor1.setSpeed(s2);// insert move dc command here //
-      if (pin2==2) motor2.setSpeed(s2);// insert move dc command here //
-      if (pin2==3) motor3.setSpeed(s2);// insert move dc command here //
-    }
-    else 
-    {
-	    if (pin1==0) motor0.setSpeed(s1);
-	    if (pin1==1) motor1.setSpeed(s1);
-	    if (pin2==0) motor0.setSpeed(s2);
-	    if (pin2==1) motor1.setSpeed(s2);
-      // if (pin1==0) motor0.setSpeed(s1);// insert move dc command here //
-      // if (pin1==1) motor1.setSpeed(s1);// insert move dc command here //
-       if (pin1==2) motor2.setSpeed(s1);// insert move dc command here //
-       if (pin1==3) motor3.setSpeed(s1);// insert move dc command here //
-      // if (pin2==0) motor0.setSpeed(s2);// insert move dc command here //
-      // if (pin2==1) motor1.setSpeed(s2);// insert move dc command here //
-       if (pin2==2) motor2.setSpeed(s2);// insert move dc command here //
-       if (pin2==3) motor3.setSpeed(s2);// insert move dc command here //
-      for (i=0;i<t;i++) delay(1); // wait for time then stop motors
-      	if (pin1==0) motor0.setSpeed(0);
-	if (pin1==1) motor1.setSpeed(0);
-	if (pin2==0) motor0.setSpeed(0);
-	if (pin2==1) motor1.setSpeed(0);
-      // if (pin1==0) motor0.setSpeed(0);// insert move dc command here //
-      // if (pin1==1) motor1.setSpeed(0);// insert move dc command here //
-       if (pin1==2) motor2.setSpeed(0);// insert move dc command here //
-       if (pin1==3) motor3.setSpeed(0);// insert move dc command here //
-      // if (pin2==0) motor0.setSpeed(0);// insert move dc command here //
-      // if (pin2==1) motor1.setSpeed(0);// insert move dc command here //
-       if (pin2==2) motor2.setSpeed(0);// insert move dc command here //
-       if (pin2==3) motor3.setSpeed(0);// insert move dc command here //
-    }
-}
-
-void move4DCmotor(){ // move DC motor
-  int pin1; // motor number
-  int s1; // speed
-  int pin2; // motor number
-  int s2; // speed
-  int pin3;
-  int s3;
-  int pin4;
-  int s4;
-  int t; //time; 0 -> keep on until speed zero called
-  int i; //counter
-  int dir1; // direction 1
-  int dir2; //direction 2
-  int dir3;
-  int dir4;
-    messageSendChar('F');  // Echo what is being read
-    pin1=messageGetInt(); // Get motor number
-    messageSendInt(pin1); // Echo what is being read
-    s1=messageGetInt(); // Get speed
-    messageSendInt(s1); // Echo what is being read
-    pin2=messageGetInt(); // Get motor number
-    messageSendInt(pin2); // Echo what is being read
-    s2=messageGetInt(); // Get speed
-    messageSendInt(s2); // Echo what is being readt=messageGetInt(); // Get time
-    pin3=messageGetInt();
-    messageSendInt(pin3);
-    s3=messageGetInt();
-    messageSendInt(s3);
-    pin4=messageGetInt();
-    messageSendInt(pin4);
-    s4=messageGetInt();
-    messageSendInt(s4);
-    t=messageGetInt(); // Get time
-    messageSendInt(t); // Echo what is being read
-    messageEnd(); // Terminate the message being sent
-    dir1=FORWARD;
-    if (s1<0) {s1=-s1;dir1=BACKWARD;}
-    dir2=FORWARD;
-    if (s2<0) {s2=-s2;dir2=BACKWARD;}
-    dir3=FORWARD;
-    if (s3<0) {s3=-s3;dir3=BACKWARD;}
-    dir4=FORWARD;
-    if (s4<0) {s4=-s4;dir4=BACKWARD;}
-    	if (pin1==0) motor0.run(dir1);
-	if (pin1==1) motor1.run(dir1);
-	if (pin2==0) motor0.run(dir2);
-	if (pin2==1) motor1.run(dir2);
-	if (pin3==0) motor0.run(dir3);
-	if (pin3==1) motor1.run(dir3);
-	if (pin4==0) motor0.run(dir4);
-	if (pin4==1) motor1.run(dir4);
-    if (pin1==2) motor2.run(dir1);
-    if (pin1==3) motor3.run(dir1);
-    if (pin2==2) motor2.run(dir2);
-    if (pin2==3) motor3.run(dir2);
-    if (pin3==2) motor2.run(dir3);
-    if (pin3==3) motor3.run(dir3);
-    if (pin4==2) motor2.run(dir4);
-    if (pin4==3) motor3.run(dir4);
-   // messageSendChar('D');messageSendInt(pin1);messageSendInt(dir1);messageSendInt(s1);
-   // messageSendInt(pin2);messageSendInt(dir2);messageSendInt(s2);
-    //messageSendInt(t);messageEnd();
-     if (t==0) {
-	     if (pin1==0) motor0.setSpeed(s1);
-	     if (pin1==1) motor1.setSpeed(s1);
-	     if (pin2==0) motor0.setSpeed(s2);
-	     if (pin2==1) motor1.setSpeed(s2);
-	     if (pin3==0) motor0.setSpeed(s3);
-	     if (pin3==1) motor1.setSpeed(s3);
-	     if (pin4==0) motor0.setSpeed(s4);
-	     if (pin4==1) motor1.setSpeed(s4);
-      if (pin1==2) motor2.setSpeed(s1);// insert move dc command here //
-      if (pin1==3) motor3.setSpeed(s1);// insert move dc command here //
-     // if (pin2==0) motor0.setSpeed(s2);// insert move dc command here //
-     // if (pin2==1) motor1.setSpeed(s2);// insert move dc command here //
-      if (pin2==2) motor2.setSpeed(s2);// insert move dc command here //
-      if (pin2==3) motor3.setSpeed(s2);// insert move dc command here //
-      if (pin3==2) motor2.setSpeed(s3);
-      if (pin3==3) motor3.setSpeed(s3);
-      if (pin4==2) motor2.setSpeed(s4);
-      if (pin4==3) motor3.setSpeed(s4);
-    }
-    else 
-    {
-	    if (pin1==0) motor0.setSpeed(s1);
-	    if (pin1==1) motor1.setSpeed(s1);
-	    if (pin2==0) motor0.setSpeed(s2);
-	    if (pin2==1) motor1.setSpeed(s2);
-	    if (pin3==0) motor0.setSpeed(s3);
-	    if (pin3==1) motor1.setSpeed(s3);
-	    if (pin4==0) motor0.setSpeed(s4);
-	    if (pin4==1) motor1.setSpeed(s4);
-      // if (pin1==0) motor0.setSpeed(s1);// insert move dc command here //
-      // if (pin1==1) motor1.setSpeed(s1);// insert move dc command here //
-       if (pin1==2) motor2.setSpeed(s1);// insert move dc command here //
-       if (pin1==3) motor3.setSpeed(s1);// insert move dc command here //
-      // if (pin2==0) motor0.setSpeed(s2);// insert move dc command here //
-      // if (pin2==1) motor1.setSpeed(s2);// insert move dc command here //
-       if (pin2==2) motor2.setSpeed(s2);// insert move dc command here //
-       if (pin2==3) motor3.setSpeed(s2);// insert move dc command here //
-       if (pin3==2) motor2.setSpeed(s3);
-       if (pin3==3) motor3.setSpeed(s3);
-       if (pin4==2) motor2.setSpeed(s4);
-       if (pin4==3) motor3.setSpeed(s4);
-      for (i=0;i<t;i++) delay(1); // wait for time then stop motors
-      	if (pin1==0) motor0.setSpeed(0);
-	if (pin1==1) motor1.setSpeed(0);
-	if (pin2==0) motor0.setSpeed(0);
-	if (pin2==1) motor1.setSpeed(0);
-	if (pin3==0) motor0.setSpeed(0);
-	if (pin3==1) motor1.setSpeed(0);
-	if (pin4==0) motor0.setSpeed(0);
-	if (pin4==1) motor1.setSpeed(0);
-      // if (pin1==0) motor0.setSpeed(0);// insert move dc command here //
-      // if (pin1==1) motor1.setSpeed(0);// insert move dc command here //
-       if (pin1==2) motor2.setSpeed(0);// insert move dc command here //
-       if (pin1==3) motor3.setSpeed(0);// insert move dc command here //
-      // if (pin2==0) motor0.setSpeed(0);// insert move dc command here //
-      // if (pin2==1) motor1.setSpeed(0);// insert move dc command here //
-       if (pin2==2) motor2.setSpeed(0);// insert move dc command here //
-       if (pin2==3) motor3.setSpeed(0);// insert move dc command here //
-       if (pin3==2) motor2.setSpeed(0);
-       if (pin3==3) motor3.setSpeed(0);
-       if (pin4==2) motor2.setSpeed(0);
-       if (pin4==3) motor3.setSpeed(0);
-    }
+	if (messageBuild() > 0)
+	{
+		switch (messageGetChar())
+		{
+			case 'r':
+				readpin();
+				break;
+			case 'v':
+				moveservo();
+				break;
+			case 'd':
+				moveDCmotor();
+				break;
+			case 'V':
+				move2servo();
+				break;
+			case 'D':
+				move2DCmotor();
+				break;
+			case 'F':
+				move4DCmotor();
+				break;
+		}
+	}
 }
 
 
-void movestepper(){ // move stepper motor
-    messageSendChar('n');  // Echo what is being read
-    messageSendChar('o');
-  }
-
-void moveservo(){ // move servo motor
-  int pin;
-  int pos;
-    messageSendChar('v');  // Echo what is being read
-    pin=messageGetInt(); // Get servo number
-    messageSendInt(pin); // Echo what is being read
-    pos=messageGetInt(); // Get servo postiion
-    messageSendInt(pos); // Echo what is being read
-    messageEnd();
-    // insert move servo command here //
-    if (pin==0) myservo0.write(pos);
-    if (pin==1) myservo1.write(pos);
-    //messageEnd(); // Terminate the message being sent
-
-  }
-
-
-void move2servo(){ // move servo motor
-  int pos1;
-  int pos2;
-    messageSendChar('V');  // Echo what is being read
-    pos1=messageGetInt(); // Get servo postiion
-    messageSendInt(pos1); // Echo what is being read
-    pos2=messageGetInt(); // Get servo postiion
-    messageSendInt(pos2); // Echo what is being read
-    messageEnd();
-    myservo0.write(pos1); // move first servo
-    myservo1.write(pos2); // move second servo
-   // messageEnd(); // Terminate the message being sent
-    
-  }
-
-void readpin(){ // Read pin (analog or digital)
-// http://arduino.cc/en/Tutorial/DigitalPins
-// http://www.ladyada.net/make/mshield/faq.html
-  // Poll the temperature sensor 10 times and require the temp be less than 50...
-  int x = 51;
-  int counter = 10;
-  switch (messageGetChar()) { // Gets the next word as a character
-    
-    
-    case 'd': // READ digital pins
-    
-    messageSendChar('d');  // Echo what is being read    
-    
-    // Only digital pins 2 and 13 are unused by the motor shield
-
-    // set the pin mode to input    
-    pinMode(13, INPUT);
-    
-    // output the message value to the terminal 
-    messageSendInt(digitalRead(13));
-    messageEnd(); // Terminate the message being sent
-    break; // Break from the switch
-
-  case 'a': // READ analog pins
-
-    messageSendChar('a');  // Echo what is being read
-    for (char i=0;i<6;i++) {
-      messageSendInt(analogRead(i)); // Read pins 0 to 5
-    }
-    messageEnd(); // Terminate the message being sent
-  break;
-  
-  case 't': // READ temperature information
-      do
-      {
-      	x = (int)getTemp();
-	--counter;
-      }
-      while ((x > 50 || x <= -1000) && counter > 0);
-      messageSendChar('t');
-      messageSendInt(x);
-      messageEnd();
-      break;
-  }
-
+void moveDCmotor()
+{
+	int pin, speed, time, direction;
+	messageSendChar('d');
+	pin = messageGetInt();
+	messageSendInt(pin);
+	speed = messageGetInt();
+	messageSendInt(speed);
+	time = messageGetInt();
+	messageSendInt(time);
+	messageEnd();
+	direction = FORWARD;
+	if (speed < 0)
+	{
+		speed = -speed;
+		direction = BACKWARD;
+	}
+	if (pin < 0 || pin >= dc_motors_length)
+		return;
+	dc_motors[pin].run(direction);
+	dc_motors[pin].setSpeed(speed);
+	if (time != 0)
+	{
+		delay(time);
+		dc_motors[pin].setSpeed(0);
+	}
 }
 
-void writepin() { // Write pin
-// http://arduino.cc/en/Tutorial/DigitalPins
-// http://www.ladyada.net/make/mshield/faq.html
-
-  int pin;
-  int state;
-
-  switch (messageGetChar()) { // Gets the next word as a character
-
-    // WRITE a digital pin (all analog pin outputs are used by the motor shield)
-  case 'd' : 
-
-    pin = messageGetInt();  // Gets the next word as an integer
-    state = messageGetInt();  // Gets the next word as an integer
-    
-    // Only digital pin 13 are unused by the motor shield
-    if(pin == 13)
-    {
-      pinMode(pin,OUTPUT);  //Sets the state of the pin to an output
-      digitalWrite(pin,state);  //Sets the state of the pin HIGH (1) or LOW (0)
-    }
-  }
+void move2DCmotor()
+{
+	int pin1, speed1, pin2, speed2, time, direction1, direction2;
+	messageSendChar('D');
+	pin1 = messageGetInt();
+	messageSendInt(pin1);
+	speed1 = messageGetInt();
+	messageSendInt(speed1);
+	pin2 = messageGetInt();
+	messageSendInt(pin2);
+	speed2 = messageGetInt();
+	messageSendInt(speed2);
+	time = messageGetInt();
+	messageSendInt(time);
+	messageEnd();
+	direction1 = FORWARD;
+	if (speed1 < 0)
+	{
+		speed1 = -speed1;
+		direction1 = BACKWARD;
+	}
+	direction2 = FORWARD;
+	if (speed2 < 0)
+	{
+		speed2 = -speed2;
+		direction2 = BACKWARD;
+	}
+	if (pin1 < 0 || pin1 >= dc_motors_length || pin2 < 0 || pin2 > dc_motors_length)
+		return;
+	dc_motors[pin1].run(direction1);
+	dc_motors[pin2].run(direction2);
+	dc_motors[pin1].setSpeed(speed1);
+	dc_motors[pin2].setSpeed(speed2);
+	if (time != 0)
+	{
+		delay(time);
+		dc_motors[pin1].setSpeed(0);
+		dc_motors[pin2].setSpeed(0);
+	}
 }
 
-// This function is for the temperature sensor and is from http://bildr.org/2011/07/ds18b20-arduino/
-float getTemp(){
- //returns the temperature from one DS18S20 in DEG Celsius
-
- byte data[12];
- byte addr[8];
-
- if ( !ds.search(addr)) {
-   //no more sensors on chain, reset search
-   ds.reset_search();
-   return -1001;
- }
-
- if ( OneWire::crc8( addr, 7) != addr[7]) {
-   return -1002;
- }
-
- if ( addr[0] != 0x10 && addr[0] != 0x28) {
-   return -1003;
- }
-
- ds.reset();
- ds.select(addr);
- ds.write(0x44,1); // start conversion, with parasite power on at the end
- delay(750);
- byte present = ds.reset();
- ds.select(addr);  
- ds.write(0xBE); // Read Scratchpad
-
- 
- for (int i = 0; i < 9; i++) { // we need 9 bytes
-  data[i] = ds.read();
- }
- 
- ds.reset_search();
- 
- byte MSB = data[1];
- byte LSB = data[0];
-
- float tempRead = ((MSB << 8) | LSB); //using two's compliment
- float TemperatureSum = tempRead / 16;
- 
- return TemperatureSum;
- 
+void move4DCmotor()
+{
+	int pin1, speed1, pin2, speed2, pin3, speed3, pin4, speed4, time, direction1, direction2, direction3, direction4;
+	messageSendChar('F');
+	pin1 = messageGetInt();
+	messageSendInt(pin1);
+	speed1 = messageGetInt();
+	messageSendInt(speed1);
+	pin2 = messageGetInt();
+	messageSendInt(pin2);
+	speed2 = messageGetInt();
+	messageSendInt(speed2);
+	pin3 = messageGetInt();
+	messageSendInt(pin3);
+	speed3 = messageGetInt();
+	messageSendInt(speed3);
+	pin4 = messageGetInt();
+	messageSendInt(pin4);
+	speed4 = messageGetInt();
+	messageSendInt(speed4);
+	time = messageGetInt();
+	messageSendInt(time);
+	messageEnd();
+	direction1 = direction2 = direction3 = direction4 = FORWARD;
+	if (speed1 < 0)
+	{
+		speed1 = -speed1;
+		direction1 = BACKWARD;
+	}
+	if (speed2 < 0)
+	{
+		speed2 = -speed2;
+		direction2 = BACKWARD;
+	}
+	if (speed3 < 0)
+	{
+		speed3 = -speed3;
+		direction3 = BACKWARD;
+	}
+	if (speed4 < 0)
+	{
+		speed4 = -speed4;
+		direction4 = BACKWARD;
+	}
+	if (pin1 < 0 || pin1 >= dc_motors_length || pin2 < 0 || pin2 >= dc_motors_length || pin3 < 0 || pin3 > dc_motors_length || pin4 < 0 || pin4 > dc_motors_length)
+		return;
+	dc_motors[pin1].run(direction1);
+	dc_motors[pin2].run(direction2);
+	dc_motors[pin3].run(direction3);
+	dc_motors[pin4].run(direction4);
+	dc_motors[pin1].setSpeed(speed1);
+	dc_motors[pin2].setSpeed(speed2);
+	dc_motors[pin3].setSpeed(speed3);
+	dc_motors[pin4].setSpeed(speed4);
+	if (time != 0)
+	{
+		delay(time);
+		dc_motors[pin1].setSpeed(0);
+		dc_motors[pin2].setSpeed(0);
+		dc_motors[pin3].setSpeed(0);
+		dc_motors[pin4].setSpeed(0);
+	}
 }
+
+void moveservo()
+{
+	int pin, position;
+	messageSendChar('v');
+	pin = messageGetInt();
+	messageSendInt(pin);
+	position = messageGetInt();
+	messageSendInt(position);
+	messageEnd();
+	if (pin < 0 || pin >= servos_length)
+		return;
+	servos[pin].write(position);
+}
+
+void move2servo()
+{
+	int position1, position2;
+	messageSendChar('V');
+	position1 = messageGetInt();
+	messageSendInt(position1);
+	position2 = messageGetInt();
+	messageSendInt(position2);
+	messageEnd();
+	servos[0].write(position1);
+	servos[1].write(position2);
+}
+
+void readpin()
+{
+	int maximum_allowed_temperature = 50;
+	int temperature_reading = maximum_allowed_temperature+1;
+	int retries = 10;
+	switch (messageGetChar())
+	{
+		case 'd':
+			messageSendChar('d');
+			pinMode(13, INPUT);
+			messageSendInt(digitalRead(13));
+			messageEnd();
+			break;
+		case 'a':
+			messageSendChar('a');
+			for (char i=0;i < 6; ++i)
+				messageSendInt(analogRead(i));
+			messageEnd();
+			break;
+		case 't':
+			do
+			{
+				temperature_reading = (int)getTemp();
+				--retries;
+			}
+			while ((temperature_reading > maximum_allowed_temperature || temperature_reading <= -1000) && retries > 0);
+			messageSendChar('t');
+			messageSendInt(temperature_reading);
+			messageEnd();
+			break;
+	}
+}
+
+// This function is to get the temperature (in Celcius) from the sensor.
+// It is taken from http://bildr.org/2011/07/ds18b20-arduino/
+float getTemp()
+{
+	byte data[12];
+	byte addr[8];
+	if (!temp0.search(addr))
+	{
+		temp0.reset_search();
+		return -1001;
+	}
+	if (OneWire::crc8(addr, 7) != addr[7])
+	{
+		return -1002;
+	}
+	if (addr[0] != 0x10 && addr[0] != 0x28)
+	{
+		return -1003;
+	}
+	temp0.reset();
+	temp0.select(addr);
+	temp0.write(0x44,1);
+	delay(750);
+	byte present = temp0.reset();
+	temp0.select(addr);
+	temp0.write(0xBE);
+	for (int i=0; i < 9; ++i)
+		data[i] = temp0.read();
+	temp0.reset_search();
+	byte MSB = data[1];
+	byte LSB = data[0];
+	float tempRead = ((MSB << 8) | LSB);
+	return (tempRead / 16);
+}
+
