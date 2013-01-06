@@ -8,6 +8,8 @@ VERSION=`sw_vers -productVersion | awk -F. '{print $2}'`
 
 SAVESPOT='/Library/Java/Extensions/librxtxSerial.jnilib'
 
+SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 echo "========================================"
 echo "|   RXTXRobot Installer for Mac OS X   |"
 echo "========================================"
@@ -26,11 +28,11 @@ echo "Access was granted successfully!  Continuing...\n"
 echo -n "Installing Java libraries........."
 
 if [ $VERSION -lt 5 ]; then
-	JFILE='libs/less_leopard.jnilib'
+	JFILE="$SCRIPTDIR/libs/less_leopard.jnilib"
 elif [ $VERSION -eq 5 ] || [ $VERSION -eq 6 ]; then
-	JFILE='libs/leop_snow.jnilib'
+	JFILE="$SCRIPTDIR/libs/leop_snow.jnilib"
 elif [ $VERSION -eq 7 ] || [ $VERSION -eq 8 ]; then
-	JFILE='libs/mnt_lion.jnilib'
+	JFILE="$SCRIPTDIR/libs/mnt_lion.jnilib"
 else
 	echo "error\n\nFATAL ERROR: Your Mac OS is not supported.  You have $(sw_vers -productVersion) and this only supports 10.0.x - 10.8.x"
 	exit
@@ -77,11 +79,11 @@ echo -n "Determining 32-bit or 64-bit....."
 if [ $(uname -m) == 'x86_64' ]; then
 	echo "done"
 	echo "You are running a 64-bit machine"
-	XFILE='libs/ftdi_x64.dmg'
+	XFILE="$SCRIPTDIR/libs/ftdi_x64.dmg"
 else
 	echo "done"
 	echo "You are running a 32-bit machine"
-	XFILE='libs/ftdi_x86.dmg'
+	XFILE="$SCRIPTDIR/libs/ftdi_x86.dmg"
 fi
 if [ ! -f "$XFILE" ]; then
 	echo "FATAL ERROR: Could not find \"$XFILE\".  Make sure the folder \"libs\" is in this directory."
