@@ -86,7 +86,7 @@ execute("cd \"$save_directory_JAR\"; zip -r -9 -q \"$save_directory_JAR.zip\" -x
 print_progress('Moving main readme');
 execute("cp \"$source_dir/RXTXRobot/lib/README.txt\" \"$save_directory_LIB/README.txt\"",1);
 print_progress('Moving RXTXcomm_INSTALL');
-execute("cp -r \"$source_dir/RXTXRobot/lib/RXTXcomm_INSTALL\" \"$save_directory_LIB/RXTXcomm_INSTALL\"",1);
+execute("cp -r \"$source_dir/RXTXRobot/lib/RXTXcomm_INSTALL\" \"$save_directory_LIB/INSTALL\"",1);
 print_progress('Zipping up Library');
 execute("cd \"$save_directory_LIB\"; zip -r -9 -q \"$save_directory_LIB.zip\" -xi \"./\"",1);
 print_progress('Cleaning up');

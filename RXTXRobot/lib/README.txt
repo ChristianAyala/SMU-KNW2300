@@ -4,7 +4,7 @@ RXTXRobot Library Instructions
 Installation:
 	1) Add "RXTXRobot.jar" as a library for your Java project
 
-	2) Go into the "RXTXComm_INSTALL" folder
+	2) Go into the "INSTALL" folder
 
 	3) Go into the folder for Windows, Mac OS X, or Linux
 
