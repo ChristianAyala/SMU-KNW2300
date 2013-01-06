@@ -66,6 +66,7 @@ public class RXTXRobot extends SerialCommunication
                 false, false, false, false
         };
         private boolean resetOnClose;
+	private boolean overrideValidation;
         private int mixerSpeed;
         private InputStream in;
         private OutputStream out;
@@ -84,6 +85,7 @@ public class RXTXRobot extends SerialCommunication
                 digitalPinCache = null;
                 mixerSpeed = 30;
                 resetOnClose = true;
+		overrideValidation = false;
         }
 
         private String displayPossiblePorts()
@@ -396,7 +398,7 @@ public class RXTXRobot extends SerialCommunication
         {
                 if (analogPinCache == null)
                         this.refreshAnalogPins();
-                if (x >= analogPinCache.length || x < 0)
+                if (!getOverrideValidation() && (x >= analogPinCache.length || x < 0))
                 {
                         this.getErrStream().println("ERROR: Analog pin " + x + " doesn't exist.  (method: getAnalogPin())");
                         return null;
@@ -505,13 +507,13 @@ public class RXTXRobot extends SerialCommunication
                         this.getErrStream().println("ERROR: Robot is not connected!");
                         return;
                 }
-                if (servo != RXTXRobot.SERVO1 && servo != RXTXRobot.SERVO2)
+                if (!getOverrideValidation() && servo != RXTXRobot.SERVO1 && servo != RXTXRobot.SERVO2)
                 {
                         this.getErrStream().println("ERROR: Invalid servo argument (RXTXRobot.SERVO1 or RXTXRobot.SERVO2).  (method: moveServo())");
                         return;
                 }
                 debug("Moving servo " + servo + " to position " + position);
-                if (position < 0 || position > 180)
+                if (!getOverrideValidation() && (position < 0 || position > 180))
                         this.getErrStream().println("ERROR: Position must be >=0 and <=180.  You supplied " + position + ", which is invalid.  (method: moveServo())");
                 else
                         sendRaw("v " + servo + " " + position);
@@ -539,7 +541,7 @@ public class RXTXRobot extends SerialCommunication
                         return;
                 }
                 debug("Moving both servos to positions " + pos1 + " and " + pos2);
-                if (pos1 < 0 || pos1 > 180 || pos2 < 0 || pos2 > 180)
+                if (!getOverrideValidation() && (pos1 < 0 || pos1 > 180 || pos2 < 0 || pos2 > 180))
                         this.getErrStream().println("ERROR: Positions must be >=0 and <=180.  You supplied " + pos1 + " and " + pos2 + ".  One or more are invalid.  (method: moveBothServos())");
                 else
                         sendRaw("V " + pos1 + " " + pos2);
@@ -573,12 +575,12 @@ public class RXTXRobot extends SerialCommunication
                         this.getErrStream().println("ERROR: Robot is not connected!");
                         return;
                 }
-                if (speed < -255 || speed > 255)
+                if (!getOverrideValidation() && (speed < -255 || speed > 255))
                 {
                         this.getErrStream().println("ERROR: You must give the motors a speed between -255 and 255 (inclusive).  (method: runMotor())");
                         return;
                 }
-                if (RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
+                if (!getOverrideValidation() && RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
                 {
                         boolean prev = motorsRunning[motor];
                         if (speed == 0)
@@ -591,12 +593,12 @@ public class RXTXRobot extends SerialCommunication
                                 return;
                         }
                 }
-                if (time < 0 || time > 30000)
+                if (!getOverrideValidation() && (time < 0 || time > 30000))
                 {
                         this.getErrStream().println("ERROR: runMotor was not given a time that is 0 <= time <= 30000.  (method: runMotor())");
                         return;
                 }
-                if (motor < RXTXRobot.MOTOR1 || motor > RXTXRobot.MOTOR4)
+                if (!getOverrideValidation() && (motor < RXTXRobot.MOTOR1 || motor > RXTXRobot.MOTOR4))
                 {
                         this.getErrStream().println("ERROR: runMotor was not given a correct motor argument.  (method: runMotor())");
                         return;
@@ -642,12 +644,12 @@ public class RXTXRobot extends SerialCommunication
                         this.getErrStream().println("ERROR: Robot is not connected!");
                         return;
                 }
-                if (speed1 < -255 || speed1 > 255 || speed2 < -255 || speed2 > 255)
+                if (!getOverrideValidation() && (speed1 < -255 || speed1 > 255 || speed2 < -255 || speed2 > 255))
                 {
                         this.getErrStream().println("ERROR: You must give the motors a speed between -255 and 255 (inclusive).  (method: runMotor())");
                         return;
                 }
-                if (RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
+                if (!getOverrideValidation() && RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
                 {
                         boolean prev1 = motorsRunning[motor1];
                         boolean prev2 = motorsRunning[motor2];
@@ -668,12 +670,12 @@ public class RXTXRobot extends SerialCommunication
                                 return;
                         }
                 }
-                if (time < 0 || time > 30000)
+                if (!getOverrideValidation() && (time < 0 || time > 30000))
                 {
                         this.getErrStream().println("ERROR: runMotor was not given a time that is 0 <= time <= 30000.  (method: runMotor())");
                         return;
                 }
-                if ((motor1 < RXTXRobot.MOTOR1 || motor1 > RXTXRobot.MOTOR4) || (motor2 < RXTXRobot.MOTOR1 || motor2 > RXTXRobot.MOTOR4))
+                if (!getOverrideValidation() && ((motor1 < RXTXRobot.MOTOR1 || motor1 > RXTXRobot.MOTOR4) || (motor2 < RXTXRobot.MOTOR1 || motor2 > RXTXRobot.MOTOR4)))
                 {
                         this.getErrStream().println("ERROR: runMotor was not given a correct motor argument.  (method: runMotor())");
                 }
@@ -726,22 +728,22 @@ public class RXTXRobot extends SerialCommunication
                         this.getErrStream().println("ERROR: Robot is not connected!");
                         return;
                 }
-                if (speed1 < -255 || speed1 > 255 || speed2 < -255 || speed2 > 255 || speed3 < -255 || speed3 > 255 || speed4 < -255 || speed4 > 255)
+                if (!getOverrideValidation() && (speed1 < -255 || speed1 > 255 || speed2 < -255 || speed2 > 255 || speed3 < -255 || speed3 > 255 || speed4 < -255 || speed4 > 255))
                 {
                         this.getErrStream().println("ERROR: You must give the motors a speed between -255 and 255 (inclusive).  (method: runMotor())");
                         return;
                 }
-                if (RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
+                if (!getOverrideValidation() && RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
                 {
                         this.getErrStream().println("ERROR: You may only run two DC motors at a time, so you cannot use this method!  (method: runMotor())");
                         return;
                 }
-                if (time < 0)
+                if (!getOverrideValidation() && time < 0)
                 {
                         this.getErrStream().println("ERROR: runMotor was not given a time that is >=0.  (method: runMotor())");
                         return;
                 }
-                if ((motor1 < 0 || motor1 > 3) || (motor2 < 0 || motor2 > 3) || (motor3 < 0 || motor3 > 3) || (motor4 < 0 || motor4 > 3))
+                if (!getOverrideValidation() && ((motor1 < 0 || motor1 > 3) || (motor2 < 0 || motor2 > 3) || (motor3 < 0 || motor3 > 3) || (motor4 < 0 || motor4 > 3)))
                 {
                         this.getErrStream().println("ERROR: runMotor was not given a correct motor argument.  (method: runMotor())");
                         return;
@@ -757,6 +759,8 @@ public class RXTXRobot extends SerialCommunication
          */
         private boolean checkRunningMotors()
         {
+		if (getOverrideValidation())
+			return true;
                 int num = 0;
                 for (int x = 0; x < motorsRunning.length; ++x)
                         if (motorsRunning[x])
@@ -795,12 +799,12 @@ public class RXTXRobot extends SerialCommunication
                         this.getErrStream().println("ERROR: Robot is not connected!");
                         return;
                 }
-                if (motor < RXTXRobot.MOTOR1 || motor > RXTXRobot.MOTOR4)
+                if (!getOverrideValidation() && (motor < RXTXRobot.MOTOR1 || motor > RXTXRobot.MOTOR4))
                 {
                         this.getErrStream().println("ERROR: You must supply a valid motor port: RXTXRobot.MOTOR1, MOTOR2, MOTOR3, or MOTOR4.  (method: runMixer())");
                         return;
                 }
-                if (time < 0)
+                if (!getOverrideValidation() && time < 0)
                 {
                         this.getErrStream().println("ERROR: You must supply a positive time.  (method: runMixer())");
                         return;
@@ -827,7 +831,7 @@ public class RXTXRobot extends SerialCommunication
                         this.getErrStream().println("ERROR: Robot is not connected!");
                         return;
                 }
-                if (motor < RXTXRobot.MOTOR1 || motor > RXTXRobot.MOTOR4)
+                if (!getOverrideValidation() && (motor < RXTXRobot.MOTOR1 || motor > RXTXRobot.MOTOR4))
                 {
                         this.getErrStream().println("ERROR: You must supply a valid motor port: RXTXRobot.MOTOR1, MOTOR2, MOTOR3, or MOTOR4.  (method: stopMixer())");
                         return;
@@ -846,12 +850,12 @@ public class RXTXRobot extends SerialCommunication
          */
         public void setMixerSpeed(int speed)
         {
-                if (speed > 255)
+                if (!getOverrideValidation() && speed > 255)
                 {
                         this.getErrStream().println("WARNING: The speed supplied (" + speed + ") is > 255.  Resetting it to 255.  (method: setMixerSpeed())");
                         speed = 255;
                 }
-                if (speed < 0)
+                if (!getOverrideValidation() && speed < 0)
                 {
                         this.getErrStream().println("WARNING: The speed supplied (" + speed + ") is < 0.  Resetting it to 0.  (method: setMixerSpeed())");
                         speed = 0;
@@ -893,4 +897,32 @@ public class RXTXRobot extends SerialCommunication
         {
                 return this.resetOnClose;
         }
+
+	/**
+	 * <b>DANGEROUS:</b> Sets whether to override the validation of inputs or not.
+	 *
+	 * You should not set this to true unless you know what you are doing!  Default is false.
+	 *
+	 * @param o Boolean representing whether to override validation checks.
+	 */
+	public void setOverrideValidation(boolean o)
+	{
+		if (o)
+		{
+			this.getErrStream().println("**********WARNING**********");
+			this.getErrStream().println("Validation has been overridden!  You are now responsible for the values you send to the device");
+		}
+		this.overrideValidation = o;
+	}
+
+	/**
+	 * Gets whether to override the validation of inputs.
+	 *
+	 * @return Boolean representing if the validation of inputs will be overridden
+	 */
+	public boolean getOverrideValidation()
+	{
+		return this.overrideValidation;
+	}
 }
+
