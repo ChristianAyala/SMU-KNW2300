@@ -72,6 +72,9 @@ public class RXTXRobot extends SerialCommunication
         private OutputStream out;
         private SerialPort sPort;
         private CommPort cPort;
+        
+        // This is a flag to set if the communication should try again
+        private boolean attemptTryAgain;
 
         /**
          * Creates a new RXTXRobot object.
@@ -86,6 +89,7 @@ public class RXTXRobot extends SerialCommunication
                 mixerSpeed = 30;
                 resetOnClose = true;
 		overrideValidation = false;
+                attemptTryAgain = false;
         }
 
         private String displayPossiblePorts()
@@ -151,6 +155,7 @@ public class RXTXRobot extends SerialCommunication
                                 sleep(500);
                                 in = sPort.getInputStream();
                                 out = sPort.getOutputStream();
+                                sleep(2500);
                                 this.getOutStream().println("Connected!\n");
                         }
                 }
@@ -266,9 +271,23 @@ public class RXTXRobot extends SerialCommunication
                 }
                 try
                 {
-                        out.write((str + "\r\n").getBytes());
-                        byte[] buffer = new byte[1024];
-                        sleep(sleep);
+                        byte[] buffer;
+                        int retries = 4; // Number of retries
+                        do
+                        {
+                                out.write((str + "\r\n").getBytes());
+                                buffer = new byte[1024];
+                                sleep(sleep);
+                                --retries;
+                                if (in.available() == 0 && attemptTryAgain && retries != 0)
+                                {
+                                        debug("No response from the Arduino....Trying " + retries + " more times");
+                                }
+                                if (retries == 0)
+                                {
+                                        this.getErrStream().println("There was no response from the Arduino, even after " + retries + " tries.");
+                                }
+                        } while (in.available() == 0 && attemptTryAgain && retries != 0);
                         int bytesRead = in.read(buffer);
                         String ret = (new String(buffer)).trim();
                         debug("Received " + bytesRead + " bytes from the Arduino: " + ret);
@@ -303,7 +322,9 @@ public class RXTXRobot extends SerialCommunication
                 }
                 try
                 {
+                        attemptTryAgain = true;
                         String[] split = sendRaw("r a").split("\\s+");
+                        attemptTryAgain = false;
                         if (split.length <= 1)
                         {
                                 this.getErrStream().println("ERROR: No response was received from the Arduino.  Try again. (method: refreshAnalogPins())");
@@ -352,7 +373,9 @@ public class RXTXRobot extends SerialCommunication
                 }
                 try
                 {
+                        attemptTryAgain = true;
                         String[] split = sendRaw("r d").split("\\s+");
+                        attemptTryAgain = false;
                         if (split.length <= 1)
                         {
                                 this.getErrStream().println("ERROR: No response was received from the Arduino.  Try again. (method: refreshDigitalPins())");
