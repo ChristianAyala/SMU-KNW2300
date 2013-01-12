@@ -1,3 +1,4 @@
+// This example shows how to run both DC motors indefinitely.  This should be used if the motors should stop based on sensor input, since the program keeps running after the motors are turned on.
 import rxtxrobot.*;
 
 public class RunBothMotors

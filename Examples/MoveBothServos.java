@@ -1,3 +1,4 @@
+// This example shows how to move both servos simultaneously.  This is better than moving each one separately, as they move as close to simultaneously as possible.
 import rxtxrobot.*;
 
 public class MoveBothServos

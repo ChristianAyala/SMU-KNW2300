@@ -1,3 +1,4 @@
+// This example shows how to get the Analog pin sensor data from the Arduino.  It shows the value of every Analog pin once after connecting to the Arduino.
 import rxtxrobot.*;
 
 public class GetSensorData

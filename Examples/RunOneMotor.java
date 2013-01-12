@@ -1,3 +1,4 @@
+// This example shows how to move only one DC motor.  The motor will run for the specified time, which pauses the execution of the program until the motor stops.
 import rxtxrobot.*;
 
 public class RunOneMotor
