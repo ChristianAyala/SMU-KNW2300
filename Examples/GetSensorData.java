@@ -11,6 +11,8 @@ public class GetSensorData
 
 	r.setPort("COM5"); // Sets the port to COM5
 	
+	r.connect();
+
 	r.refreshAnalogPins(); // Cache the Analog pin information
 
 	for (int x=0; x < RXTXRobot.NUM_ANALOG_PINS; ++x)
