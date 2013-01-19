@@ -9,6 +9,10 @@ import gnu.io.UnsupportedCommOperationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import com.phidgets.EncoderPhidget;
+import com.phidgets.PhidgetException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author Chris King
@@ -66,13 +70,14 @@ public class RXTXRobot extends SerialCommunication
                 false, false, false, false
         };
         private boolean resetOnClose;
-	private boolean overrideValidation;
+        private boolean overrideValidation;
         private int mixerSpeed;
         private InputStream in;
         private OutputStream out;
         private SerialPort sPort;
         private CommPort cPort;
-        
+        private boolean hasEncodedMotors;
+        private EncoderPhidget encMotor;
         // This is a flag to set if the communication should try again
         private boolean attemptTryAgain;
 
@@ -88,8 +93,9 @@ public class RXTXRobot extends SerialCommunication
                 digitalPinCache = null;
                 mixerSpeed = 30;
                 resetOnClose = true;
-		overrideValidation = false;
+                overrideValidation = false;
                 attemptTryAgain = false;
+                hasEncodedMotors = false;
         }
 
         private String displayPossiblePorts()
@@ -157,6 +163,27 @@ public class RXTXRobot extends SerialCommunication
                                 out = sPort.getOutputStream();
                                 sleep(2500);
                                 this.getOutStream().println("Connected!\n");
+                                if (this.getHasEncodedMotors())
+                                {
+                                        this.getOutStream().println("Connecting encoded motors...\n");
+                                        this.encMotor = new EncoderPhidget();
+                                        this.encMotor.openAny();
+                                        for (int x = 0; x < 50; ++x)
+                                        {
+                                                if (encMotor.isAttached())
+                                                        break;
+                                                sleep(500);
+                                        }
+                                        if (!encMotor.isAttached())
+                                        {
+                                                this.getErrStream().println("ERROR: Could not find attached encoded motors in time");
+                                                System.exit(1);
+                                        }
+                                        else
+                                        {
+                                                this.getOutStream().println("Motors connected!\n");
+                                        }
+                                }
                         }
                 }
                 catch (NoSuchPortException e)
@@ -200,6 +227,15 @@ public class RXTXRobot extends SerialCommunication
                                 e.printStackTrace(this.getErrStream());
                         }
                         System.exit(1);
+                }
+                catch (Exception e)
+                {
+                        this.getErrStream().println("FATAL ERROR: Something went wrong. (method: connect())");
+                        if (getVerbose())
+                        {
+                                this.getErrStream().println("Error Message: " + e.toString() + "\n\nError StackTrace:\n");
+                                e.printStackTrace(this.getErrStream());
+                        }
                 }
         }
 
@@ -287,7 +323,8 @@ public class RXTXRobot extends SerialCommunication
                                 {
                                         this.getErrStream().println("There was no response from the Arduino, even after " + retries + " tries.");
                                 }
-                        } while (in.available() == 0 && attemptTryAgain && retries != 0);
+                        }
+                        while (in.available() == 0 && attemptTryAgain && retries != 0);
                         int bytesRead = in.read(buffer);
                         String ret = (new String(buffer)).trim();
                         debug("Received " + bytesRead + " bytes from the Arduino: " + ret);
@@ -776,14 +813,297 @@ public class RXTXRobot extends SerialCommunication
                         sleep(time);
         }
 
+        /**
+         * Runs a DC encoded motor at a specific speed for a specific distance
+         * (Blocking Method).
+         *
+         * Accepts a DC motor, either {@link #MOTOR1 RXTXRobot.MOTOR1},
+         * {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3},
+         * or {@link #MOTOR4 RXTXRobot.MOTOR4}, the speed that the motor should
+         * run at (-255 - 255), and the tick to move to. <br /><br /> If speed
+         * is negative, the motor will run in reverse. <br /><br /> An error
+         * message will display on error. <br /><br /> Note: This method is a
+         * blocking method
+         *
+         * @param motor The DC motor you want to run:
+         * {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3},
+         * or {@link #MOTOR4 RXTXRobot.MOTOR4}
+         * @param speed The speed that the motor should run at (-255 - 255)
+         * @param tick The tick that the motor should move
+         */
+        public void runEncodedMotor(int motor, int speed, int ticks)
+        {
+                if (!isConnected())
+                {
+                        this.getErrStream().println("ERROR: Robot is not connected!  (method: runEncodedMotor())");
+                        return;
+                }
+                try
+                {
+                        if (!getOverrideValidation() && (!this.getHasEncodedMotors() || !this.encMotor.isAttached()))
+                        {
+                                this.getErrStream().println("ERROR: Encoded motors are not on or attached  (method: runEncodedMotor())");
+                                return;
+                        }
+                }
+                catch (Exception e)
+                {
+                        this.getErrStream().println("EXCEPTION: Encoded motors are not on or attached  (method: runEncodedMotor())");
+                        return;
+                }
+                if (!getOverrideValidation() && (speed < -255 || speed > 255))
+                {
+                        this.getErrStream().println("ERROR: You must give the motors a speed between -255 and 255 (inclusive).  (method: runEncodedMotor())");
+                        return;
+                }
+                if (!getOverrideValidation() && (motor < RXTXRobot.MOTOR1 || motor > RXTXRobot.MOTOR4))
+                {
+                        this.getErrStream().println("ERROR: runEncodedMotor was not given a correct motor argument.  (method: runEncodedMotor())");
+                        return;
+                }
+                if (!getOverrideValidation() && (ticks <= 0))
+                {
+                        this.getErrStream().println("ERROR: runEncodedMotor was not given a positive tick argument.  (method: runEncodedMotor())");
+                        return;
+                }
+                if (!getOverrideValidation() && RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
+                {
+                        boolean prev = motorsRunning[motor];
+                        if (speed == 0)
+                                motorsRunning[motor] = false;
+                        else
+                                motorsRunning[motor] = true;
+                        if (!checkRunningMotors())
+                        {
+                                motorsRunning[motor] = prev;
+                                return;
+                        }
+                }
+                debug("Running encoded motor " + motor + " to tick " + ticks + " at speed " + speed);
+                int curTicks = 0;
+                try
+                {
+                        curTicks = encMotor.getPosition(motor);
+                }
+                catch (Exception e)
+                {
+                }
+                int goalTicks;
+                if (speed > 0)
+                        goalTicks = curTicks + ticks;
+                else
+                        goalTicks = curTicks - ticks;
+                if (!"".equals(sendRaw("d " + motor + " " + speed + " 0")))
+                {
+                        if (speed != 0)
+                        {
+                                int test;
+                                while (true)
+                                {
+                                        try
+                                        {
+                                                test = encMotor.getPosition(motor);
+                                                if (speed > 0 && test > goalTicks)
+                                                {
+                                                        break;
+                                                }
+                                                else if (speed < 0 && test < goalTicks)
+                                                {
+                                                        break;
+                                                }
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                        }
+                                }
+                        }
+                        this.attemptTryAgain = true;
+                        sendRaw("d " + motor + " 0 0");
+                        this.attemptTryAgain = false;
+                }
+                motorsRunning[motor] = false;
+        }
+
+        /**
+         * Runs a DC encoded motor at a specific speed for a specific distance
+         * (Blocking Method).
+         *
+         * Accepts a DC motor, either {@link #MOTOR1 RXTXRobot.MOTOR1},
+         * {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3},
+         * or {@link #MOTOR4 RXTXRobot.MOTOR4}, the speed in which that motor
+         * should run (-255 - 255), accepts another DC motor, the speed in which
+         * that motor should run, and the time with which both motors should run
+         * (in milliseconds). <br /><br /> If speed is negative for either
+         * motor, that motor will run in reverse. <br /><br /> An error message
+         * will display on error. <br /><br /> Note: This method is a blocking
+         * method unless time = 0
+         *
+         * @param motor1 The first DC motor:
+         * {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3},
+         * or {@link #MOTOR4 RXTXRobot.MOTOR4}
+         * @param speed1 The speed that the first DC motor should run at
+         * @param tick1 The tick that the first DC motor should move to
+         * @param motor2 The second DC motor:
+         * {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3},
+         * or {@link #MOTOR4 RXTXRobot.MOTOR4}
+         * @param speed2 The speed that the second DC motor should run at
+         * @param ticks2 The tick that the second DC motor should move
+         */
+        public void runEncodedMotor(int motor1, int speed1, int tick1, int motor2, int speed2, int tick2)
+        {
+                if (!isConnected())
+                {
+                        this.getErrStream().println("ERROR: Robot is not connected!  (method: runEncodedMotor())");
+                        return;
+                }
+                try
+                {
+                        if (!getOverrideValidation() && (!this.getHasEncodedMotors() || !this.encMotor.isAttached()))
+                        {
+                                this.getErrStream().println("ERROR: Encoded motors are not on or attached  (method: runEncodedMotor())");
+                                return;
+                        }
+                }
+                catch (Exception e)
+                {
+                        this.getErrStream().println("EXCEPTION: Encoded motors are not on or attached  (method: runEncodedMotor())");
+                        return;
+                }
+                if (!getOverrideValidation() && (speed1 < -255 || speed1 > 255 || speed2 < -255 || speed2 > 255))
+                {
+                        this.getErrStream().println("ERROR: You must give the motors a speed between -255 and 255 (inclusive).  (method: runEncodedMotor())");
+                        return;
+                }
+                if (!getOverrideValidation() && RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
+                {
+                        boolean prev1 = motorsRunning[motor1];
+                        boolean prev2 = motorsRunning[motor2];
+                        if (speed1 == 0)
+                                motorsRunning[motor1] = false;
+                        else
+                                motorsRunning[motor1] = true;
+
+                        if (speed2 == 0)
+                                motorsRunning[motor2] = false;
+                        else
+                                motorsRunning[motor2] = true;
+
+                        if (!checkRunningMotors())
+                        {
+                                motorsRunning[motor1] = prev1;
+                                motorsRunning[motor2] = prev2;
+                                return;
+                        }
+                }
+                if (!getOverrideValidation() && (tick1 <= 0 || tick2 <= 0))
+                {
+                        this.getErrStream().println("ERROR: runEncodedMotor was not given a tick that is positive  (method: runEncodedMotor())");
+                        return;
+                }
+                if (!getOverrideValidation() && ((motor1 < RXTXRobot.MOTOR1 || motor1 > RXTXRobot.MOTOR4) || (motor2 < RXTXRobot.MOTOR1 || motor2 > RXTXRobot.MOTOR4)))
+                {
+                        this.getErrStream().println("ERROR: runEncodedMotor was not given a correct motor argument.  (method: runEncodedMotor())");
+                }
+                debug("Running two motors, motor " + motor1 + " at speed " + speed1 + " for " + tick1 + " ticks and motor " + motor2 + " at speed " + speed2 + " for " + tick2 + " ticks");
+                int curTicks1 = 0;
+                int curTicks2 = 0;
+                try
+                {
+                        curTicks1 = encMotor.getPosition(motor1);
+                        curTicks2 = encMotor.getPosition(motor2);
+                }
+                catch (Exception e)
+                {
+                }
+                int goalTicks1;
+                int goalTicks2;
+                if (speed1 > 0)
+                        goalTicks1 = curTicks1 + tick1;
+                else
+                        goalTicks1 = curTicks1 - tick1;
+                if (speed2 > 0)
+                        goalTicks2 = curTicks2 + tick2;
+                else
+                        goalTicks2 = curTicks2 - tick2;
+                if (!"".equals(sendRaw("D " + motor1 + " " + speed1 + " " + motor2 + " " + speed2 + " 0")))
+                {
+                        if (speed1 != 0)
+                        {
+                                int test1;
+                                int test2;
+                                boolean firstDone = false;
+                                boolean secondDone = false;
+                                while (true)
+                                {
+                                        try
+                                        {
+                                                test1 = encMotor.getPosition(motor1);
+                                                test2 = encMotor.getPosition(motor2);
+                                                if (speed1 > 0 && test1 > goalTicks1)
+                                                {
+                                                        firstDone = true;
+                                                        if (tick1 == tick2)
+                                                        {
+                                                                secondDone = true;
+                                                                sendRaw("D " + motor1 + " 0 " + motor2 + " 0 0");
+                                                        }
+                                                        else
+                                                                sendRaw("d " + motor1 + " 0 0 ");
+                                                }
+                                                else if (speed1 < 0 && test1 < goalTicks1)
+                                                {
+                                                        firstDone = true;
+                                                        if (tick1 == tick2)
+                                                        {
+                                                                secondDone = true;
+                                                                sendRaw("D " + motor1 + " 0 " + motor2 + " 0 0");
+                                                        }
+                                                        else
+                                                                sendRaw("d " + motor1 + " 0 0 ");
+                                                }
+                                                if (speed2 > 0 && test2 > goalTicks2)
+                                                {
+                                                        secondDone = true;
+                                                        if (tick1 == tick2)
+                                                        {
+                                                                firstDone = true;
+                                                                sendRaw("D " + motor1 + " 0 " + motor2 + " 0 0");
+                                                        }
+                                                        else
+                                                                sendRaw("d " + motor2 + " 0 0 ");
+                                                }
+                                                else if (speed2 < 0 && test2 < goalTicks2)
+                                                {
+                                                        firstDone = true;
+                                                        if (tick1 == tick2)
+                                                        {
+                                                                secondDone = true;
+                                                                sendRaw("D " + motor1 + " 0 " + motor2 + " 0 0");
+                                                        }
+                                                        else
+                                                                sendRaw("d " + motor2 + " 0 0 ");
+                                                }
+                                                if (firstDone && secondDone)
+                                                        break;
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                        }
+                                }
+                        }
+                }
+                motorsRunning[motor1] = false;
+                motorsRunning[motor2] = false;
+        }
+
         /*
          * This method just checks to make sure that only two DC motors are
          * running
          */
         private boolean checkRunningMotors()
         {
-		if (getOverrideValidation())
-			return true;
+                if (getOverrideValidation())
+                        return true;
                 int num = 0;
                 for (int x = 0; x < motorsRunning.length; ++x)
                         if (motorsRunning[x])
@@ -921,31 +1241,55 @@ public class RXTXRobot extends SerialCommunication
                 return this.resetOnClose;
         }
 
-	/**
-	 * <b>DANGEROUS:</b> Sets whether to override the validation of inputs or not.
-	 *
-	 * You should not set this to true unless you know what you are doing!  Default is false.
-	 *
-	 * @param o Boolean representing whether to override validation checks.
-	 */
-	public void setOverrideValidation(boolean o)
-	{
-		if (o)
-		{
-			this.getErrStream().println("**********WARNING**********");
-			this.getErrStream().println("Validation has been overridden!  You are now responsible for the values you send to the device");
-		}
-		this.overrideValidation = o;
-	}
+        /**
+         * <b>DANGEROUS:</b> Sets whether to override the validation of inputs
+         * or not.
+         *
+         * You should not set this to true unless you know what you are doing!
+         * Default is false.
+         *
+         * @param o Boolean representing whether to override validation checks.
+         */
+        public void setOverrideValidation(boolean o)
+        {
+                if (o)
+                {
+                        this.getErrStream().println("**********WARNING**********");
+                        this.getErrStream().println("Validation has been overridden!  You are now responsible for the values you send to the device");
+                }
+                this.overrideValidation = o;
+        }
 
-	/**
-	 * Gets whether to override the validation of inputs.
-	 *
-	 * @return Boolean representing if the validation of inputs will be overridden
-	 */
-	public boolean getOverrideValidation()
-	{
-		return this.overrideValidation;
-	}
+        /**
+         * Gets whether to override the validation of inputs.
+         *
+         * @return Boolean representing if the validation of inputs will be
+         * overridden
+         */
+        public boolean getOverrideValidation()
+        {
+                return this.overrideValidation;
+        }
+
+        /**
+         * Sets whether the robot is using motors with encoders or not.
+         *
+         * Default is true.
+         *
+         * @param r Boolean representing whether the robot uses encoder motors
+         */
+        public void setHasEncodedMotors(boolean m)
+        {
+                this.hasEncodedMotors = m;
+        }
+
+        /**
+         * Gets whether the robot is using motors with encoders
+         *
+         * @return Boolean representing whether the robot uses encoder motors
+         */
+        public boolean getHasEncodedMotors()
+        {
+                return this.hasEncodedMotors;
+        }
 }
-
