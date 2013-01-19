@@ -91,6 +91,15 @@ sudo mkdir -p /lock && sudo chmod -R 777 /lock && sudo chmod -R 777 /run/lock &&
 echo "Permissions set and complete!"
 echo ""
 echo ""
+echo "Compiling and installing Phidget Libraries... (if installation fails, make sure you have at least libusb-1.0-0-dev installed, then rerun)"
+echo ""
+cd libs/libphidget/
+./configure
+make
+sudo make install
+cd ../..
+echo ""
+echo "Phidget library installation complete!"
 echo ""
 echo "Installation is complete!"
 echo ""

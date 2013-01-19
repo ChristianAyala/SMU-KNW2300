@@ -37,8 +37,10 @@ IF %win8%==y (
 	ECHO Successfully changed driver permissions!
 	ECHO.
 )
-
-ECHO Installing Java Libraries..........................................
+ECHO.
+ECHO Complete the installation in the window that pops up.
+ECHO.
+ECHO Installing Java Libraries and Phidget drivers........................
 IF NOT exist %save%\libs\32-bit\rxtxSerial.dll goto fatalerror
 IF NOT exist %save%\libs\64-bit\rxtxSerial.dll goto fatalerror
 IF exist "C:\Program Files (x86)\" goto checkOldBits
@@ -50,6 +52,7 @@ IF exist "C:\Program Files (x86)\Java\" goto doOldBits
 goto checkRegular
 
 :doOldBits
+START %save%\libs\64-bit\Phidget.exe
 CD "C:\Program Files (x86)\Java\"
 FOR /D /r %%i IN (bin*) DO ( COPY  %save%\libs\32-bit\rxtxSerial.dll %%i >nul )
 set javafound=y
@@ -72,6 +75,7 @@ IF exist "C:\Program Files\Java\" goto doRegularNo64
 goto closing
 
 :doRegularNo64
+START %save%\libs\32-bit\Phidget.exe
 CD "C:\Program Files\Java\"
 FOR /D /r %%i IN (bin*) DO ( COPY %save%\libs\32-bit\rxtxSerial.dll %%i >nul )
 set javafound=y
@@ -143,6 +147,8 @@ goto startDriver
 ECHO.
 ECHO         Driver Installation has completed SUCCESSFULLY
 ECHO.
+bcdedit -set loadoptions ENABLE_INTEGRITY_CHECKS >nul 2>nul
+bcdedit -set TESTSIGNING OFF >nul 2>nul
 ECHO.
 ECHO Installation Ended.
 CD %save%
