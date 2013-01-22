@@ -880,19 +880,14 @@ public class RXTXRobot extends SerialCommunication
                         }
                 }
                 debug("Running encoded motor " + motor + " to tick " + ticks + " at speed " + speed);
-                int curTicks = 0;
                 try
                 {
-                        curTicks = encMotor.getPosition(motor);
+                        encMotor.setPosition(motor,0);
                 }
                 catch (Exception e)
                 {
+                        System.err.println("Set position error: " + e.getMessage());
                 }
-                int goalTicks;
-                if (speed > 0)
-                        goalTicks = curTicks + ticks;
-                else
-                        goalTicks = curTicks - ticks;
                 if (!"".equals(sendRaw("d " + motor + " " + speed + " 0")))
                 {
                         if (speed != 0)
@@ -902,18 +897,16 @@ public class RXTXRobot extends SerialCommunication
                                 {
                                         try
                                         {
-                                                test = encMotor.getPosition(motor);
-                                                if (speed > 0 && test > goalTicks)
-                                                {
-                                                        break;
-                                                }
-                                                else if (speed < 0 && test < goalTicks)
+                                                test = Math.abs(encMotor.getPosition(motor));
+                                                debug("Goal: " + ticks + ", Position: " + test);
+                                                if (test >= ticks)
                                                 {
                                                         break;
                                                 }
                                         }
                                         catch (Exception ex)
                                         {
+                                             System.err.println("Get position error: " + ex.getMessage());
                                         }
                                 }
                         }
@@ -1005,29 +998,18 @@ public class RXTXRobot extends SerialCommunication
                         this.getErrStream().println("ERROR: runEncodedMotor was not given a correct motor argument.  (method: runEncodedMotor())");
                 }
                 debug("Running two motors, motor " + motor1 + " at speed " + speed1 + " for " + tick1 + " ticks and motor " + motor2 + " at speed " + speed2 + " for " + tick2 + " ticks");
-                int curTicks1 = 0;
-                int curTicks2 = 0;
                 try
                 {
-                        curTicks1 = encMotor.getPosition(motor1);
-                        curTicks2 = encMotor.getPosition(motor2);
+                        encMotor.setPosition(motor1, 0);
+                        encMotor.setPosition(motor2, 0);
                 }
-                catch (Exception e)
+                catch(Exception e)
                 {
+                        System.err.println(e.getMessage());
                 }
-                int goalTicks1;
-                int goalTicks2;
-                if (speed1 > 0)
-                        goalTicks1 = curTicks1 + tick1;
-                else
-                        goalTicks1 = curTicks1 - tick1;
-                if (speed2 > 0)
-                        goalTicks2 = curTicks2 + tick2;
-                else
-                        goalTicks2 = curTicks2 - tick2;
                 if (!"".equals(sendRaw("D " + motor1 + " " + speed1 + " " + motor2 + " " + speed2 + " 0")))
                 {
-                        if (speed1 != 0)
+                        if (speed1 != 0 && speed2 != 0)
                         {
                                 int test1;
                                 int test2;
@@ -1037,9 +1019,9 @@ public class RXTXRobot extends SerialCommunication
                                 {
                                         try
                                         {
-                                                test1 = encMotor.getPosition(motor1);
-                                                test2 = encMotor.getPosition(motor2);
-                                                if (speed1 > 0 && test1 > goalTicks1)
+                                                test1 = Math.abs(encMotor.getPosition(motor1));
+                                                test2 = Math.abs(encMotor.getPosition(motor2));
+                                                if (!firstDone && test1 > tick1)
                                                 {
                                                         firstDone = true;
                                                         if (tick1 == tick2)
@@ -1050,18 +1032,7 @@ public class RXTXRobot extends SerialCommunication
                                                         else
                                                                 sendRaw("d " + motor1 + " 0 0 ");
                                                 }
-                                                else if (speed1 < 0 && test1 < goalTicks1)
-                                                {
-                                                        firstDone = true;
-                                                        if (tick1 == tick2)
-                                                        {
-                                                                secondDone = true;
-                                                                sendRaw("D " + motor1 + " 0 " + motor2 + " 0 0");
-                                                        }
-                                                        else
-                                                                sendRaw("d " + motor1 + " 0 0 ");
-                                                }
-                                                if (speed2 > 0 && test2 > goalTicks2)
+                                                if (!secondDone && test2 > tick2)
                                                 {
                                                         secondDone = true;
                                                         if (tick1 == tick2)
@@ -1072,22 +1043,12 @@ public class RXTXRobot extends SerialCommunication
                                                         else
                                                                 sendRaw("d " + motor2 + " 0 0 ");
                                                 }
-                                                else if (speed2 < 0 && test2 < goalTicks2)
-                                                {
-                                                        firstDone = true;
-                                                        if (tick1 == tick2)
-                                                        {
-                                                                secondDone = true;
-                                                                sendRaw("D " + motor1 + " 0 " + motor2 + " 0 0");
-                                                        }
-                                                        else
-                                                                sendRaw("d " + motor2 + " 0 0 ");
-                                                }
                                                 if (firstDone && secondDone)
                                                         break;
                                         }
                                         catch (Exception ex)
                                         {
+                                                System.err.println(ex.getMessage());
                                         }
                                 }
                         }
