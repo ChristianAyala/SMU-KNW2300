@@ -10,9 +10,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import com.phidgets.EncoderPhidget;
-import com.phidgets.PhidgetException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @author Chris King
@@ -182,6 +179,13 @@ public class RXTXRobot extends SerialCommunication
                                         else
                                         {
                                                 this.getOutStream().println("Motors connected!\n");
+                                        }
+                                        if (encMotor.getDeviceID() == EncoderPhidget.PHIDID_ENCODER_HS_4ENCODER_4INPUT)
+                                        {
+                                                encMotor.setEnabled(0, true);
+                                                encMotor.setEnabled(1, true);
+                                                encMotor.setEnabled(2, true);
+                                                encMotor.setEnabled(3, true);
                                         }
                                 }
                         }
@@ -882,7 +886,7 @@ public class RXTXRobot extends SerialCommunication
                 debug("Running encoded motor " + motor + " to tick " + ticks + " at speed " + speed);
                 try
                 {
-                        encMotor.setPosition(motor,0);
+                        encMotor.setPosition(motor, 0);
                 }
                 catch (Exception e)
                 {
@@ -906,7 +910,7 @@ public class RXTXRobot extends SerialCommunication
                                         }
                                         catch (Exception ex)
                                         {
-                                             System.err.println("Get position error: " + ex.getMessage());
+                                                System.err.println("Get position error: " + ex.getMessage());
                                         }
                                 }
                         }
@@ -1003,7 +1007,7 @@ public class RXTXRobot extends SerialCommunication
                         encMotor.setPosition(motor1, 0);
                         encMotor.setPosition(motor2, 0);
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                         System.err.println(e.getMessage());
                 }
@@ -1021,6 +1025,7 @@ public class RXTXRobot extends SerialCommunication
                                         {
                                                 test1 = Math.abs(encMotor.getPosition(motor1));
                                                 test2 = Math.abs(encMotor.getPosition(motor2));
+                                                debug("test1: " + test1 + ", test2: " + test2);
                                                 if (!firstDone && test1 > tick1)
                                                 {
                                                         firstDone = true;
