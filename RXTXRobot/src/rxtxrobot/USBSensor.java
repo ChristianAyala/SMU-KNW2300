@@ -273,7 +273,7 @@ public class USBSensor extends SerialCommunication
          *
          * This will set the value of the Digital Output pin.
          *
-         * @param x The number of the pin: 0 &lt; x &lt;
+         * @param index The number of the pin: 0 &lt; x &lt;
          * {@link #NUM_DIGITAL_INPUT_PINS NUM_DIGITAL_INPUT_PINS}
          * @param value The value to write to the pin: 0 or 1
          */

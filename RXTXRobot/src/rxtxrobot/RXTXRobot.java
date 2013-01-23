@@ -833,7 +833,7 @@ public class RXTXRobot extends SerialCommunication
          * {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3},
          * or {@link #MOTOR4 RXTXRobot.MOTOR4}
          * @param speed The speed that the motor should run at (-255 - 255)
-         * @param tick The tick that the motor should move
+         * @param ticks The tick that the motor should move
          */
         public void runEncodedMotor(int motor, int speed, int ticks)
         {
@@ -944,7 +944,7 @@ public class RXTXRobot extends SerialCommunication
          * {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3},
          * or {@link #MOTOR4 RXTXRobot.MOTOR4}
          * @param speed2 The speed that the second DC motor should run at
-         * @param ticks2 The tick that the second DC motor should move
+         * @param tick2 The tick that the second DC motor should move
          */
         public void runEncodedMotor(int motor1, int speed1, int tick1, int motor2, int speed2, int tick2)
         {
@@ -1242,7 +1242,7 @@ public class RXTXRobot extends SerialCommunication
          *
          * Default is true.
          *
-         * @param r Boolean representing whether the robot uses encoder motors
+         * @param m Boolean representing whether the robot uses encoder motors
          */
         public void setHasEncodedMotors(boolean m)
         {

@@ -225,7 +225,7 @@ public abstract class SerialCommunication
          * this process, but does not throw an Exception. (1000 milliseconds = 1
          * second)
          *
-         * @param amount The amount of time in milliseconds
+         * @param length The amount of time in milliseconds
          */
         public void sleep(int length)
         {
