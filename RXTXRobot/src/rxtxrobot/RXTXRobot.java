@@ -48,12 +48,12 @@ public class RXTXRobot extends SerialCommunication
         final public static int MOTOR4 = 3;
         /**
          * The maximum number of digital pins that can be read from the Arduino
-         * (0 &lt; pins &lt; NUM_DIGITAL_PINS)
+         * (0 &le; pins &lt; NUM_DIGITAL_PINS)
          */
         final public static int NUM_DIGITAL_PINS = 1;
         /**
          * The maximum number of analog pins that can be read from the Arduino
-         * (0 &lt; pins &lt; NUM_ANALOG_PINS)
+         * (0 &le; pins &lt; NUM_ANALOG_PINS)
          */
         final public static int NUM_ANALOG_PINS = 6;
 
