@@ -4,18 +4,28 @@ import com.phidgets.InterfaceKitPhidget;
 import com.phidgets.PhidgetException;
 
 /**
- *
- * @author raikia
+ * @author Chris King
+ * @version 3.0.0
  */
 public class USBSensor extends SerialCommunication
 {
+        public int NUM_ANALOG_PINS;
+        public int NUM_DIGITAL_OUTPUT_PINS;
+        public int NUM_DIGITAL_INPUT_PINS;
         private InterfaceKitPhidget inter;
 
+        /**
+         * Initialize the USB Sensor.
+         *
+         */
         public USBSensor()
         {
                 try
                 {
                         inter = new InterfaceKitPhidget();
+                        NUM_ANALOG_PINS = inter.getSensorCount();
+                        NUM_DIGITAL_OUTPUT_PINS = inter.getOutputCount();
+                        NUM_DIGITAL_INPUT_PINS = inter.getInputCount();
                 }
                 catch (PhidgetException ex)
                 {
@@ -23,6 +33,15 @@ public class USBSensor extends SerialCommunication
                 }
         }
 
+        /**
+         * Checks if the USB Sensor object is connected to the actual sensor.
+         *
+         * Returns true if the USB Sensor object is successfully connected to
+         * the actual sensor. Returns false otherwise.
+         *
+         * @return true/false value that specifies if the USB Sensor object is
+         * connected to the sensor.
+         */
         @Override
         public boolean isConnected()
         {
@@ -36,18 +55,54 @@ public class USBSensor extends SerialCommunication
                 }
         }
 
+        /**
+         * Closes the connection to the USB Sensor.
+         *
+         * This method closes the serial connection to the USB Sensor. It
+         * deletes the mutual exclusion lock file, which is important, so this
+         * should be done before the program is terminated.
+         */
         @Override
         public void close()
         {
-                throw new UnsupportedOperationException("Not supported yet.");
+                try
+                {
+                        if (inter.isAttached())
+                                inter.close();
+                }
+                catch (Exception e)
+                {
+                        this.getErrStream().println("ERROR: Could not close the USB Sensor! " + e.getMessage());
+                }
         }
 
+        /**
+         * Attempts to connect to any USB Sensor.
+         *
+         * This method attempts to make a serial connection to ANY USB Sensor.
+         * This can be problematic if there are multiple USB Sensors to be
+         * connected to. If there are multiple, you should specify a serial
+         * number. If there is an error in connecting, then the appropriate
+         * error message will be displayed. <br /><br /> This function will
+         * terminate runtime if an error is discovered.
+         */
         @Override
         public void connect()
         {
                 connect(0);
         }
 
+        /**
+         * Attempts to connect to a specific USB Sensor.
+         *
+         * This method attempts to make a serial connection to a specific USB
+         * Sensor. The serial number supplied must be equivalent to the serial
+         * number on the USB Sensor. If there is an error in connecting, then
+         * the appropriate error message will be displayed. <br /><br /> This
+         * function will terminate runtime if an error is discovered.
+         *
+         * @param serial Serial number of the USB Sensor to connect to.
+         */
         public void connect(int serial)
         {
                 this.getOutStream().print("Connecting to the USB Sensor");
@@ -96,6 +151,15 @@ public class USBSensor extends SerialCommunication
                 }
         }
 
+        /**
+         * Returns an AnalogPin object for the specified Analog pin.
+         *
+         * This will get the value of the pin on the USB Sensor.
+         *
+         * @param index The number of the pin: 0 &lt; x &lt;
+         * {@link #NUM_ANALOG_PINS NUM_ANALOG_PINS}
+         * @return AnalogPin object of the specified pin, or null if error.
+         */
         public AnalogPin getAnalogPin(int index)
         {
                 if (!isConnected())
@@ -126,6 +190,15 @@ public class USBSensor extends SerialCommunication
                 }
         }
 
+        /**
+         * Returns a DigitalPin object for the specified Input Digital pin.
+         *
+         * This will get the value of the pin on the USB Sensor.
+         *
+         * @param index The number of the pin: 0 &lt; x &lt;
+         * {@link #NUM_DIGITAL_INPUT_PINS NUM_DIGITAL_INPUT_PINS}
+         * @return DigitalPin object of the specified pin, or null if error.
+         */
         public DigitalPin getDigitalInputPin(int index)
         {
                 if (!isConnected())
@@ -147,7 +220,7 @@ public class USBSensor extends SerialCommunication
                 }
                 try
                 {
-                        return new DigitalPin(index, inter.getInputState(index)?1:0);
+                        return new DigitalPin(index, inter.getInputState(index) ? 1 : 0);
                 }
                 catch (Exception e)
                 {
@@ -156,6 +229,15 @@ public class USBSensor extends SerialCommunication
                 }
         }
 
+        /**
+         * Returns a DigitalPin object for the specified Output Digital pin.
+         *
+         * This will get the value of the pin on the USB Sensor.
+         *
+         * @param index The number of the pin: 0 &lt; x &lt;
+         * {@link #NUM_DIGITAL_INPUT_PINS NUM_DIGITAL_INPUT_PINS}
+         * @return DigitalPin object of the specified pin, or null if error.
+         */
         public DigitalPin getDigitalOutputPin(int index)
         {
                 if (!isConnected())
@@ -177,7 +259,7 @@ public class USBSensor extends SerialCommunication
                 }
                 try
                 {
-                        return new DigitalPin(index, inter.getOutputState(index)?1:0);
+                        return new DigitalPin(index, inter.getOutputState(index) ? 1 : 0);
                 }
                 catch (Exception e)
                 {
@@ -186,11 +268,25 @@ public class USBSensor extends SerialCommunication
                 }
         }
 
+        /**
+         * Sets the value of the specified Digital Output pin.
+         *
+         * This will set the value of the Digital Output pin.
+         *
+         * @param x The number of the pin: 0 &lt; x &lt;
+         * {@link #NUM_DIGITAL_INPUT_PINS NUM_DIGITAL_INPUT_PINS}
+         * @param value The value to write to the pin: 0 or 1
+         */
         public void setDigitalOutputPin(int index, int value)
         {
                 if (!isConnected())
                 {
                         this.getErrStream().println("ERROR: No USB Sensor is connected");
+                        return;
+                }
+                if (value != 0 && value != 1)
+                {
+                        this.getErrStream().println("ERROR: Value must be either 0 or 1");
                         return;
                 }
                 try
@@ -207,7 +303,7 @@ public class USBSensor extends SerialCommunication
                 }
                 try
                 {
-                        inter.setOutputState(index, value==1);
+                        inter.setOutputState(index, value == 1);
                 }
                 catch (Exception e)
                 {
