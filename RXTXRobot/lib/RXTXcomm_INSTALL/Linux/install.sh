@@ -17,12 +17,12 @@ fi
 sudo rm getRoot
 echo ""
 echo "Looking for Java installation..."
-while [ ! "$JAVA_HOME"  -o -f "$JAVA_HOME/jre/lib" ]
+while [ ! "$JAVA_HOME" -o ! -d "$JAVA_HOME/jre/lib" ]
 do
 	echo ""
-	echo "JAVA_HOME was not found.  Please input the location of your Java installation (\$JAVA_HOME/jre/lib must exist)."
+	echo "$JAVA_HOME was not found.  Please input the location of your Java installation (\$JAVA_HOME/jre/lib must exist)."
 	echo -n "(JAVA_HOME)-> "
-	read $input
+	read input
 	JAVA_HOME=$input
 done
 
@@ -66,7 +66,7 @@ else
 		ls -l "$JAVA_HOME/jre/lib/" | grep -P '^d' | awk '{print $9}' | sed "s/^/      /"
 		echo "Could not find installation location!  Please choose from the above list."
 		echo "Location :-> "
-		read $input
+		read input
 		INSTLOC=$JAVA_HOME/jre/lib/$input
 	done
 fi
@@ -92,6 +92,9 @@ echo "Permissions set and complete!"
 echo ""
 echo ""
 echo "Compiling and installing Phidget Libraries... (if installation fails, make sure you have at least libusb-1.0-0-dev installed, then rerun)"
+echo ""
+echo "Press enter to continue the installation..."
+read enter
 echo ""
 cd libs/libphidget/
 ./configure
