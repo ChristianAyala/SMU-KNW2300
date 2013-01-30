@@ -96,7 +96,7 @@ hdiutil attach "$XFILE"
 sleep 2
 #open "$XFILE"
 open -W "/Volumes/FTDI*/FTDIUSBSerialDriver_10_4_10_5_10_6_10_7.mpkg"
-hdiutil detach "$XFILE"
+hdiutil detach "/Volumes/FTDI*"
 
 echo ""
 echo ""
@@ -105,7 +105,7 @@ hdiutil attach "$SCRIPTDIR/libs/Phidget.dmg"
 sleep 2
 #open "$SCRIPTDIR/libs/Phidget.dmg"
 open -W "/Volumes/Phid*/Phidgets.mpkg"
-hdiutil detach "$SCRIPTDIR/libs/Phidget.dmg"
+hdiutil detach "/Volumes/Phid*"
 echo ""
 echo "The driver installation has completed!  You may need to restart your computer for it to finish successfully"
 
