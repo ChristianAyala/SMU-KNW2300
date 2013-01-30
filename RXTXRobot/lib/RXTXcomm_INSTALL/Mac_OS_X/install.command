@@ -92,18 +92,18 @@ fi
 
 echo ""
 echo "Follow the instructions to install the FTDI drivers for the XBee."
-hdiutil attach -noautoopen "$XFILE" 
+hdiutil attach -quiet -noautoopen -nobrowse "$XFILE" 
 sleep 2
 open -W "/Volumes/FTDIUSBSerialDriver_v2_2_18/FTDIUSBSerialDriver_10_4_10_5_10_6_10_7.mpkg"
-hdiutil detach "/Volumes/FTDIUSBSerialDriver_v2_2_18"
+hdiutil detach -quiet "/Volumes/FTDIUSBSerialDriver_v2_2_18"
 
 echo ""
 echo ""
 echo "Follow the instructions to install the drivers for the Phidget motors."
-hdiutil attach -noautoopen "$SCRIPTDIR/libs/Phidget.dmg" &> /dev/null
+hdiutil attach -quiet -noautoopen -nobrowse "$SCRIPTDIR/libs/Phidget.dmg" &> /dev/null
 sleep 2
 open -W "/Volumes/Phidgets21/Phidgets.mpkg"
-hdiutil detach "/Volumes/Phidgets21" &> /dev/null
+hdiutil detach -quiet "/Volumes/Phidgets21" &> /dev/null
 echo ""
 echo "The driver installation has completed!  You may need to restart your computer for it to finish successfully"
 
