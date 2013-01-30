@@ -97,7 +97,7 @@ open "$XFILE"
 echo ""
 echo ""
 echo "Follow the instructions to install the drivers for the Phidget motors."
-open "libs/Phidget.dmg"
+open "$SCRIPTDIR/libs/Phidget.dmg"
 echo ""
 echo "The driver installation has completed!  You may need to restart your computer for it to finish successfully"
 
