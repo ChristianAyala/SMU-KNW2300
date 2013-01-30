@@ -24,7 +24,7 @@ if [ "$?" -ne 0 ]; then
 	echo "Password Authentication failed.  Please try rerunning this installer."
 	exit
 fi
-echo "Access was granted successfully!  Continuing...\n"
+echo -e "Access was granted successfully!  Continuing...\n"
 echo -n "Installing Java libraries........."
 
 if [ $VERSION -lt 5 ]; then
@@ -69,7 +69,7 @@ if [ $VERSION -lt 5 ]; then
 	fi
 else
 	if [ ! `sudo dscl . -read / /groups/_uucp users | grep "$curruser" &> /dev/null` ]; then
-		sudo dscl . -append /groups/_uucp GroupMembership "$curruser"
+		sudo dscl . -append /groups/_uucp GroupMembership "$curruser" &> /dev/null
 	fi
 fi
 
@@ -93,6 +93,7 @@ fi
 echo ""
 echo "Follow the instructions to install the FTDI drivers for the XBee."
 hdiutil attach "$XFILE"
+sleep 2
 #open "$XFILE"
 open -W "/Volumes/FTDI*/FTDIUSBSerialDriver_10_4_10_5_10_6_10_7.mpkg"
 hdiutil detach "$XFILE"
@@ -101,6 +102,7 @@ echo ""
 echo ""
 echo "Follow the instructions to install the drivers for the Phidget motors."
 hdiutil attach "$SCRIPTDIR/libs/Phidget.dmg"
+sleep 2
 #open "$SCRIPTDIR/libs/Phidget.dmg"
 open -W "/Volumes/Phid*/Phidgets.mpkg"
 hdiutil detach "$SCRIPTDIR/libs/Phidget.dmg"
