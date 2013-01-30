@@ -24,7 +24,7 @@ if [ "$?" -ne 0 ]; then
 	echo "Password Authentication failed.  Please try rerunning this installer."
 	exit
 fi
-echo "Access was granted successfully!  Continuing...\n"
+echo -e "Access was granted successfully!  Continuing...\n"
 echo -n "Installing Java libraries........."
 
 if [ $VERSION -lt 5 ]; then
@@ -69,7 +69,7 @@ if [ $VERSION -lt 5 ]; then
 	fi
 else
 	if [ ! `sudo dscl . -read / /groups/_uucp users | grep "$curruser" &> /dev/null` ]; then
-		sudo dscl . -append /groups/_uucp GroupMembership "$curruser"
+		sudo dscl . -append /groups/_uucp GroupMembership "$curruser" &> /dev/null
 	fi
 fi
 
@@ -93,7 +93,7 @@ fi
 echo ""
 echo "Follow the instructions to install the FTDI drivers for the XBee."
 hdiutil attach "$XFILE" >> mountOutput.txt
-MOUNT_LOCATION=$(cat mountOutput.txt | perl -e '<>; <>; $a=<>; $a =~ /\s+(.*)$/; print $1')
+MOUNT_LOCATION=$(cat mountOutput.txt | perl -e '<>; <>; <>; $a=<>; $a =~ /([^\s]*)$/; print $1')
 open -W "$MOUNT_LOCATION/FTDIUSBSerialDriver_10_4_10_5_10_6_10_7.mpkg"
 #open "$XFILE"
 hdiutil detach "$MOUNT_LOCATION" > /dev/null
@@ -103,7 +103,7 @@ echo ""
 echo "Follow the instructions to install the drivers for the Phidget motors."
 #open "$SCRIPTDIR/libs/Phidget.dmg"
 hdiutil attach "$SCRIPTDIR/libs/Phidget.dmg" >> mountOutput.txt
-MOUNT_LOCATION=$(cat mountOutput.txt | perl -e '<>; <>; $a=<>; $a =~ /\s+(.*)$/; print $1')
+MOUNT_LOCATION=$(cat mountOutput.txt | perl -e '<>; <>; <>; $a=<>; $a =~ /([^\s]*)$/; print $1')
 open -W "$MOUNT_LOCATION/Phidgets.mpkg"
 hdiutil detach "$MOUNT_LOCATION" > /dev/null
 rm mountOutput.txt
