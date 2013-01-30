@@ -64,11 +64,11 @@ sudo chgrp uucp /var/lock &> /dev/null
 sudo chmod 775  /var/lock &> /dev/null
 
 if [ $VERSION -lt 5 ]; then
-	if [ ! `sudo niutil -readprop / /groups/uucp users | grep "$curruser" &> /dev/null` ]; then
+	if [ ! `sudo niutil -readprop / /groups/uucp users 2> /dev/null | grep "$curruser" &> /dev/null` ]; then
 		sudo niutil -mergeprop / /groups/uucp users "$curruser" &> /dev/null
 	fi
 else
-	if [ ! `sudo dscl . -read / /groups/_uucp users | grep "$curruser" &> /dev/null` ]; then
+	if [ ! `sudo dscl . -read / /groups/_uucp users 2> /dev/null | grep "$curruser" &> /dev/null` ]; then
 		sudo dscl . -append /groups/_uucp GroupMembership "$curruser" &> /dev/null
 	fi
 fi
