@@ -92,12 +92,21 @@ fi
 
 echo ""
 echo "Follow the instructions to install the FTDI drivers for the XBee."
-open "$XFILE"
-
+hdiutil attach "$XFILE" >> mountOutput.txt
+MOUNT_LOCATION=$(cat mountOutput.txt | perl -e '<>; <>; $a=<>; $a =~ /\s+(.*)$/; print $1')
+open -W "$MOUNT_LOCATION/FTDIUSBSerialDriver_10_4_10_5_10_6_10_7.mpkg"
+#open "$XFILE"
+hdiutil detach "$MOUNT_LOCATION" > /dev/null
+rm mountOutput.txt
 echo ""
 echo ""
 echo "Follow the instructions to install the drivers for the Phidget motors."
-open "$SCRIPTDIR/libs/Phidget.dmg"
+#open "$SCRIPTDIR/libs/Phidget.dmg"
+hdiutil attach "$SCRIPTDIR/libs/Phidget.dmg" >> mountOutput.txt
+MOUNT_LOCATION=$(cat mountOutput.txt | perl -e '<>; <>; $a=<>; $a =~ /\s+(.*)$/; print $1')
+open -W "$MOUNT_LOCATION/Phidgets.mpkg"
+hdiutil detach "$MOUNT_LOCATION" > /dev/null
+rm mountOutput.txt
 echo ""
 echo "The driver installation has completed!  You may need to restart your computer for it to finish successfully"
 
