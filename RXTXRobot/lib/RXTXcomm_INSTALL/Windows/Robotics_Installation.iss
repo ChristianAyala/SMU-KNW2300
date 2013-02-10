@@ -30,9 +30,9 @@ RestartIfNeededByRun=no
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "C:\Users\Chris\Documents\GitHub\RXTX-Java-API\RXTXRobot\lib\RXTXcomm_INSTALL\Windows\libs\32-bit\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: not Is64BitInstallMode
-Source: "C:\Users\Chris\Documents\GitHub\RXTX-Java-API\RXTXRobot\lib\RXTXcomm_INSTALL\Windows\libs\64-bit\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: Is64BitInstallMode;
-Source: "C:\Users\Chris\Desktop\RXTX-Java-API-master\RXTXRobot\lib\RXTXcomm_INSTALL\Windows\libs\Drivers\Arduino_UNO.inf"; DestDir: "{app}"; Flags: ignoreversion
+Source: "libs\32-bit\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: not Is64BitInstallMode
+Source: "libs\64-bit\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: Is64BitInstallMode;
+Source: "libs\Drivers\Arduino_UNO.inf"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
@@ -56,35 +56,41 @@ var
   ResultCode1: Integer;
   ResultCode2: Integer;
   noContinue: Boolean;
+  JavaOutput: Integer;
 begin
   if CurPageID = wpReady then begin
-    TmpFileName1 := ExpandConstant('{tmp}') + '\result1.txt';
-    TmpFileName2 := ExpandConstant('{tmp}') + '\result2.txt';
-    noContinue := false;
-    ExtractTemporaryFile('devcon.exe');
-    Exec(ExpandConstant('{cmd}'), '/C "' + ExpandConstant('{tmp}') + '\devcon.exe find USB\VID_2341^&PID_0001 > ' + TmpFileName1, '', SW_HIDE, ewWaitUntilTerminated, ResultCode1);
-    Exec(ExpandConstant('{cmd}'), '/C "' + ExpandConstant('{tmp}') + '\devcon.exe find USB\VID_2341^&PID_0043 > ' + TmpFileName2, '', SW_HIDE, ewWaitUntilTerminated, ResultCode2);
-    LoadStringFromFile(TmpFileName1, ExecStdout1);
-    LoadStringFromFile(TmpFileName2, ExecStdout2);
-    ExecStdout1 := Copy(ExecStdout1, 0, 3);
-    ExecStdout2 := Copy(ExecStdout2, 0, 3);
-    while (ExecStdout1 = 'No ') AND (ExecStdout2 = 'No ') AND (noContinue = false)  do
-    begin
-      if MsgBox('No Arduino was detected.  Plug one into the computer and retry.', mbInformation, MB_RETRYCANCEL) = IDRETRY then begin
-        Exec(ExpandConstant('{cmd}'), '/C "' + ExpandConstant('{tmp}') + '\devcon.exe find USB\VID_2341^&PID_0001 > ' + TmpFileName1, '', SW_HIDE, ewWaitUntilTerminated, ResultCode1);
-        Exec(ExpandConstant('{cmd}'), '/C "' + ExpandConstant('{tmp}') + '\devcon.exe find USB\VID_2341^&PID_0043 > ' + TmpFileName2, '', SW_HIDE, ewWaitUntilTerminated, ResultCode2);
-        LoadStringFromFile(TmpFileName1, ExecStdout1);
-        LoadStringFromFile(TmpFileName2, ExecStdout2);
-        ExecStdout1 := Copy(ExecStdout1, 0, 3);
-        ExecStdout2 := Copy(ExecStdout2, 0, 3);
-      end else begin
-        noContinue := true;
-      end;
-    end;
-    if noContinue = true then begin
+    JavaOutput := MsgBox('Java JDK MUST be installed before continuing.  Please make sure it is installed before continuing, otherwise the installer will not function correctly!', mbInformation, MB_OKCANCEL);
+    if JavaOutput = IDCANCEL then begin
       Result := false;
-    end else begin
-      Result := true;
+    end else begin;
+      TmpFileName1 := ExpandConstant('{tmp}') + '\result1.txt';
+      TmpFileName2 := ExpandConstant('{tmp}') + '\result2.txt';
+      noContinue := false;
+      ExtractTemporaryFile('devcon.exe');
+      Exec(ExpandConstant('{cmd}'), '/C "' + ExpandConstant('{tmp}') + '\devcon.exe find USB\VID_2341^&PID_0001 > ' + TmpFileName1, '', SW_HIDE, ewWaitUntilTerminated, ResultCode1);
+      Exec(ExpandConstant('{cmd}'), '/C "' + ExpandConstant('{tmp}') + '\devcon.exe find USB\VID_2341^&PID_0043 > ' + TmpFileName2, '', SW_HIDE, ewWaitUntilTerminated, ResultCode2);
+      LoadStringFromFile(TmpFileName1, ExecStdout1);
+      LoadStringFromFile(TmpFileName2, ExecStdout2);
+      ExecStdout1 := Copy(ExecStdout1, 0, 3);
+      ExecStdout2 := Copy(ExecStdout2, 0, 3);
+      while (ExecStdout1 = 'No ') AND (ExecStdout2 = 'No ') AND (noContinue = false)  do
+      begin
+        if MsgBox('No Arduino was detected.  Plug one into the computer and retry.', mbInformation, MB_RETRYCANCEL) = IDRETRY then begin
+          Exec(ExpandConstant('{cmd}'), '/C "' + ExpandConstant('{tmp}') + '\devcon.exe find USB\VID_2341^&PID_0001 > ' + TmpFileName1, '', SW_HIDE, ewWaitUntilTerminated, ResultCode1);
+          Exec(ExpandConstant('{cmd}'), '/C "' + ExpandConstant('{tmp}') + '\devcon.exe find USB\VID_2341^&PID_0043 > ' + TmpFileName2, '', SW_HIDE, ewWaitUntilTerminated, ResultCode2);
+          LoadStringFromFile(TmpFileName1, ExecStdout1);
+          LoadStringFromFile(TmpFileName2, ExecStdout2);
+          ExecStdout1 := Copy(ExecStdout1, 0, 3);
+          ExecStdout2 := Copy(ExecStdout2, 0, 3);
+        end else begin
+          noContinue := true;
+        end;
+      end;
+      if noContinue = true then begin
+        Result := false;
+      end else begin
+        Result := true;
+      end;
     end;
   end else begin
     Result := true;
