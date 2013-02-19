@@ -95,18 +95,6 @@ public class RXTXRobot extends SerialCommunication
                 hasEncodedMotors = false;
         }
 
-        private String displayPossiblePorts()
-        {
-                String ret = "Possible serial ports:\n";
-                String[] temp = SerialCommunication.checkValidPorts();
-                int x = 0;
-                for (; x < temp.length; ++x)
-                        ret += "\t" + (x + 1) + ". " + temp[x] + "\n";
-                if (x == 0)
-                        ret += "\tNone - Make sure its plugged in!\n";
-                return ret;
-        }
-
         /**
          * Attempts to connect to the Arduino/XBee.
          *
@@ -121,13 +109,12 @@ public class RXTXRobot extends SerialCommunication
                 this.getOutStream().println("Connecting to robot, please wait...\n");
                 if ("".equals(getPort()))
                 {
-                        this.getErrStream().println("FATAL ERROR: No port was specified to connect to! (method: connect())\n");
-                        this.getErrStream().println(displayPossiblePorts());
+                        error("No port was specified to connect to!\n" + SerialCommunication.displayPossiblePorts(), "RXTXRobot", "connect", true);
                         System.exit(1);
                 }
                 if (isConnected())
                 {
-                        this.getErrStream().println("ERROR: Robot is already connected! (method: connect())");
+                        error("Robot is already connected!", "RXTXRobot", "connect");
                         return;
                 }
                 try
@@ -145,8 +132,7 @@ public class RXTXRobot extends SerialCommunication
                         System.setOut(originalStream);
                         if (pIdent.isCurrentlyOwned())
                         {
-                                this.getErrStream().println("FATAL ERROR: Arduino port (" + getPort() + ") is currently owned by " + pIdent.getCurrentOwner() + "! (method: connect())\n");
-                                this.getErrStream().println(displayPossiblePorts());
+                                error("Arduino port (" + getPort() + ") is currently owned by " + pIdent.getCurrentOwner() + "!\n" + SerialCommunication.displayPossiblePorts(), "RXTXRobot", "connect", true);
                                 System.exit(1);
                         }
                         cPort = pIdent.open("RXTXRobot", 2000);
@@ -173,7 +159,7 @@ public class RXTXRobot extends SerialCommunication
                                         }
                                         if (!encMotor.isAttached())
                                         {
-                                                this.getErrStream().println("ERROR: Could not find attached encoded motors in time");
+                                                error("Could not find attached encoded motors in time", "RXTXRobot", "connect");
                                                 System.exit(1);
                                         }
                                         else
@@ -192,8 +178,7 @@ public class RXTXRobot extends SerialCommunication
                 }
                 catch (NoSuchPortException e)
                 {
-                        this.getErrStream().println("FATAL ERROR: Invalid port (NoSuchPortException).  Check to make sure the correct port is set at the object's initialization. (method: connect())\n");
-                        this.getErrStream().println(displayPossiblePorts());
+                        error("Invalid port (NoSuchPortException).  Check to make sure the correct port is set at the object's initialization.\n" + SerialCommunication.displayPossiblePorts(), "RXTXRobot", "connect", true);
                         if (getVerbose())
                         {
                                 this.getErrStream().println("Error Message: " + e.toString() + "\n\nError StackTrace:\n");
@@ -203,8 +188,7 @@ public class RXTXRobot extends SerialCommunication
                 }
                 catch (PortInUseException e)
                 {
-                        this.getErrStream().println("FATAL ERROR: Port is already being used by a different application (PortInUseException).  Did you stop a previously running instance of this program? (method: connect())\n");
-                        this.getErrStream().println(displayPossiblePorts());
+                        error("Port is already being used by a different application (PortInUseException).  Did you stop a previously running instance of this program?\n" + SerialCommunication.displayPossiblePorts(), "RXTXRobot", "connect", true);
                         if (getVerbose())
                         {
                                 this.getErrStream().println("Error Message: " + e.toString() + "\n\nError StackTrace:\n");
@@ -214,7 +198,7 @@ public class RXTXRobot extends SerialCommunication
                 }
                 catch (UnsupportedCommOperationException e)
                 {
-                        this.getErrStream().println("FATAL ERROR: Comm Operation is unsupported (UnsupportedCommOperationException).  This shouldn't ever happen.  If you see this, ask a TA for assistance (method: connect())");
+                        error("Comm Operation is unsupported (UnsupportedCommOperationException).  This should never happen.  If you see this, ask a TA for assistance.", "RXTXRobot", "connect", true);
                         if (getVerbose())
                         {
                                 this.getErrStream().println("Error Message: " + e.toString() + "\n\nError StackTrace:\n");
@@ -224,7 +208,7 @@ public class RXTXRobot extends SerialCommunication
                 }
                 catch (IOException e)
                 {
-                        this.getErrStream().println("FATAL ERROR: Could not assign Input and Output streams (IOException).  You may be calling the \"close()\" method before this one.  Make sure you only call \"close()\" at the very end of your program. (method: connect())");
+                        error("Could not assign Input and Output streams (IOException).  You may be calling the \"close()\" method before this.  Make sure you only call \"close()\" at the very end of your program!", "RXTXRobot", "connect", true);
                         if (getVerbose())
                         {
                                 this.getErrStream().println("Error Message: " + e.toString() + "\n\nError StackTrace:\n");
@@ -234,12 +218,13 @@ public class RXTXRobot extends SerialCommunication
                 }
                 catch (Exception e)
                 {
-                        this.getErrStream().println("FATAL ERROR: Something went wrong. (method: connect())");
+                        error("A generic error occurred: " + e.getMessage(), "RXTXRobot", "connect", true);
                         if (getVerbose())
                         {
                                 this.getErrStream().println("Error Message: " + e.toString() + "\n\nError StackTrace:\n");
                                 e.printStackTrace(this.getErrStream());
                         }
+                        System.exit(1);
                 }
         }
 
@@ -306,7 +291,7 @@ public class RXTXRobot extends SerialCommunication
                 debug("Sending command: " + str);
                 if (!isConnected())
                 {
-                        this.getErrStream().println("ERROR: Cannot send command because the robot is not connected! (method: sendRaw())");
+                        error("Cannot send command because the robot is not connected.", "RXTXRobot", "sendRaw");
                         return "";
                 }
                 try
@@ -326,6 +311,7 @@ public class RXTXRobot extends SerialCommunication
                                 if (retries == 0)
                                 {
                                         this.getErrStream().println("There was no response from the Arduino, even after " + retries + " tries.");
+                                        error("There was no response from the Arduino, even after " + retries + " tries.", "RXTXRobot", "sendRaw");
                                 }
                         }
                         while (in.available() == 0 && attemptTryAgain && retries != 0);
@@ -336,7 +322,7 @@ public class RXTXRobot extends SerialCommunication
                 }
                 catch (IOException e)
                 {
-                        this.getErrStream().println("ERROR: Could not read or use Input or Output streams (IOException).  (method: sendRaw())");
+                        error("Could not read or use Input or Output streams (IOException)", "RXTXRobot", "sendRaw");
                         if (getVerbose())
                         {
                                 this.getErrStream().println("Error Message: " + e.toString() + "\n\nError StackTrace:\n");
@@ -358,7 +344,7 @@ public class RXTXRobot extends SerialCommunication
                         analogPinCache[x] = -1;
                 if (!isConnected())
                 {
-                        this.getErrStream().println("ERROR: Robot is not connected!");
+                        error("Robot is not connected!", "RXTXRobot", "refreshAnalogPins");
                         return;
                 }
                 try
@@ -368,12 +354,12 @@ public class RXTXRobot extends SerialCommunication
                         attemptTryAgain = false;
                         if (split.length <= 1)
                         {
-                                this.getErrStream().println("ERROR: No response was received from the Arduino.  Try again. (method: refreshAnalogPins())");
+                                error("No response was received from the Arduino.", "RXTXRobot", "refreshAnalogPins");
                                 return;
                         }
                         if (split.length - 1 != RXTXRobot.NUM_ANALOG_PINS)
                         {
-                                this.getErrStream().println("ERROR: Incorrect length returned: " + split.length + ".  (method: refreshAnalogPins())");
+                                error("Incorrect length returned: " + split.length + ".", "RXTXRobot", "refreshAnalogPins");
                                 if (getVerbose())
                                         for (int x = 0; x < split.length; ++x)
                                                 this.getErrStream().println("[" + x + "] = " + split[x]);
@@ -384,11 +370,11 @@ public class RXTXRobot extends SerialCommunication
                 }
                 catch (NumberFormatException e)
                 {
-                        this.getErrStream().println("ERROR: Returned string could not be parsed into Integers.  (method: refreshAnalogPins())");
+                        error("Returned string could not be parsed into Integers.", "RXTXRobot", "refreshAnalogPins");
                 }
                 catch (Exception e)
                 {
-                        this.getErrStream().println("ERROR: An error occurred with getAnalogPins.");
+                        error("A generic error occurred.", "RXTXRobot", "refreshAnalogPins");
                         if (getVerbose())
                         {
                                 this.getErrStream().println("Stacktrace: ");
@@ -409,7 +395,7 @@ public class RXTXRobot extends SerialCommunication
                         digitalPinCache[x] = -1;
                 if (!isConnected())
                 {
-                        this.getErrStream().println("ERROR: Robot is not connected!");
+                        error("Robot is not connected!", "RXTXRobot", "refreshDigitalPins");
                         return;
                 }
                 try
@@ -419,12 +405,12 @@ public class RXTXRobot extends SerialCommunication
                         attemptTryAgain = false;
                         if (split.length <= 1)
                         {
-                                this.getErrStream().println("ERROR: No response was received from the Arduino.  Try again. (method: refreshDigitalPins())");
+                                error("No response was received from the Arduino.", "RXTXRobot", "refreshDigitalPins");
                                 return;
                         }
                         if (split.length - 1 != RXTXRobot.NUM_DIGITAL_PINS)
                         {
-                                this.getErrStream().println("ERROR: Incorrect length returned: " + split.length + ".  (method: refreshDigitalPins())");
+                                error("Incorrect length returned: " + split.length + ".", "RXTXRobot", "refreshDigitalPins");
                                 if (getVerbose())
                                         for (int x = 0; x < split.length; ++x)
                                                 this.getErrStream().println("[" + x + "] = " + split[x]);
@@ -435,11 +421,11 @@ public class RXTXRobot extends SerialCommunication
                 }
                 catch (NumberFormatException e)
                 {
-                        this.getErrStream().println("ERROR: Returned string could not be parsed into Integers.  (method: refreshDigitalPins())");
+                        error("Returned string could not be parsed into Integers.", "RXTXRobot", "refreshDigitalPins");
                 }
                 catch (Exception e)
                 {
-                        this.getErrStream().println("ERROR: An error occurred with getDigitalPins.");
+                        error("A generic error occurred.", "RXTXRobot", "refreshDigitalPins");
                         if (getVerbose())
                         {
                                 this.getErrStream().println("Stacktrace: ");
@@ -464,7 +450,7 @@ public class RXTXRobot extends SerialCommunication
                         this.refreshAnalogPins();
                 if (!getOverrideValidation() && (x >= analogPinCache.length || x < 0))
                 {
-                        this.getErrStream().println("ERROR: Analog pin " + x + " doesn't exist.  (method: getAnalogPin())");
+                        error("Analog pin " + x + " doesn't exist.", "RXTXRobot", "getAnalogPin");
                         return null;
                 }
                 return new AnalogPin(x, analogPinCache[x]);
@@ -490,13 +476,12 @@ public class RXTXRobot extends SerialCommunication
                 };
                 if (digitalPinCache == null)
                         this.refreshDigitalPins();
-                int get_pin = -1;
                 for (int y = 0; y < mapping.length; ++y)
                 {
                         if (mapping[y][0] == x)
                                 return new DigitalPin(x, digitalPinCache[mapping[y][1]]);
                 }
-                this.getErrStream().println("ERROR: Digital pin " + x + " doesn't exist.  (method: getDigitalPin())");
+                error("Digital pin " + x + " doesn't exist.", "RXTXRobot", "getDigitalPin");
                 return null;
         }
 
@@ -512,7 +497,7 @@ public class RXTXRobot extends SerialCommunication
         {
                 if (!isConnected())
                 {
-                        this.getErrStream().println("ERROR: Robot is not connected!");
+                        error("Robot is not connected!", "RXTXRobot", "getTemperature");
                         return -1;
                 }
                 try
@@ -520,12 +505,12 @@ public class RXTXRobot extends SerialCommunication
                         String[] split = sendRaw("r t").split("\\s+");
                         if (split.length <= 1)
                         {
-                                this.getErrStream().println("No response was received from the Arduino.  Try again.  (method: getTemperature())");
+                                error("No response was received from the Arduino.", "RXTXRobot", "getTemperature");
                                 return -1;
                         }
                         if (split.length - 1 != 1)
                         {
-                                this.getErrStream().println("Incorrect length returned: " + split.length + ".  (method: getTemperature())");
+                                error("Incorrect length returned: " + split.length + ".", "RXTXRobot", "getTemperature");
                                 if (getVerbose())
                                         for (int x = 0; x < split.length; ++x)
                                                 this.getErrStream().println("[" + x + "] = " + split[x]);
@@ -535,11 +520,11 @@ public class RXTXRobot extends SerialCommunication
                 }
                 catch (NumberFormatException e)
                 {
-                        this.getErrStream().println("ERROR: Returned string could not be parsed into an Integer.  (method: getTemperature())");
+                        error("Returned string could not be parsed into an Integer.", "RXTXRobot", "getTemperature");
                 }
                 catch (Exception e)
                 {
-                        this.getErrStream().println("ERROR: An error occurred with getTemperature()");
+                        error("A generic error occurred.", "RXTXRobot", "getTemperature");
                         if (getVerbose())
                         {
                                 this.getErrStream().println("Stacktrace: ");
@@ -568,17 +553,17 @@ public class RXTXRobot extends SerialCommunication
         {
                 if (!isConnected())
                 {
-                        this.getErrStream().println("ERROR: Robot is not connected!");
+                        error("Robot is not connected!", "RXTXRobot", "moveServo");
                         return;
                 }
                 if (!getOverrideValidation() && servo != RXTXRobot.SERVO1 && servo != RXTXRobot.SERVO2)
                 {
-                        this.getErrStream().println("ERROR: Invalid servo argument (RXTXRobot.SERVO1 or RXTXRobot.SERVO2).  (method: moveServo())");
+                        error("Invalid servo argument.", "RXTXRobot", "moveServo");
                         return;
                 }
                 debug("Moving servo " + servo + " to position " + position);
                 if (!getOverrideValidation() && (position < 0 || position > 180))
-                        this.getErrStream().println("ERROR: Position must be >=0 and <=180.  You supplied " + position + ", which is invalid.  (method: moveServo())");
+                        error("Position must be >=0 and <=180.  You supplied " + position + ", which is invalid.", "RXTXRobot", "moveServo");
                 else
                         sendRaw("v " + servo + " " + position);
         }
@@ -601,12 +586,12 @@ public class RXTXRobot extends SerialCommunication
         {
                 if (!isConnected())
                 {
-                        this.getErrStream().println("ERROR: Robot is not connected!");
+                        error("Robot is not connected!", "RXTXRobot", "moveBothServos");
                         return;
                 }
                 debug("Moving both servos to positions " + pos1 + " and " + pos2);
                 if (!getOverrideValidation() && (pos1 < 0 || pos1 > 180 || pos2 < 0 || pos2 > 180))
-                        this.getErrStream().println("ERROR: Positions must be >=0 and <=180.  You supplied " + pos1 + " and " + pos2 + ".  One or more are invalid.  (method: moveBothServos())");
+                        error("Positions must be >=0 and <=180.  You supplied " + pos1 + " and " + pos2 + ".  One or more are invalid.", "RXTXRobot", "moveBothServos");
                 else
                         sendRaw("V " + pos1 + " " + pos2);
         }
@@ -636,12 +621,12 @@ public class RXTXRobot extends SerialCommunication
         {
                 if (!isConnected())
                 {
-                        this.getErrStream().println("ERROR: Robot is not connected!");
+                        error("Robot is not connected!", "RXTXRobot", "runMotor");
                         return;
                 }
                 if (!getOverrideValidation() && (speed < -255 || speed > 255))
                 {
-                        this.getErrStream().println("ERROR: You must give the motors a speed between -255 and 255 (inclusive).  (method: runMotor())");
+                        error("You must give the motors a speed between -255 and 255 (inclusive).", "RXTXRobot", "runMotor");
                         return;
                 }
                 if (!getOverrideValidation() && RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
@@ -659,12 +644,12 @@ public class RXTXRobot extends SerialCommunication
                 }
                 if (!getOverrideValidation() && (time < 0 || time > 30000))
                 {
-                        this.getErrStream().println("ERROR: runMotor was not given a time that is 0 <= time <= 30000.  (method: runMotor())");
+                        error("runMotor not given a time that is 0 <= time <= 30000.", "RXTXRobot", "runMotor");
                         return;
                 }
                 if (!getOverrideValidation() && (motor < RXTXRobot.MOTOR1 || motor > RXTXRobot.MOTOR4))
                 {
-                        this.getErrStream().println("ERROR: runMotor was not given a correct motor argument.  (method: runMotor())");
+                        error("runMotor was not given a correct motor argument.", "RXTXRobot", "runMotor");
                         return;
                 }
                 debug("Running motor " + motor + " at speed " + speed + " for time of " + time);
@@ -705,12 +690,12 @@ public class RXTXRobot extends SerialCommunication
         {
                 if (!isConnected())
                 {
-                        this.getErrStream().println("ERROR: Robot is not connected!");
+                        error("Robot is not connected!", "RXTXRobot", "runMotor");
                         return;
                 }
                 if (!getOverrideValidation() && (speed1 < -255 || speed1 > 255 || speed2 < -255 || speed2 > 255))
                 {
-                        this.getErrStream().println("ERROR: You must give the motors a speed between -255 and 255 (inclusive).  (method: runMotor())");
+                        error("You must give the motors a speed between -255 and 255 (inclusive).", "RXTXRobot", "runMotor");
                         return;
                 }
                 if (!getOverrideValidation() && RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
@@ -736,12 +721,12 @@ public class RXTXRobot extends SerialCommunication
                 }
                 if (!getOverrideValidation() && (time < 0 || time > 30000))
                 {
-                        this.getErrStream().println("ERROR: runMotor was not given a time that is 0 <= time <= 30000.  (method: runMotor())");
+                        error("runMotor was not given a time that is 0 <= time <= 30000.", "RXTXRobot", "runMotor");
                         return;
                 }
                 if (!getOverrideValidation() && ((motor1 < RXTXRobot.MOTOR1 || motor1 > RXTXRobot.MOTOR4) || (motor2 < RXTXRobot.MOTOR1 || motor2 > RXTXRobot.MOTOR4)))
                 {
-                        this.getErrStream().println("ERROR: runMotor was not given a correct motor argument.  (method: runMotor())");
+                        error("runMotor was not given a correct motor argument.", "RXTXRobot", "runMotor");
                 }
                 debug("Running two motors, motor " + motor1 + " at speed " + speed1 + " and motor " + motor2 + " at speed " + speed2 + " for time of " + time);
                 if (!"".equals(sendRaw("D " + motor1 + " " + speed1 + " " + motor2 + " " + speed2 + " " + time)))
@@ -789,27 +774,27 @@ public class RXTXRobot extends SerialCommunication
         {
                 if (!isConnected())
                 {
-                        this.getErrStream().println("ERROR: Robot is not connected!");
+                        error("Robot is not connected!", "RXTXRobot", "runMotor");
                         return;
                 }
                 if (!getOverrideValidation() && (speed1 < -255 || speed1 > 255 || speed2 < -255 || speed2 > 255 || speed3 < -255 || speed3 > 255 || speed4 < -255 || speed4 > 255))
                 {
-                        this.getErrStream().println("ERROR: You must give the motors a speed between -255 and 255 (inclusive).  (method: runMotor())");
+                        error("You must give the motors a speed between -255 and 255 (inclusive).", "RXTXRobot", "runMotor");
                         return;
                 }
                 if (!getOverrideValidation() && RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
                 {
-                        this.getErrStream().println("ERROR: You may only run two DC motors at a time, so you cannot use this method!  (method: runMotor())");
+                        error("You may only run two DC motors at a time, so you cannot use this method!", "RXTXRobot", "runMotor");
                         return;
                 }
                 if (!getOverrideValidation() && time < 0)
                 {
-                        this.getErrStream().println("ERROR: runMotor was not given a time that is >=0.  (method: runMotor())");
+                        error("runMotor was not given a time that is >=0.", "RXTXRobot", "runMotor");
                         return;
                 }
                 if (!getOverrideValidation() && ((motor1 < 0 || motor1 > 3) || (motor2 < 0 || motor2 > 3) || (motor3 < 0 || motor3 > 3) || (motor4 < 0 || motor4 > 3)))
                 {
-                        this.getErrStream().println("ERROR: runMotor was not given a correct motor argument.  (method: runMotor())");
+                        error("runMotor was not given a correct motor argument.", "RXTXRobot", "runMotor");
                         return;
                 }
                 debug("Running four motors, motor " + motor1 + " at speed " + speed1 + " and motor " + motor2 + " at speed " + speed2 + " and motor " + motor3 + " at speed " + speed3 + " and motor " + motor4 + " at speed " + speed4 + " for time of " + time);
@@ -839,35 +824,35 @@ public class RXTXRobot extends SerialCommunication
         {
                 if (!isConnected())
                 {
-                        this.getErrStream().println("ERROR: Robot is not connected!  (method: runEncodedMotor())");
+                        error("Robot is not connected!", "RXTXRobot", "runEncodedMotor");
                         return;
                 }
                 try
                 {
                         if (!getOverrideValidation() && (!this.getHasEncodedMotors() || !this.encMotor.isAttached()))
                         {
-                                this.getErrStream().println("ERROR: Encoded motors are not on or attached  (method: runEncodedMotor())");
+                                error("Encoded motors are not on or attached.", "RXTXRobot", "runEncodedMotor");
                                 return;
                         }
                 }
                 catch (Exception e)
                 {
-                        this.getErrStream().println("EXCEPTION: Encoded motors are not on or attached  (method: runEncodedMotor())");
+                        error("Encoded motors are not on or attached.", "RXTXRobot", "runEncodedMotor");
                         return;
                 }
                 if (!getOverrideValidation() && (speed < -255 || speed > 255))
                 {
-                        this.getErrStream().println("ERROR: You must give the motors a speed between -255 and 255 (inclusive).  (method: runEncodedMotor())");
+                        error("You must give the motors a speed between -255 and 255 (inclusive).", "RXTXRobot", "runEncodedMotor");
                         return;
                 }
                 if (!getOverrideValidation() && (motor < RXTXRobot.MOTOR1 || motor > RXTXRobot.MOTOR4))
                 {
-                        this.getErrStream().println("ERROR: runEncodedMotor was not given a correct motor argument.  (method: runEncodedMotor())");
+                        error("runEncodedMotor was not given a correct motor argument.", "RXTXRobot", "runEncodedMotor");
                         return;
                 }
                 if (!getOverrideValidation() && (ticks <= 0))
                 {
-                        this.getErrStream().println("ERROR: runEncodedMotor was not given a positive tick argument.  (method: runEncodedMotor())");
+                        error("runEncodedMotor was not given a positive tick argument.", "RXTXRobot", "runEncodedMotor");
                         return;
                 }
                 if (!getOverrideValidation() && RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
@@ -890,7 +875,7 @@ public class RXTXRobot extends SerialCommunication
                 }
                 catch (Exception e)
                 {
-                        System.err.println("Set position error: " + e.getMessage());
+                        error("Set position error: " + e.getMessage(), "RXTXRobot", "runEncodedMotor");
                 }
                 if (!"".equals(sendRaw("d " + motor + " " + speed + " 0")))
                 {
@@ -910,7 +895,7 @@ public class RXTXRobot extends SerialCommunication
                                         }
                                         catch (Exception ex)
                                         {
-                                                System.err.println("Get position error: " + ex.getMessage());
+                                                error("Get position error: " + ex.getMessage(), "RXTXRobot", "runEncodedMotor");
                                         }
                                 }
                         }
@@ -950,25 +935,25 @@ public class RXTXRobot extends SerialCommunication
         {
                 if (!isConnected())
                 {
-                        this.getErrStream().println("ERROR: Robot is not connected!  (method: runEncodedMotor())");
+                        error("Robot is not connected!", "RXTXRobot", "runEncodedMotor");
                         return;
                 }
                 try
                 {
                         if (!getOverrideValidation() && (!this.getHasEncodedMotors() || !this.encMotor.isAttached()))
                         {
-                                this.getErrStream().println("ERROR: Encoded motors are not on or attached  (method: runEncodedMotor())");
+                                error("Encoded motors are not on or attached", "RXTXRobot", "runEncodedMotor");
                                 return;
                         }
                 }
                 catch (Exception e)
                 {
-                        this.getErrStream().println("EXCEPTION: Encoded motors are not on or attached  (method: runEncodedMotor())");
+                        error("Encoded motors are not on or attached", "RXTXRobot", "runEncodedMotor");
                         return;
                 }
                 if (!getOverrideValidation() && (speed1 < -255 || speed1 > 255 || speed2 < -255 || speed2 > 255))
                 {
-                        this.getErrStream().println("ERROR: You must give the motors a speed between -255 and 255 (inclusive).  (method: runEncodedMotor())");
+                        error("You must give the motors a speed between -255 and 255 (inclusive).", "RXTXRobot", "runEncodedMotor");
                         return;
                 }
                 if (!getOverrideValidation() && RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
@@ -994,12 +979,12 @@ public class RXTXRobot extends SerialCommunication
                 }
                 if (!getOverrideValidation() && (tick1 <= 0 || tick2 <= 0))
                 {
-                        this.getErrStream().println("ERROR: runEncodedMotor was not given a tick that is positive  (method: runEncodedMotor())");
+                        error("runEncodedMotor was not given a tick that is positive", "RXTXRobot", "runEncodedMotor");
                         return;
                 }
                 if (!getOverrideValidation() && ((motor1 < RXTXRobot.MOTOR1 || motor1 > RXTXRobot.MOTOR4) || (motor2 < RXTXRobot.MOTOR1 || motor2 > RXTXRobot.MOTOR4)))
                 {
-                        this.getErrStream().println("ERROR: runEncodedMotor was not given a correct motor argument.  (method: runEncodedMotor())");
+                        error("runEncodedMotor was not given a correct motor argument.", "RXTXRobot", "runEncodedMotor");
                 }
                 debug("Running two motors, motor " + motor1 + " at speed " + speed1 + " for " + tick1 + " ticks and motor " + motor2 + " at speed " + speed2 + " for " + tick2 + " ticks");
                 try
@@ -1009,7 +994,7 @@ public class RXTXRobot extends SerialCommunication
                 }
                 catch (Exception e)
                 {
-                        System.err.println(e.getMessage());
+                        error("Set position error: " + e.getMessage(), "RXTXRobot", "runEncodedMotor");
                 }
                 if (!"".equals(sendRaw("D " + motor1 + " " + speed1 + " " + motor2 + " " + speed2 + " 0")))
                 {
@@ -1053,7 +1038,7 @@ public class RXTXRobot extends SerialCommunication
                                         }
                                         catch (Exception ex)
                                         {
-                                                System.err.println(ex.getMessage());
+                                                error("A generic error occurred: " + ex.getMessage(), "RXTXRobot", "runEncodedMotor");
                                         }
                                 }
                         }
@@ -1076,7 +1061,7 @@ public class RXTXRobot extends SerialCommunication
                                 ++num;
                 if (num > 2)
                 {
-                        this.getErrStream().println("ERROR: You may not run more than two motors at any given time!");
+                        error("You may not run more than two motors at any given time!", "RXTXRobot", "checkRunningMotors");
                         return false;
                 }
                 return true;
@@ -1105,17 +1090,17 @@ public class RXTXRobot extends SerialCommunication
         {
                 if (!isConnected())
                 {
-                        this.getErrStream().println("ERROR: Robot is not connected!");
+                        error("Robot is not connected!", "RXTXRobot", "runMixer");
                         return;
                 }
                 if (!getOverrideValidation() && (motor < RXTXRobot.MOTOR1 || motor > RXTXRobot.MOTOR4))
                 {
-                        this.getErrStream().println("ERROR: You must supply a valid motor port: RXTXRobot.MOTOR1, MOTOR2, MOTOR3, or MOTOR4.  (method: runMixer())");
+                        error("You must supply a valid motor port: RXTXRobot.MOTOR1, MOTOR2, MOTOR3, or MOTOR4.", "RXTXRobot", "runMixer");
                         return;
                 }
                 if (!getOverrideValidation() && time < 0)
                 {
-                        this.getErrStream().println("ERROR: You must supply a positive time.  (method: runMixer())");
+                        error("You must supply a positive time.", "RXTXRobot", "runMixer");
                         return;
                 }
                 debug("Running mixer on port " + motor + " at speed " + getMixerSpeed() + " for time of " + time);
@@ -1137,12 +1122,12 @@ public class RXTXRobot extends SerialCommunication
         {
                 if (!isConnected())
                 {
-                        this.getErrStream().println("ERROR: Robot is not connected!");
+                        error("Robot is not connected!", "RXTXRobot", "stopMixer");
                         return;
                 }
                 if (!getOverrideValidation() && (motor < RXTXRobot.MOTOR1 || motor > RXTXRobot.MOTOR4))
                 {
-                        this.getErrStream().println("ERROR: You must supply a valid motor port: RXTXRobot.MOTOR1, MOTOR2, MOTOR3, or MOTOR4.  (method: stopMixer())");
+                        error("You must supply a valid motor port: RXTXRobot.MOTOR1, MOTOR2, MOTOR3, or MOTOR4.", "RXTXRobot", "stopMixer");
                         return;
                 }
                 debug("Stopping mixer on port " + motor);
@@ -1161,12 +1146,12 @@ public class RXTXRobot extends SerialCommunication
         {
                 if (!getOverrideValidation() && speed > 255)
                 {
-                        this.getErrStream().println("WARNING: The speed supplied (" + speed + ") is > 255.  Resetting it to 255.  (method: setMixerSpeed())");
+                        error("The speed supplied (" + speed + ") is > 255.  Resetting it to 255.", "RXTXRobot", "setMixerSpeed");
                         speed = 255;
                 }
                 if (!getOverrideValidation() && speed < 0)
                 {
-                        this.getErrStream().println("WARNING: The speed supplied (" + speed + ") is < 0.  Resetting it to 0.  (method: setMixerSpeed())");
+                        error("The speed supplied (" + speed + ") is < 0.  Resetting it to 0.", "RXTXRobot", "setMixerSpeed");
                         speed = 0;
                 }
                 this.mixerSpeed = speed;

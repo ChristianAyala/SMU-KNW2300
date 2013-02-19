@@ -43,7 +43,7 @@ public class USBSensor extends SerialCommunication
                 }
                 catch (PhidgetException ex)
                 {
-                        this.getErrStream().println("ERROR: Error creating InterfaceKitPhidget: " + ex.getMessage());
+                        error("Error creating InterfaceKitPhidget", "USBSensor", "Constructor");
                 }
         }
 
@@ -86,7 +86,7 @@ public class USBSensor extends SerialCommunication
                 }
                 catch (Exception e)
                 {
-                        this.getErrStream().println("ERROR: Could not close the USB Sensor! " + e.getMessage());
+                        error("Could not close the USB Sensor! Message: " + e.getMessage(), "USBSensor", "close");
                 }
         }
 
@@ -135,7 +135,7 @@ public class USBSensor extends SerialCommunication
                 }
                 catch (Exception e)
                 {
-                        this.getErrStream().println("ERROR: Opening InterfaceKitPhidget error: " + e.getMessage());
+                        error("Opening InterfaceKitPhidget error: " + e.getMessage(), "USBSensor", "connect");
                 }
                 this.getOutStream().println("Waiting for sensor to be attached...");
                 try
@@ -148,13 +148,13 @@ public class USBSensor extends SerialCommunication
                         }
                         if (!inter.isAttached())
                         {
-                                this.getErrStream().println("ERROR: Could not find the USB sensor in time.  Check that you are using the correct serial number!");
+                                error("Could not find the USB sensor in time.  Check that you are using the correct serial number!", "USBSensor", "connect", true);
                                 System.exit(1);
                         }
                 }
                 catch (Exception e)
                 {
-                        this.getErrStream().println("ERROR: Could not check if the device is attached! " + e.getMessage());
+                        error("Could not check if the device is attached!  Message: " + e.getMessage(), "USBSensor", "connect");
                 }
                 try
                 {
@@ -178,14 +178,14 @@ public class USBSensor extends SerialCommunication
         {
                 if (!isConnected())
                 {
-                        this.getErrStream().println("ERROR: No USB Sensor is connected");
+                        error("No USB Sensor is connected.", "USBSensor", "getAnalogPin");
                         return null;
                 }
                 try
                 {
                         if (index >= inter.getSensorCount())
                         {
-                                this.getErrStream().println("ERROR: Invalid index of AnalogPin: " + index);
+                                error("Invalid index of AnalogPin: " + index, "USBSensor", "getAnalogPin");
                                 return null;
                         }
                 }
@@ -199,7 +199,7 @@ public class USBSensor extends SerialCommunication
                 }
                 catch (Exception e)
                 {
-                        this.getErrStream().println("ERROR: Could not get the real sensor data! " + e.getMessage());
+                        error("Could not get the real sensor data!  Message: " + e.getMessage(), "USBSensor", "getAnalogPin");
                         return null;
                 }
         }
@@ -217,14 +217,14 @@ public class USBSensor extends SerialCommunication
         {
                 if (!isConnected())
                 {
-                        this.getErrStream().println("ERROR: No USB Sensor is connected");
+                        error("No USB Sensor is connected", "USBSensor", "getDigitalInputPin");
                         return null;
                 }
                 try
                 {
                         if (index >= inter.getInputCount())
                         {
-                                this.getErrStream().println("ERROR: Invalid index of DigitalInputPin: " + index);
+                                error("Invalid index of DigitalInputPin: " + index, "USBSensor", "getDigitalInputPin");
                                 return null;
                         }
                 }
@@ -238,7 +238,7 @@ public class USBSensor extends SerialCommunication
                 }
                 catch (Exception e)
                 {
-                        this.getErrStream().println("ERROR: Could not get the real sensor data! " + e.getMessage());
+                        error("Could not get the real sensor data!  Message: " + e.getMessage(), "USBSensor", "getDigitalInputPin");
                         return null;
                 }
         }
@@ -256,14 +256,14 @@ public class USBSensor extends SerialCommunication
         {
                 if (!isConnected())
                 {
-                        this.getErrStream().println("ERROR: No USB Sensor is connected");
+                        error("No USB Sensor is connected", "USBSensor", "getDigitalOutputPin");
                         return null;
                 }
                 try
                 {
                         if (index >= inter.getOutputCount())
                         {
-                                this.getErrStream().println("ERROR: Invalid index of DigitalOutputPin: " + index);
+                                error("Invalid index of DigitalOutputPin: " + index, "USBSensor", "getDigitalOutputPin");
                                 return null;
                         }
                 }
@@ -277,7 +277,7 @@ public class USBSensor extends SerialCommunication
                 }
                 catch (Exception e)
                 {
-                        this.getErrStream().println("ERROR: Could not get the real sensor data! " + e.getMessage());
+                        error("Could not get the real sensor data!  Message: " + e.getMessage(), "USBSensor", "getDigitalOutputPin");
                         return null;
                 }
         }
@@ -295,19 +295,19 @@ public class USBSensor extends SerialCommunication
         {
                 if (!isConnected())
                 {
-                        this.getErrStream().println("ERROR: No USB Sensor is connected");
+                        error("No USB Sensor is connected", "USBSensor", "setDigitalOutputPin");
                         return;
                 }
                 if (value != 0 && value != 1)
                 {
-                        this.getErrStream().println("ERROR: Value must be either 0 or 1");
+                        error("Value must be either 0 or 1.", "USBSensor", "setDigitalOutputPin");
                         return;
                 }
                 try
                 {
                         if (index >= inter.getOutputCount())
                         {
-                                this.getErrStream().println("ERROR: Invalid index of DigitalOutputPin: " + index);
+                                error("Invalid index of DigitalOutputPin: " + index, "USBSensor", "setDigitalOutputPin");
                                 return;
                         }
                 }
@@ -321,7 +321,7 @@ public class USBSensor extends SerialCommunication
                 }
                 catch (Exception e)
                 {
-                        this.getErrStream().println("ERROR: Could not set the sensor data! " + e.getMessage());
+                        error("Could not set the sensor data!  Message: " + e.getMessage(), "USBSensor", "setDigitalOutputPin");
                 }
         }
 }

@@ -21,16 +21,21 @@ public abstract class SerialCommunication
         private int baud_rate;
         private PrintStream out_stream;
         private PrintStream err_stream;
+        private static boolean displayedWelcome = false;
 
         public SerialCommunication()
         {
                 this.setOutStream(System.out);
                 this.setErrStream(System.err);
-                this.getOutStream().println("   RXTXRobot API version " + SerialCommunication.getVersion());
-                this.getOutStream().println("---------------------------------\n");
                 baud_rate = 9600;
                 port = "";
                 verbose = false;
+                if (!displayedWelcome)
+                {
+                        this.getOutStream().println("   RXTXRobot API version " + SerialCommunication.getVersion());
+                        this.getOutStream().println("---------------------------------\n");
+                        displayedWelcome = true;
+                }
         }
 
         /**
@@ -74,6 +79,22 @@ public abstract class SerialCommunication
                 a = list.toArray(a);
                 System.setOut(originalStream);
                 return a;
+        }
+
+        /**
+         * Returns a formatted String to display valid ports.
+         * @return String of acceptable ports ready to display.
+         */
+        public static String displayPossiblePorts()
+        {
+                String ret = "Possible serial ports:\n";
+                String[] temp = SerialCommunication.checkValidPorts();
+                int x = 0;
+                for (; x < temp.length; ++x)
+                        ret += "\t" + (x + 1) + ". " + temp[x] + "\n";
+                if (x == 0)
+                        ret += "\tNone - Make sure its plugged in!\n";
+                return ret;
         }
 
         /**
@@ -164,6 +185,50 @@ public abstract class SerialCommunication
         }
 
         /**
+         * Prints out an error message to the console.
+         *
+         * Prints the string to the screen in a unified format.
+         * @param str String to print to the screen.
+         */
+        protected void error(String str)
+        {
+                error(str, "SerialCommunication", "N/A");
+        }
+
+        /**
+         * Prints out an error message to the console.
+         *
+         * Prints the string to the screen, giving more information such as class name and method name.
+         * @param str String to print to the screen.
+         * @param class_name Name of the class where the error originated.
+         * @param method Name of the method where the error originated.
+         */
+        protected void error(String str, String class_name, String method)
+        {
+                error(str, class_name, method, false);
+        }
+        
+        /**
+         * Print out an error message to the console.
+         *
+         * Prints the string to the screen, giving more information such as class name and method name, and whether the error is fatal or not.
+         * @param str String to print to the screen
+         * @param class_name Name of the class where the error originated.
+         * @param method Name of the method where the error originated.
+         * @param fatal Boolean specifying whether the error is fatal.
+         */
+        protected void error(String str, String class_name, String method, boolean fatal)
+        {
+                if (fatal)
+                        this.getErrStream().println("FATAL ERROR (method: " + method + "):");
+                else
+                        this.getErrStream().println("ERROR (method: " + method + " ): ");
+                this.getErrStream().println("Message:");
+                str = str.replaceAll("\\n", "\n\t");
+                this.getErrStream().println("\t" + str);
+        }
+
+        /**
          * Sets the output PrintStream; System.out by default.
          *
          * This method lets you set the output stream from System.out to
@@ -235,7 +300,7 @@ public abstract class SerialCommunication
                 }
                 catch (InterruptedException e)
                 {
-                        this.getErrStream().println("ERROR: Thread was interrupted (InterruptedException).  Error: " + e.toString());
+                        error("Thread was interrupted (InterruptedException): " + e.toString(), "SerialCommunication", "sleep");
                 }
         }
 
