@@ -8,14 +8,14 @@ import java.util.List;
 
 /**
  * @author Chris King
- * @version 3.0.0
+ * @version 3.1.0
  */
 public abstract class SerialCommunication
 {
         /*
          * Private variables
          */
-        final private static String API_VERSION = "3.0.0";
+        final private static String API_VERSION = "3.1.0";
         private String port;
         private boolean verbose;
         private int baud_rate;
@@ -83,6 +83,7 @@ public abstract class SerialCommunication
 
         /**
          * Returns a formatted String to display valid ports.
+         *
          * @return String of acceptable ports ready to display.
          */
         public static String displayPossiblePorts()
@@ -188,6 +189,7 @@ public abstract class SerialCommunication
          * Prints out an error message to the console.
          *
          * Prints the string to the screen in a unified format.
+         *
          * @param str String to print to the screen.
          */
         protected void error(String str)
@@ -198,7 +200,9 @@ public abstract class SerialCommunication
         /**
          * Prints out an error message to the console.
          *
-         * Prints the string to the screen, giving more information such as class name and method name.
+         * Prints the string to the screen, giving more information such as
+         * class name and method name.
+         *
          * @param str String to print to the screen.
          * @param class_name Name of the class where the error originated.
          * @param method Name of the method where the error originated.
@@ -207,11 +211,13 @@ public abstract class SerialCommunication
         {
                 error(str, class_name, method, false);
         }
-        
+
         /**
          * Print out an error message to the console.
          *
-         * Prints the string to the screen, giving more information such as class name and method name, and whether the error is fatal or not.
+         * Prints the string to the screen, giving more information such as
+         * class name and method name, and whether the error is fatal or not.
+         *
          * @param str String to print to the screen
          * @param class_name Name of the class where the error originated.
          * @param method Name of the method where the error originated.

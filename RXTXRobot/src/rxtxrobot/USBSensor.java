@@ -5,25 +5,23 @@ import com.phidgets.PhidgetException;
 
 /**
  * @author Chris King
- * @version 3.0.0
+ * @version 3.1.0
  */
 public class USBSensor extends SerialCommunication
 {
         /**
-         * The maximum number of analog pins that can be read from the USB Sensor
-         * (0 &le; pins &lt; NUM_DIGITAL_PINS)
+         * The maximum number of analog pins that can be read from the USB
+         * Sensor (0 &le; pins &lt; NUM_DIGITAL_PINS)
          */
         public int NUM_ANALOG_PINS;
-
         /**
-         * The maximum number of digital output pins that can be written or read from the USB Sensor
-         * (0 &le; pins &lt; NUM_DIGITAL_OUTPUT_PINS)
+         * The maximum number of digital output pins that can be written or read
+         * from the USB Sensor (0 &le; pins &lt; NUM_DIGITAL_OUTPUT_PINS)
          */
         public int NUM_DIGITAL_OUTPUT_PINS;
-
         /**
-         * The maximum number of digital input pins that can be read from the USB Sensor
-         * (0 &le; pins &lt; NUM_DIGITAL_INPUT_PINS)
+         * The maximum number of digital input pins that can be read from the
+         * USB Sensor (0 &le; pins &lt; NUM_DIGITAL_INPUT_PINS)
          */
         public int NUM_DIGITAL_INPUT_PINS;
         private InterfaceKitPhidget inter;
