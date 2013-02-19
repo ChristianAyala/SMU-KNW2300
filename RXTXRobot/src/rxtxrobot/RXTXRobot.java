@@ -1,5 +1,6 @@
 package rxtxrobot;
 
+import com.phidgets.EncoderPhidget;
 import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
 import gnu.io.NoSuchPortException;
@@ -9,7 +10,6 @@ import gnu.io.UnsupportedCommOperationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import com.phidgets.EncoderPhidget;
 
 /**
  * @author Chris King
