@@ -57,7 +57,7 @@ echo -n "Fixing permissions................"
 curruser=`sudo id -p | grep 'login' | sed 's/login.//'`
 
 if [ ! -d /var/lock ]; then
-	mkdir /var/lock
+	sudo mkdir /var/lock
 fi
 
 sudo chgrp uucp /var/lock &> /dev/null
