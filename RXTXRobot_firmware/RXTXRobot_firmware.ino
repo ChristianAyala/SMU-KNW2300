@@ -8,8 +8,9 @@
  
  r a -> read analog pins
  r d -> read digital pins
- r t -> read temperature sensor
- 
+ r t -> read temperature sensor from pin 2
+ q -> Gets a ping result on pin 13
+
  v [num] [position] -> move servo number [num] to position [position] (position is (0,180)
  p [num] [steps] -> move stepper motor [num] in direction [direction] [steps] steps
  d [num] [speed] [t] -> set dc motor number [num] to speed [speed] for time [t], if t=0 then keep on.
@@ -93,6 +94,9 @@ void loop()
 			case 'F':
 				move4DCmotor();
 				break;
+                        case 'q':
+                                ping();
+                                break;
 		}
 	}
 }
@@ -324,5 +328,23 @@ float getTemp()
 	byte LSB = data[0];
 	float tempRead = ((MSB << 8) | LSB);
 	return (tempRead / 16);
+}
+
+void ping()
+{
+	long duration;
+        int cm;
+	messageSendChar('q');
+        pinMode(13, OUTPUT);
+	digitalWrite(13, LOW);
+	delayMicroseconds(2);
+	digitalWrite(13, HIGH);
+	delayMicroseconds(5);
+	digitalWrite(13, LOW);
+	pinMode(13, INPUT);
+	duration = pulseIn(13, HIGH);
+	cm = duration / 29 / 2;
+        messageSendInt(cm);
+        messageEnd();
 }
 
