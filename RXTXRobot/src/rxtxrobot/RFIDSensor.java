@@ -12,7 +12,7 @@ import java.io.OutputStream;
 
 /**
  * @author Chris King
- * @version 3.1.0
+ * @version 3.1.1
  */
 public class RFIDSensor extends SerialCommunication
 {
@@ -197,6 +197,8 @@ public class RFIDSensor extends SerialCommunication
          */
         public boolean hasTag()
         {
+                if (!this.isConnected())
+                        this.error("RFIDSensor is not connected!", "RFIDSensor", "hasTag");
                 return hasTag;
         }
 
@@ -209,6 +211,8 @@ public class RFIDSensor extends SerialCommunication
          */
         public String getTag()
         {
+                if (!this.isConnected())
+                        this.error("RFIDSensor is not connected!", "RFIDSensor", "getTag");
                 hasTag = false;
                 return tag;
         }

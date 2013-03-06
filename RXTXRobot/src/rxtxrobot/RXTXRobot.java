@@ -13,7 +13,7 @@ import java.io.OutputStream;
 
 /**
  * @author Chris King
- * @version 3.1.0
+ * @version 3.1.1
  */
 public class RXTXRobot extends SerialCommunication
 {
@@ -882,8 +882,11 @@ public class RXTXRobot extends SerialCommunication
                         if (speed != 0)
                         {
                                 int test;
+                                int lastTest = -1;
+                                long counter = 0;
                                 while (true)
                                 {
+                                        ++counter;
                                         try
                                         {
                                                 test = Math.abs(encMotor.getPosition(motor));
@@ -891,6 +894,11 @@ public class RXTXRobot extends SerialCommunication
                                                 if (test >= ticks)
                                                 {
                                                         break;
+                                                }
+                                                if (counter%20 == 0 && test == lastTest)
+                                                {
+                                                        this.getErrStream().println("Warning: Detected infinite motor running.  Make sure the wiring is correct and that the Phidget is getting sufficient power!  (Goal = "+ticks+", Current = "+test+")");
+                                                        lastTest = test;
                                                 }
                                         }
                                         catch (Exception ex)
@@ -1002,6 +1010,9 @@ public class RXTXRobot extends SerialCommunication
                         {
                                 int test1;
                                 int test2;
+                                int lastTest1 = -1;
+                                int lastTest2 = -1;
+                                long counter = 0;
                                 boolean firstDone = false;
                                 boolean secondDone = false;
                                 while (true)
@@ -1035,6 +1046,12 @@ public class RXTXRobot extends SerialCommunication
                                                 }
                                                 if (firstDone && secondDone)
                                                         break;
+                                                if (counter%20 == 0 && (test1 == lastTest1 || test2 == lastTest2))
+                                                {
+                                                        this.getErrStream().println("Warning: Detected infinite motor running.  Make sure the wiring is correct and that the Phidget is getting sufficient power!  (Goal 1 = " + tick1 + ", Current 1 = " + test1 + " | Goal 2 = " + tick2 + ", Current 2 = " + test2 +")");
+                                                        lastTest1 = test1;
+                                                        lastTest2 = test2;
+                                                }
                                         }
                                         catch (Exception ex)
                                         {

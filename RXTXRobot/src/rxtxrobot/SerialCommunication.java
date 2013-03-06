@@ -8,14 +8,14 @@ import java.util.List;
 
 /**
  * @author Chris King
- * @version 3.1.0
+ * @version 3.1.1
  */
 public abstract class SerialCommunication
 {
         /*
          * Private variables
          */
-        final private static String API_VERSION = "3.1.0";
+        final private static String API_VERSION = "3.1.1";
         private String port;
         private boolean verbose;
         private int baud_rate;
