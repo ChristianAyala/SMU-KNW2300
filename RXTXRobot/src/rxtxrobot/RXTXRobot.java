@@ -1,6 +1,7 @@
 package rxtxrobot;
 
 import com.phidgets.EncoderPhidget;
+import com.phidgets.PhidgetException;
 import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
 import gnu.io.NoSuchPortException;
@@ -1062,6 +1063,44 @@ public class RXTXRobot extends SerialCommunication
                 }
                 motorsRunning[motor1] = false;
                 motorsRunning[motor2] = false;
+        }
+
+        /**
+         * Gets the number of ticks that a motor has turned.
+         *
+         * This method returns the number of ticks that a motor has moved since it was last reset.
+         * @param motor The motor number to get the ticks from.
+         * @return Positive integer representing the distance a motor has moved.
+         */
+        public int getEncodedMotorPosition(int motor)
+        {
+                try
+                {
+                        return Math.abs(encMotor.getPosition(motor));
+                }
+                catch (PhidgetException e)
+                {
+                        this.error("Could not get motor position!  " + e.getDescription(), "RXTXRobot", "getEncodedMotorPosition");
+                        return -1;
+                }
+        }
+
+        /**
+         * Resets the position of a motor to 0.
+         *
+         * This method resets the position of a motor back to 0 so distances can begin to be measured.
+         * @param motor The motor number to reset the ticks of.
+         */
+        public void resetEncodedMotorPosition(int motor)
+        {
+                try
+                {
+                        encMotor.setPosition(motor, 0);
+                }
+                catch (PhidgetException e)
+                {
+                        this.error("Could not get motor position!  " + e.getDescription(), "RXTXRobot", "resetEncodedMotorPosition");
+                }
         }
 
         /*
