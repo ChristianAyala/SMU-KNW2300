@@ -536,6 +536,40 @@ public class RXTXRobot extends SerialCommunication
         }
 
         /**
+         * Gets the result from the Ping sensor (must be on digital pin 13).
+         *
+         * The Ping sensor must be on digital pin 13 and this method returns the distance in centimeters.
+         * @return The distance from an object in centimeters
+         */
+        public int getPing()
+        {
+                if (!isConnected())
+                {
+                        error("Robot isn't connected!", "RXTXRobot", "getPing");
+                        return -1;
+                }
+                this.attemptTryAgain = true;
+                String response = this.sendRaw("q");
+                String[] arr = response.split("\\s+");
+                this.attemptTryAgain = false;
+                if (arr.length != 2)
+                {
+                        error("Incorrect response from Arduino (Invalid length)!", "RXTXRobot", "getPing");
+                        debug("Ping Response: " + response);
+                        return -1;
+                }
+                try
+                {
+                        return Integer.parseInt(arr[1]);
+                }
+                catch (Exception e)
+                {
+                        error("Incorrect response from Arduino (Invalid datatype)!", "RXTXRobot", "getPing");
+                        debug("Ping Response: " + response);
+                }
+                return -1;
+        }
+        /**
          * Moves the specified servo to the specified angular position.
          *
          * Accepts either {@link #SERVO1 RXTXRobot.SERVO1} or
