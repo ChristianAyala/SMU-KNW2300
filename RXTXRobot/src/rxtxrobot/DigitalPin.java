@@ -2,7 +2,7 @@ package rxtxrobot;
 
 /**
  * @author Chris King
- * @version 3.1.2
+ * @version 3.1.4
  */
 public class DigitalPin
 {

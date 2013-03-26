@@ -14,7 +14,7 @@ import java.io.OutputStream;
 
 /**
  * @author Chris King
- * @version 3.1.2
+ * @version 3.1.4
  */
 public class RXTXRobot extends SerialCommunication
 {
