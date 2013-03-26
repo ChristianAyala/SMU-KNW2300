@@ -78,6 +78,7 @@ public class RXTXRobot extends SerialCommunication
         private EncoderPhidget encMotor;
         // This is a flag to set if the communication should try again
         private boolean attemptTryAgain;
+        private boolean waitForResponse;
 
         /**
          * Creates a new RXTXRobot object.
@@ -93,6 +94,7 @@ public class RXTXRobot extends SerialCommunication
                 resetOnClose = true;
                 overrideValidation = false;
                 attemptTryAgain = false;
+                waitForResponse = false;
                 hasEncodedMotors = false;
         }
 
@@ -305,17 +307,20 @@ public class RXTXRobot extends SerialCommunication
                                 buffer = new byte[1024];
                                 sleep(sleep);
                                 --retries;
-                                if (in.available() == 0 && attemptTryAgain && retries != 0)
+                                if (!waitForResponse)
                                 {
-                                        debug("No response from the Arduino....Trying " + retries + " more times");
-                                }
-                                if (retries == 0)
-                                {
-                                        this.getErrStream().println("There was no response from the Arduino, even after " + retries + " tries.");
-                                        error("There was no response from the Arduino, even after " + retries + " tries.", "RXTXRobot", "sendRaw");
+                                        if (in.available() == 0 && attemptTryAgain && retries != 0)
+                                        {
+                                                debug("No response from the Arduino....Trying " + retries + " more times");
+                                        }
+                                        if (retries == 0)
+                                        {
+                                                this.getErrStream().println("There was no response from the Arduino, even after " + retries + " tries.");
+                                                error("There was no response from the Arduino, even after " + retries + " tries.", "RXTXRobot", "sendRaw");
+                                        }
                                 }
                         }
-                        while (in.available() == 0 && attemptTryAgain && retries != 0);
+                        while (in.available() == 0 && attemptTryAgain && !waitForResponse && retries != 0);
                         int bytesRead = in.read(buffer);
                         String ret = (new String(buffer)).trim();
                         debug("Received " + bytesRead + " bytes from the Arduino: " + ret);
@@ -503,7 +508,9 @@ public class RXTXRobot extends SerialCommunication
                 }
                 try
                 {
-                        String[] split = sendRaw("r t").split("\\s+");
+                        this.waitForResponse = true;
+                        String[] split = sendRaw("r t",1000).split("\\s+");
+                        this.waitForResponse = false;
                         if (split.length <= 1)
                         {
                                 error("No response was received from the Arduino.", "RXTXRobot", "getTemperature");
