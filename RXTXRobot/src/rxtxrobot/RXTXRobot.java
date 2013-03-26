@@ -1340,4 +1340,55 @@ public class RXTXRobot extends SerialCommunication
         {
                 return this.hasEncodedMotors;
         }
+
+        /**
+         * Return the value of the compass sensor on analog pins 4 and 5.
+         *
+         * An error is displayed if something goes wrong, but verbose is
+         * required for more in-depth errors.
+         *
+         * @return Integer representing the heading of the compass in degrees.
+         */
+        public int readCompass()
+        {
+                if (!isConnected())
+                {
+                        error("Robot is not connected!", "RXTXRobot", "readCompass");
+                        return -1;
+                }
+                try
+                {
+                        this.attemptTryAgain = true;
+                        String[] split = sendRaw("c").split("\\s+");
+                        this.attemptTryAgain = false;
+                        if (split.length <= 1)
+                        {
+                                error("No response was received from the Arduino.", "RXTXRobot", "readCompass");
+                                return -1;
+                        }
+                        if (split.length - 1 != 1)
+                        {
+                                error("Incorrect length returned: " + split.length + ".", "RXTXRobot", "readCompass");
+                                if (getVerbose())
+                                        for (int x = 0; x < split.length; ++x)
+                                                this.getErrStream().println("[" + x + "] = " + split[x]);
+                                return -1;
+                        }
+                        return Integer.parseInt(split[1]);
+                }
+                catch (NumberFormatException e)
+                {
+                        error("Returned string could not be parsed into an Integer.", "RXTXRobot", "readCompass");
+                }
+                catch (Exception e)
+                {
+                        error("A generic error occurred.", "RXTXRobot", "readCompass");
+                        if (getVerbose())
+                        {
+                                this.getErrStream().println("Stacktrace: ");
+                                e.printStackTrace(this.getErrStream());
+                        }
+                }
+                return -1;
+        }
 }
