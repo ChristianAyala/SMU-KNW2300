@@ -10,6 +10,8 @@
  r d -> read digital pins
  r t -> read temperature sensor from pin 2
  q -> Gets a ping result on pin 13
+ c -> Get compass reading from SDA on pin 4, SCL on pin 5
+ 
 
  v [num] [position] -> move servo number [num] to position [position] (position is (0,180)
  p [num] [steps] -> move stepper motor [num] in direction [direction] [steps] steps
@@ -40,8 +42,10 @@ Authors:
 #include <Servo.h>
 #include <AFMotor.h>
 #include <OneWire.h>
+#include <Wire.h>
 
-
+int HMC6352Address = 0x42;
+int slaveAddress;
 AF_DCMotor motor0(1);
 AF_DCMotor motor1(2);
 AF_DCMotor motor2(3);
@@ -63,11 +67,13 @@ void setup()
 	Serial.begin(BAUD_RATE);
 	servo0.attach(9);
 	servo1.attach(10);
+        slaveAddress = HMC6352Address >> 1;
 	for (int x=0; x < dc_motors_length; ++x)
 	{
 		dc_motors[x].setSpeed(0);
 		dc_motors[x].run(FORWARD);
 	}
+        Wire.begin();
 }
 
 void loop()
@@ -96,6 +102,9 @@ void loop()
 				break;
                         case 'q':
                                 ping();
+                                break;
+                        case 'c':
+                                compass();
                                 break;
 		}
 	}
@@ -345,6 +354,32 @@ void ping()
 	duration = pulseIn(13, HIGH);
 	cm = duration / 29 / 2;
         messageSendInt(cm);
+        messageEnd();
+}
+
+void compass()
+{
+        byte headingData[2];
+        int i, headingValue;
+        messageSendChar('c');
+        Wire.beginTransmission(slaveAddress);
+        Wire.write("A");              // The "Get Data" command
+        Wire.endTransmission();
+        delay(10);                   // The HMC6352 needs at least a 70us (microsecond) delay
+        // after this command.  Using 10ms just makes it safe
+        // Read the 2 heading bytes, MSB first
+        // The resulting 16bit word is the compass heading in 10th's of a degree
+        // For example: a heading of 1345 would be 134.5 degrees
+        Wire.requestFrom(slaveAddress, 2);        // Request the 2 byte heading (MSB comes first)
+        i = 0;
+      //  while(Wire.available() && i < 2)
+        while(i < 2)
+        { 
+                headingData[i] = Wire.read();
+                i++;
+        }
+        headingValue = headingData[0]*256 + headingData[1];  // Put the MSB and LSB together
+        messageSendInt(int (headingValue / 10));
         messageEnd();
 }
 
