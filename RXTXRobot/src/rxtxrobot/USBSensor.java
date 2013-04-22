@@ -5,7 +5,7 @@ import com.phidgets.PhidgetException;
 
 /**
  * @author Chris King
- * @version 3.1.4
+ * @version 3.1.5
  */
 public class USBSensor extends SerialCommunication
 {

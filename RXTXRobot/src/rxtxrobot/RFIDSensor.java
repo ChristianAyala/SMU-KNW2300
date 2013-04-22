@@ -12,7 +12,7 @@ import java.io.OutputStream;
 
 /**
  * @author Chris King
- * @version 3.1.4
+ * @version 3.1.5
  */
 public class RFIDSensor extends SerialCommunication
 {
