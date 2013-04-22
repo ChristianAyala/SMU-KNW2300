@@ -289,7 +289,17 @@ public class RXTXRobot extends SerialCommunication
                 return sendRaw(str, 100);
         }
 
-        private String sendRaw(String str, int sleep)
+        /**
+         * Sends a string to the Arduino to be executed with a specified delay.
+         *
+         * If a serial connection is present, then it sends the String to the
+         * Arduino to be executed. If verbose is on, then the response from the
+         * Arduino is displayed.
+         *
+         * @param str The command to send to the Arduino
+         * @param sleep The number of milliseconds to wait for a response
+         */
+        public String sendRaw(String str, int sleep)
         {
                 debug("Sending command: " + str);
                 if (!isConnected())
@@ -315,8 +325,7 @@ public class RXTXRobot extends SerialCommunication
                                         }
                                         if (retries == 0)
                                         {
-                                                this.getErrStream().println("There was no response from the Arduino, even after " + retries + " tries.");
-                                                error("There was no response from the Arduino, even after " + retries + " tries.", "RXTXRobot", "sendRaw");
+                                                error("There was no response from the Arduino", "RXTXRobot", "sendRaw");
                                         }
                                 }
                         }
@@ -556,7 +565,7 @@ public class RXTXRobot extends SerialCommunication
                         return -1;
                 }
                 this.attemptTryAgain = true;
-                String response = this.sendRaw("q");
+                String response = this.sendRaw("q",200);
                 String[] arr = response.split("\\s+");
                 this.attemptTryAgain = false;
                 if (arr.length != 2)
@@ -1359,7 +1368,7 @@ public class RXTXRobot extends SerialCommunication
                 try
                 {
                         this.attemptTryAgain = true;
-                        String[] split = sendRaw("c").split("\\s+");
+                        String[] split = sendRaw("c", 300).split("\\s+");
                         this.attemptTryAgain = false;
                         if (split.length <= 1)
                         {
