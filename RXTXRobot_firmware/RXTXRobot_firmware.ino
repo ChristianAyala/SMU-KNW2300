@@ -62,6 +62,12 @@ int servos_length = 2;
 
 OneWire temp0(2);
 
+// This values should be the values to move the DC motors
+int moveBackward = 100;
+int moveForward = 200;
+int stopMoving = 0;
+
+
 void setup()
 {
 	Serial.begin(BAUD_RATE);
@@ -122,20 +128,21 @@ void moveDCmotor()
 	time = messageGetInt();
 	messageSendInt(time);
 	messageEnd();
-	direction = FORWARD;
+	pinMode(pin, INPUT);
+	
+	direction = moveForward;
 	if (speed < 0)
 	{
 		speed = -speed;
-		direction = BACKWARD;
+		direction = moveBackward;
 	}
 	if (pin < 0 || pin >= dc_motors_length)
 		return;
-	dc_motors[pin].run(direction);
-	dc_motors[pin].setSpeed(speed);
+	digitalWrite(pin, direction);
 	if (time != 0)
 	{
 		delay(time);
-		dc_motors[pin].setSpeed(0);
+		digitalWrite(pin, stopMoving);
 	}
 }
 
@@ -154,34 +161,35 @@ void move2DCmotor()
 	time = messageGetInt();
 	messageSendInt(time);
 	messageEnd();
-	direction1 = FORWARD;
+	direction1 = moveForward;
 	if (speed1 < 0)
 	{
 		speed1 = -speed1;
-		direction1 = BACKWARD;
+		direction1 = moveBackward;
 	}
-	direction2 = FORWARD;
+	direction2 = moveForward;
 	if (speed2 < 0)
 	{
 		speed2 = -speed2;
-		direction2 = BACKWARD;
+		direction2 = moveBackward;
 	}
 	if (pin1 < 0 || pin1 >= dc_motors_length || pin2 < 0 || pin2 > dc_motors_length)
 		return;
-	dc_motors[pin1].run(direction1);
-	dc_motors[pin2].run(direction2);
-	dc_motors[pin1].setSpeed(speed1);
-	dc_motors[pin2].setSpeed(speed2);
+	pinMode(pin1, INPUT);
+	pinMode(pin2, INPUT);
+	digitalWrite(pin1, direction1);
+	digitalWrite(pin2, direction2);
 	if (time != 0)
 	{
 		delay(time);
-		dc_motors[pin1].setSpeed(0);
-		dc_motors[pin2].setSpeed(0);
+		digitalWrite(pin1, stopMoving);
+		digitalWrite(pin2, stopMoving);
 	}
 }
 
 void move4DCmotor()
 {
+	return;  // This function shouldnt be used anymore!
 	int pin1, speed1, pin2, speed2, pin3, speed3, pin4, speed4, time, direction1, direction2, direction3, direction4;
 	messageSendChar('F');
 	pin1 = messageGetInt();
