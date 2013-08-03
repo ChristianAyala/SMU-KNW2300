@@ -46,13 +46,13 @@ Authors:
 
 int HMC6352Address = 0x42;
 int slaveAddress;
-AF_DCMotor motor0(1);
-AF_DCMotor motor1(2);
-AF_DCMotor motor2(3);
-AF_DCMotor motor3(4);
+//AF_DCMotor motor0(1);
+//AF_DCMotor motor1(2);
+//AF_DCMotor motor2(3);
+//AF_DCMotor motor3(4);
 
-AF_DCMotor dc_motors[] = { motor0, motor1, motor2, motor3 };
-int dc_motors_length = 4;
+//AF_DCMotor dc_motors[] = { motor0, motor1, motor2, motor3 };
+//int dc_motors_length = 4;
 
 Servo servo0;
 Servo servo1;
@@ -74,11 +74,11 @@ void setup()
 	servo0.attach(9);
 	servo1.attach(10);
         slaveAddress = HMC6352Address >> 1;
-	for (int x=0; x < dc_motors_length; ++x)
-	{
-		dc_motors[x].setSpeed(0);
-		dc_motors[x].run(FORWARD);
-	}
+//	for (int x=0; x < dc_motors_length; ++x)
+//	{
+//		dc_motors[x].setSpeed(0);
+//		dc_motors[x].run(FORWARD);
+//	}
         Wire.begin();
 }
 
@@ -136,7 +136,7 @@ void moveDCmotor()
 		speed = -speed;
 		direction = moveBackward;
 	}
-	if (pin < 0 || pin >= dc_motors_length)
+	if (pin < 0)
 		return;
 	digitalWrite(pin, direction);
 	if (time != 0)
@@ -173,7 +173,7 @@ void move2DCmotor()
 		speed2 = -speed2;
 		direction2 = moveBackward;
 	}
-	if (pin1 < 0 || pin1 >= dc_motors_length || pin2 < 0 || pin2 > dc_motors_length)
+	if (pin1 < 0 || pin2 < 0)
 		return;
 	pinMode(pin1, INPUT);
 	pinMode(pin2, INPUT);
@@ -232,23 +232,11 @@ void move4DCmotor()
 		speed4 = -speed4;
 		direction4 = BACKWARD;
 	}
-	if (pin1 < 0 || pin1 >= dc_motors_length || pin2 < 0 || pin2 >= dc_motors_length || pin3 < 0 || pin3 > dc_motors_length || pin4 < 0 || pin4 > dc_motors_length)
+	if (pin1 < 0 || pin2 < 0 || pin3 < 0 || pin4 < 0)
 		return;
-	dc_motors[pin1].run(direction1);
-	dc_motors[pin2].run(direction2);
-	dc_motors[pin3].run(direction3);
-	dc_motors[pin4].run(direction4);
-	dc_motors[pin1].setSpeed(speed1);
-	dc_motors[pin2].setSpeed(speed2);
-	dc_motors[pin3].setSpeed(speed3);
-	dc_motors[pin4].setSpeed(speed4);
 	if (time != 0)
 	{
 		delay(time);
-		dc_motors[pin1].setSpeed(0);
-		dc_motors[pin2].setSpeed(0);
-		dc_motors[pin3].setSpeed(0);
-		dc_motors[pin4].setSpeed(0);
 	}
 }
 
