@@ -14,16 +14,40 @@
  
 
  v [num] [position] -> move servo number [num] to position [position] (position is (0,180)
- p [num] [steps] -> move stepper motor [num] in direction [direction] [steps] steps
  d [num] [speed] [t] -> set dc motor number [num] to speed [speed] for time [t], if t=0 then keep on.
+ e [num] [speed] [ticks] -> run encoded dc motor number [num] to speed [speed] for ticks [ticks]
  
  The next 3 do the same thing for 2 motors as close to simultaneously as possible:
  V [position1] [position2]-> move servos to position1 and 2 [position] (position is (0,180)
- P [num1] [steps1] [num2] [steps2]-> move 2 stepper motors [num] in direction [direction] [steps] steps
  D [num1] [speed1] [num2] [speed2] [t] -> set dc motor number [num] to speed [speed] for time [t], if t=0 then keep on.
- 
- The next 1 does the same thing but for 4 motors as close to simultaneously as possible:
- F [num1] [speed1] [num2] [speed2] [num3] [speed3] [num4] [speed4] [t] -> set dc motor number [num] to speed [speed] for time [t], if t=0 then keep on
+ E [num1] [speed1] [ticks1] [num2] [speed2] [ticks2] -> run 2 encoded dc motors at same time
+
+
+
+Sensor layout:
+	Digital Pins:
+		1 - Unused
+		2 - Temperature Sensor
+		3 - Encoded DC Motor 1
+		4 - Encoded DC Motor 2
+		5 - DC Motor
+		6 - DC Motor
+		7 - Unused
+		8 - Unused
+		9 - Servo
+		10 - Servo
+		11 - Unused
+		12 - Unused
+		13 - Ping Sensor
+
+	Analog Pins:
+		0 - Encoded DC Motor 1
+		1 - Encoded DC Motor 2
+		2 - Unused
+		3 - Unused
+		4 - Compass
+		5 - Compass
+
 
  
 Authors:
@@ -46,13 +70,6 @@ Authors:
 
 int HMC6352Address = 0x42;
 int slaveAddress;
-//AF_DCMotor motor0(1);
-//AF_DCMotor motor1(2);
-//AF_DCMotor motor2(3);
-//AF_DCMotor motor3(4);
-
-//AF_DCMotor dc_motors[] = { motor0, motor1, motor2, motor3 };
-//int dc_motors_length = 4;
 
 Servo servo0;
 Servo servo1;
@@ -60,12 +77,21 @@ Servo servo1;
 Servo servos[] = { servo0, servo1 };
 int servos_length = 2;
 
+Servo motor0;
+Servo motor1;
+Servo motor2;
+Servo motor3;
+
+Servo dc_motors = {motor0, motor1, motor2, motor3 };
+int dc_motors_length = 2;
+
 OneWire temp0(2);
 
 // This values should be the values to move the DC motors
-int moveBackward = 100;
-int moveForward = 200;
-int stopMoving = 0;
+int moveBackward = 138;
+int moveForward = 20;
+int stopMoving = 91;
+int MAX_ENCODED_TICK_ITERATIONS = 10000; // This is to prevent infinite loops on the Arduino...may need to be changed.
 
 
 void setup()
@@ -73,7 +99,13 @@ void setup()
 	Serial.begin(BAUD_RATE);
 	servo0.attach(9);
 	servo1.attach(10);
-        slaveAddress = HMC6352Address >> 1;
+
+	motor0.attach(3);
+	motor1.attach(4);
+	motor2.attach(5);
+	motor3.attach(6);
+
+    slaveAddress = HMC6352Address >> 1;
 //	for (int x=0; x < dc_motors_length; ++x)
 //	{
 //		dc_motors[x].setSpeed(0);
@@ -97,21 +129,24 @@ void loop()
 			case 'd':
 				moveDCmotor();
 				break;
+			case 'e':
+				moveEncodedDCmotor();
+				break;
 			case 'V':
 				move2servo();
 				break;
 			case 'D':
 				move2DCmotor();
 				break;
-			case 'F':
-				move4DCmotor();
+			case 'E':
+				move2EncodedDCmotor();
 				break;
-                        case 'q':
-                                ping();
-                                break;
-                        case 'c':
-                                compass();
-                                break;
+            case 'q':
+                ping();
+            	break;
+            case 'c':
+                compass();
+                break;
 		}
 	}
 }
@@ -128,7 +163,6 @@ void moveDCmotor()
 	time = messageGetInt();
 	messageSendInt(time);
 	messageEnd();
-	pinMode(pin, INPUT);
 	
 	direction = moveForward;
 	if (speed < 0)
@@ -138,12 +172,49 @@ void moveDCmotor()
 	}
 	if (pin < 0)
 		return;
-	digitalWrite(pin, direction);
+	dc_motors[pin].write(direction)
 	if (time != 0)
 	{
 		delay(time);
-		digitalWrite(pin, stopMoving);
+		dc_motors[pin].write(stopMoving);
 	}
+}
+
+void moveEncodedDCmotor()
+{
+	int pin, speed, ticks, direction, tickCounter;
+	tickCounter = 0;
+	messageSendChar('e');
+	pin = messageGetInt();
+	messageSendInt(pin);
+	speed = messageGetInt();
+	messageSendInt(speed);
+	ticks = messageGetInt();
+	messageSendInt(ticks);
+	messageEnd();
+	
+	direction = moveForward;
+	if (speed < 0)
+	{
+		speed = -speed;
+		direction = moveBackward;
+	}
+	if (pin < 0)
+		return;
+	dc_motors[pin].write(direction)
+	while (ticks > 0)
+	{
+		if (analogRead(pin) > 512))
+		{
+			--ticks;
+		}
+		++tickCounter;
+		if (tickCounter > MAX_ENCODED_TICK_ITERATIONS)
+		{
+			ticks = 0;
+		}
+	}
+	dc_motors[pin].write(stopMoving);
 }
 
 void move2DCmotor()
@@ -175,69 +246,69 @@ void move2DCmotor()
 	}
 	if (pin1 < 0 || pin2 < 0)
 		return;
-	pinMode(pin1, INPUT);
-	pinMode(pin2, INPUT);
-	digitalWrite(pin1, direction1);
-	digitalWrite(pin2, direction2);
+	dc_motors[pin1].write(direction1);
+	dc_motors[pin2].write(direction2);
 	if (time != 0)
 	{
 		delay(time);
-		digitalWrite(pin1, stopMoving);
-		digitalWrite(pin2, stopMoving);
+		dc_motors[pin1].write(stopMoving);
+		dc_motors[pin2].write(stopMoving);
 	}
 }
 
-void move4DCmotor()
+void move2EncodedDCmotor()
 {
-	return;  // This function shouldnt be used anymore!
-	int pin1, speed1, pin2, speed2, pin3, speed3, pin4, speed4, time, direction1, direction2, direction3, direction4;
-	messageSendChar('F');
+	int pin1, speed1, ticks1, pin2, speed2, ticks2, direction1, direction2, tickCounter;
+	tickCounter = 0;
+	messageSendChar('E');
 	pin1 = messageGetInt();
 	messageSendInt(pin1);
 	speed1 = messageGetInt();
 	messageSendInt(speed1);
+	ticks1 = messageGetInt();
+	messageSendInt(ticks1);
 	pin2 = messageGetInt();
 	messageSendInt(pin2);
 	speed2 = messageGetInt();
 	messageSendInt(speed2);
-	pin3 = messageGetInt();
-	messageSendInt(pin3);
-	speed3 = messageGetInt();
-	messageSendInt(speed3);
-	pin4 = messageGetInt();
-	messageSendInt(pin4);
-	speed4 = messageGetInt();
-	messageSendInt(speed4);
-	time = messageGetInt();
-	messageSendInt(time);
+	ticks2 = messageGetInt();
+	messageSendInt(ticks2);
 	messageEnd();
-	direction1 = direction2 = direction3 = direction4 = FORWARD;
+	direction1 = moveForward;
 	if (speed1 < 0)
 	{
 		speed1 = -speed1;
-		direction1 = BACKWARD;
+		direction1 = moveBackward;
 	}
+	direction2 = moveForward;
 	if (speed2 < 0)
 	{
 		speed2 = -speed2;
-		direction2 = BACKWARD;
+		direction2 = moveBackward;
 	}
-	if (speed3 < 0)
-	{
-		speed3 = -speed3;
-		direction3 = BACKWARD;
-	}
-	if (speed4 < 0)
-	{
-		speed4 = -speed4;
-		direction4 = BACKWARD;
-	}
-	if (pin1 < 0 || pin2 < 0 || pin3 < 0 || pin4 < 0)
+	if (pin1 < 0 || pin2 < 0)
 		return;
-	if (time != 0)
+	dc_motors[pin1].write(direction1);
+	dc_motors[pin2].write(direction2);
+	while (ticks1 > 0 || ticks2 > 0)
 	{
-		delay(time);
+		if (analogRead(pin1) > 512)
+			--ticks1;
+		if (analogRead(pin2) > 512)
+			--ticks2;
+		if (ticks1 <= 0)
+			dc_motors[pin1].write(stopMoving);
+		if (ticks2 <= 0)
+			dc_motors[pin2].write(stopMoving);
+		++tickCounter;
+		if (tickCounter > MAX_ENCODED_TICK_ITERATIONS)
+		{
+			ticks1 = 0;
+			ticks2 = 0;
+		}
 	}
+	dc_motors[pin1].write(stopMoving);
+	dc_motors[pin2].write(stopMoving);
 }
 
 void moveservo()
@@ -276,13 +347,21 @@ void readpin()
 	{
 		case 'd':
 			messageSendChar('d');
-			pinMode(13, INPUT);
-			messageSendInt(digitalRead(13));
+			pinMode(1, INPUT);
+			pinMode(7, INPUT);
+			pinMode(8, INPUT);
+			pinMode(11, INPUT);
+			pinMode(12, INPUT);
+			messageSendInt(digitalRead(1));
+			messageSendInt(digitalRead(7));
+			messageSendInt(digitalRead(8));
+			messageSendInt(digitalRead(11));
+			messageSendInt(digitalRead(12));
 			messageEnd();
 			break;
 		case 'a':
 			messageSendChar('a');
-			for (char i=0;i < 6; ++i)
+			for (char i=2;i < 4; ++i)
 				messageSendInt(analogRead(i));
 			messageEnd();
 			break;
