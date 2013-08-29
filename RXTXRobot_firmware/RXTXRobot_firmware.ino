@@ -110,7 +110,7 @@ void setup()
 //	{
 //		dc_motors[x].setSpeed(0);
 //		dc_motors[x].run(FORWARD);
-//	}
+//	}asdkasjhdaklsjdha
         Wire.begin();
 }
 
