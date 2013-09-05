@@ -28,10 +28,10 @@ Sensor layout:
 	Digital Pins:
 		1 - Unused
 		2 - Temperature Sensor
-		3 - Encoded DC Motor 1
-		4 - Encoded DC Motor 2
-		5 - DC Motor
-		6 - DC Motor
+		3 - DC Motor
+		4 - DC Motor
+		5 - Encoded DC Motor 1
+		6 - Encoded DC Motor 2
 		7 - Unused
 		8 - Unused
 		9 - Servo
@@ -57,6 +57,15 @@ Authors:
  Temperature addition: Chris King
  Cleanup and complete rewrite: Chris King
  
+ATTENTION:
+NEW CHANGES FOR VERSION 4:
+  + added speed control for DC motors
+    + speed range is now -500 to 500
+    + safeguards are in place if speed inputted is over 500 or under -500
+  * fixed encoding loops for DC motors to count low-to-high tick readings
+  
+  
+  
  */
 
 #define BAUD_RATE 9600
@@ -79,19 +88,13 @@ int servos_length = 2;
 
 Servo motor0;
 Servo motor1;
-Servo motor2;
-Servo motor3;
-
-Servo dc_motors = {motor0, motor1, motor2, motor3 };
+Servo encodedMotor0;
+Servo encodedMotor1;
+Servo dc_motors[] = {motor0, motor1, encodedMotor0, encodedMotor1};
 int dc_motors_length = 2;
+int halt = 1500;
 
 OneWire temp0(2);
-
-// This values should be the values to move the DC motors
-int moveBackward = 138;
-int moveForward = 20;
-int stopMoving = 91;
-int MAX_ENCODED_TICK_ITERATIONS = 10000; // This is to prevent infinite loops on the Arduino...may need to be changed.
 
 
 void setup()
@@ -102,15 +105,10 @@ void setup()
 
 	motor0.attach(3);
 	motor1.attach(4);
-	motor2.attach(5);
-	motor3.attach(6);
+	encodedMotor0.attach(5);
+	encodedMotor1.attach(6);
 
-    slaveAddress = HMC6352Address >> 1;
-//	for (int x=0; x < dc_motors_length; ++x)
-//	{
-//		dc_motors[x].setSpeed(0);
-//		dc_motors[x].run(FORWARD);
-//	}
+        slaveAddress = HMC6352Address >> 1;
         Wire.begin();
 }
 
@@ -154,7 +152,7 @@ void loop()
 
 void moveDCmotor()
 {
-	int pin, speed, time, direction;
+	int pin, speed, time;
 	messageSendChar('d');
 	pin = messageGetInt();
 	messageSendInt(pin);
@@ -163,27 +161,28 @@ void moveDCmotor()
 	time = messageGetInt();
 	messageSendInt(time);
 	messageEnd();
-	
-	direction = moveForward;
-	if (speed < 0)
-	{
-		speed = -speed;
-		direction = moveBackward;
-	}
+        
+        speed += 1500;
+
 	if (pin < 0)
 		return;
-	dc_motors[pin].write(direction)
+        if(speed > 2000)
+                dc_motors[pin].write(2000);
+        else if(speed < 1000)
+                dc_motors[pin].write(1000);
+        else
+                dc_motors[pin].write(speed);
+                
 	if (time != 0)
 	{
 		delay(time);
-		dc_motors[pin].write(stopMoving);
+		dc_motors[pin].write(halt);
 	}
 }
 
 void moveEncodedDCmotor()
 {
-	int pin, speed, ticks, direction, tickCounter;
-	tickCounter = 0;
+	int pin, speed, ticks;
 	messageSendChar('e');
 	pin = messageGetInt();
 	messageSendInt(pin);
@@ -192,34 +191,33 @@ void moveEncodedDCmotor()
 	ticks = messageGetInt();
 	messageSendInt(ticks);
 	messageEnd();
-	
-	direction = moveForward;
-	if (speed < 0)
-	{
-		speed = -speed;
-		direction = moveBackward;
-	}
+
+        speed += 1500;
+        
 	if (pin < 0)
 		return;
-	dc_motors[pin].write(direction)
-	while (ticks > 0)
+        if(speed > 2000)
+                dc_motors[pin].write(2000);
+        else if(speed < 1000)
+                dc_motors[pin].write(1000);
+        else
+                dc_motors[pin].write(speed);
+        
+        int newTick;
+        int oldTick = analogRead(pin - 2);
+	while (ticks > 0) //new encoding loop, counts low-to-high tick iterations
 	{
-		if (analogRead(pin) > 512))
-		{
-			--ticks;
-		}
-		++tickCounter;
-		if (tickCounter > MAX_ENCODED_TICK_ITERATIONS)
-		{
-			ticks = 0;
-		}
+                newTick = analogRead(pin - 2);
+                if(oldTick < 512 && newTick > 512)
+                        ticks--;
+                oldTick = newTick;
 	}
-	dc_motors[pin].write(stopMoving);
+	dc_motors[pin].write(halt);
 }
 
 void move2DCmotor()
 {
-	int pin1, speed1, pin2, speed2, time, direction1, direction2;
+	int pin1, speed1, pin2, speed2, time;
 	messageSendChar('D');
 	pin1 = messageGetInt();
 	messageSendInt(pin1);
@@ -232,34 +230,38 @@ void move2DCmotor()
 	time = messageGetInt();
 	messageSendInt(time);
 	messageEnd();
-	direction1 = moveForward;
-	if (speed1 < 0)
-	{
-		speed1 = -speed1;
-		direction1 = moveBackward;
-	}
-	direction2 = moveForward;
-	if (speed2 < 0)
-	{
-		speed2 = -speed2;
-		direction2 = moveBackward;
-	}
+	
+        speed1 += 1500;
+        speed2 += 1500;
+        
 	if (pin1 < 0 || pin2 < 0)
 		return;
-	dc_motors[pin1].write(direction1);
-	dc_motors[pin2].write(direction2);
+
+        if(speed1 > 2000)
+                dc_motors[pin1].write(2000);
+        else if(speed1 < 1000)
+                dc_motors[pin1].write(1000);
+        else
+	        dc_motors[pin1].write(speed1);
+
+        if(speed2 > 2000)
+                dc_motors[pin2].write(2000);
+        else if(speed2 < 1000)
+                dc_motors[pin2].write(1000);
+        else
+                dc_motors[pin2].write(speed2);
+                
 	if (time != 0)
 	{
 		delay(time);
-		dc_motors[pin1].write(stopMoving);
-		dc_motors[pin2].write(stopMoving);
+		dc_motors[pin1].write(halt);
+		dc_motors[pin2].write(halt);
 	}
 }
 
 void move2EncodedDCmotor()
 {
-	int pin1, speed1, ticks1, pin2, speed2, ticks2, direction1, direction2, tickCounter;
-	tickCounter = 0;
+	int pin1, speed1, ticks1, pin2, speed2, ticks2;
 	messageSendChar('E');
 	pin1 = messageGetInt();
 	messageSendInt(pin1);
@@ -274,41 +276,48 @@ void move2EncodedDCmotor()
 	ticks2 = messageGetInt();
 	messageSendInt(ticks2);
 	messageEnd();
-	direction1 = moveForward;
-	if (speed1 < 0)
-	{
-		speed1 = -speed1;
-		direction1 = moveBackward;
-	}
-	direction2 = moveForward;
-	if (speed2 < 0)
-	{
-		speed2 = -speed2;
-		direction2 = moveBackward;
-	}
+
+        speed1 += 1500;
+        speed2 += 1500;
 	if (pin1 < 0 || pin2 < 0)
 		return;
-	dc_motors[pin1].write(direction1);
-	dc_motors[pin2].write(direction2);
-	while (ticks1 > 0 || ticks2 > 0)
+
+        if(speed1 > 2000)
+                dc_motors[pin1].write(2000);
+        else if(speed1 < 1000)
+                dc_motors[pin1].write(1000);
+        else
+	        dc_motors[pin1].write(speed1);
+
+        if(speed2 > 2000)
+                dc_motors[pin2].write(2000);
+        else if(speed2 > 1000)
+                dc_motors[pin2].write(1000);
+        else
+                dc_motors[pin2].write(speed2);
+                
+        int newTick1, newTick2;
+        int oldTick1 = analogRead(pin1 - 2);
+        int oldTick2 = analogRead(pin2 - 2);
+                
+	while (ticks1 > 0 || ticks2 > 0) //another new encoding loop
 	{
-		if (analogRead(pin1) > 512)
-			--ticks1;
-		if (analogRead(pin2) > 512)
-			--ticks2;
-		if (ticks1 <= 0)
-			dc_motors[pin1].write(stopMoving);
-		if (ticks2 <= 0)
-			dc_motors[pin2].write(stopMoving);
-		++tickCounter;
-		if (tickCounter > MAX_ENCODED_TICK_ITERATIONS)
-		{
-			ticks1 = 0;
-			ticks2 = 0;
-		}
+		newTick1 = analogRead(pin1 - 2);
+                newTick2 = analogRead(pin2 - 2);
+                
+                if(oldTick1 < 512 && newTick1 > 512)
+                        ticks1--;
+                if(oldTick2 < 512 && newTick2 > 512)
+                        ticks2--;
+                if(ticks1 <= 0)
+                        dc_motors[pin1].write(halt);
+                if(ticks2 <= 0)
+                        dc_motors[pin2].write(halt);
+                oldTick1 = newTick1;
+                oldTick2 = newTick2;
 	}
-	dc_motors[pin1].write(stopMoving);
-	dc_motors[pin2].write(stopMoving);
+	dc_motors[pin1].write(halt);
+	dc_motors[pin2].write(halt);
 }
 
 void moveservo()
