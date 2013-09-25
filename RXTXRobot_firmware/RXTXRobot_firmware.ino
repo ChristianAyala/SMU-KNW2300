@@ -8,18 +8,16 @@
  
  r a -> read analog pins
  r d -> read digital pins
- r t -> read temperature sensor from pin 2
- q -> Gets a ping result on pin 13
- c -> Get compass reading from SDA on pin 4, SCL on pin 5
- 
+ r t -> read temperature sensor from pin 4
+ q -> Gets a ping result on pin 13, in centimeters
 
  v [num] [position] -> move servo number [num] to position [position] (position is (0,180)
- d [num] [speed] [t] -> set dc motor number [num] to speed [speed] for time [t], if t=0 then keep on.
- e [num] [speed] [ticks] -> run encoded dc motor number [num] to speed [speed] for ticks [ticks]
+ d [num] [speed] [t] -> set dc motor number [num] at speed [speed] for time [t], if t=0 then keep on.
+ e [num] [speed] [ticks] -> run encoded dc motor number [num] at speed [speed] for ticks [ticks]
  
  The next 3 do the same thing for 2 motors as close to simultaneously as possible:
- V [position1] [position2]-> move servos to position1 and 2 [position] (position is (0,180)
- D [num1] [speed1] [num2] [speed2] [t] -> set dc motor number [num] to speed [speed] for time [t], if t=0 then keep on.
+ V [position1] [position2]-> move servos to position 1 and 2 [position] (position is (0,180)
+ D [num1] [speed1] [num2] [speed2] [t] -> set dc motor number [num] at speed [speed] for time [t], if t=0 then keep on.
  E [num1] [speed1] [ticks1] [num2] [speed2] [ticks2] -> run 2 encoded dc motors at same time
 
 
@@ -27,26 +25,26 @@
 Sensor layout:
 	Digital Pins:
 		1 - Unused
-		2 - Temperature Sensor
-		3 - DC Motor
-		4 - DC Motor
+		2 - Motor 1 Encoder
+		3 - Motor 2 Encoder
+		4 - Temperature
 		5 - Encoded DC Motor 1
 		6 - Encoded DC Motor 2
-		7 - Unused
-		8 - Unused
+		7 - DC Motor 1
+		8 - DC Motor 2
 		9 - Servo
 		10 - Servo
 		11 - Unused
-		12 - Unused
+		12 - Unused 
 		13 - Ping Sensor
 
 	Analog Pins:
-		0 - Encoded DC Motor 1
-		1 - Encoded DC Motor 2
+		0 - Unused
+		1 - Unused
 		2 - Unused
 		3 - Unused
-		4 - Compass
-		5 - Compass
+		4 - Unused
+		5 - Unused
 
 
  
@@ -56,16 +54,17 @@ Authors:
  Motor Additions: Marc Christensen
  Temperature addition: Chris King
  Cleanup and complete rewrite: Chris King
+ Version 4 Update: Charlie Albright
  
 ATTENTION:
 NEW CHANGES FOR VERSION 4:
   + added speed control for DC motors
-    + speed range is now -500 to 500
+    + speed range is now -500 to 500 (based on pulse width)
     + safeguards are in place if speed inputted is over 500 or under -500
-  * fixed encoding loops for DC motors to count low-to-high tick readings
-  
-  
-  
+  * fixed encoding logic by implementing interrupt pins on Digital 2 and 3 
+    * allows for more accurate tracking of ticks as well as speed control
+  - got rid of the compass implementation to free up Analog pin space
+  |||CLEANED AND TESTED|||
  */
 
 #define BAUD_RATE 9600
@@ -75,7 +74,6 @@ NEW CHANGES FOR VERSION 4:
 #include <Servo.h>
 #include <AFMotor.h>
 #include <OneWire.h>
-#include <Wire.h>
 
 int HMC6352Address = 0x42;
 int slaveAddress;
@@ -90,11 +88,14 @@ Servo motor0;
 Servo motor1;
 Servo encodedMotor0;
 Servo encodedMotor1;
-Servo dc_motors[] = {motor0, motor1, encodedMotor0, encodedMotor1};
+Servo dc_motors[] = {encodedMotor0, encodedMotor1, motor0, motor1};
 int dc_motors_length = 2;
-int halt = 1500;
 
-OneWire temp0(2);
+int halt = 1500;
+long encoder1 = 0;
+long encoder2 = 0;
+
+OneWire temp0(4);
 
 
 void setup()
@@ -103,13 +104,15 @@ void setup()
 	servo0.attach(9);
 	servo1.attach(10);
 
-	motor0.attach(3);
-	motor1.attach(4);
 	encodedMotor0.attach(5);
 	encodedMotor1.attach(6);
+        motor0.attach(7);
+	motor1.attach(8);
 
+        attachInterrupt(0, incrementEncoder1, RISING);
+        attachInterrupt(1, incrementEncoder2, RISING);
+        
         slaveAddress = HMC6352Address >> 1;
-        Wire.begin();
 }
 
 void loop()
@@ -142,13 +145,19 @@ void loop()
             case 'q':
                 ping();
             	break;
-            case 'c':
-                compass();
-                break;
 		}
 	}
 }
 
+void incrementEncoder1()
+{
+        encoder1++;
+}
+
+void incrementEncoder2()
+{
+        encoder2++;
+}
 
 void moveDCmotor()
 {
@@ -182,16 +191,17 @@ void moveDCmotor()
 
 void moveEncodedDCmotor()
 {
-	int pin, speed, ticks;
+	int pin, speed, tickInput;
 	messageSendChar('e');
 	pin = messageGetInt();
 	messageSendInt(pin);
 	speed = messageGetInt();
 	messageSendInt(speed);
-	ticks = messageGetInt();
-	messageSendInt(ticks);
+	tickInput = messageGetInt();
+	messageSendInt(tickInput);
 	messageEnd();
-
+        
+        long ticks = (long)tickInput * 100;
         speed += 1500;
         
 	if (pin < 0)
@@ -203,16 +213,27 @@ void moveEncodedDCmotor()
         else
                 dc_motors[pin].write(speed);
         
-        int newTick;
-        int oldTick = analogRead(pin - 2);
-	while (ticks > 0) //new encoding loop, counts low-to-high tick iterations
-	{
-                newTick = analogRead(pin - 2);
-                if(oldTick < 512 && newTick > 512)
-                        ticks--;
-                oldTick = newTick;
-	}
-	dc_motors[pin].write(halt);
+        if(pin == 0)
+        {
+                while(encoder1 < ticks)
+                {
+                        delayMicroseconds(2);//waits for encoder1 value to reach ticks via the interrupt
+                }
+                
+        }
+        else if(pin == 1)
+        {
+                while(encoder2 < ticks)
+                {
+                        delayMicroseconds(2);//waits for encoder2 value to reach ticks via the interrupt
+                }
+        }
+        else
+                return;
+        
+        dc_motors[pin].write(halt);
+        encoder1 = 0;
+        encoder2 = 0;
 }
 
 void move2DCmotor()
@@ -261,22 +282,24 @@ void move2DCmotor()
 
 void move2EncodedDCmotor()
 {
-	int pin1, speed1, ticks1, pin2, speed2, ticks2;
+	int pin1, speed1, tickInput1, pin2, speed2, tickInput2;
 	messageSendChar('E');
 	pin1 = messageGetInt();
 	messageSendInt(pin1);
 	speed1 = messageGetInt();
 	messageSendInt(speed1);
-	ticks1 = messageGetInt();
-	messageSendInt(ticks1);
+	tickInput1 = messageGetInt();
+	messageSendInt(tickInput1);
 	pin2 = messageGetInt();
 	messageSendInt(pin2);
 	speed2 = messageGetInt();
 	messageSendInt(speed2);
-	ticks2 = messageGetInt();
-	messageSendInt(ticks2);
+	tickInput2 = messageGetInt();
+	messageSendInt(tickInput2);
 	messageEnd();
 
+        long ticks1 = (long)tickInput1 * 100;
+        long ticks2 = (long)tickInput2 * 100;
         speed1 += 1500;
         speed2 += 1500;
 	if (pin1 < 0 || pin2 < 0)
@@ -291,31 +314,35 @@ void move2EncodedDCmotor()
 
         if(speed2 > 2000)
                 dc_motors[pin2].write(2000);
-        else if(speed2 > 1000)
+        else if(speed2 < 1000)
                 dc_motors[pin2].write(1000);
         else
                 dc_motors[pin2].write(speed2);
-                
-        int newTick1, newTick2;
-        int oldTick1 = analogRead(pin1 - 2);
-        int oldTick2 = analogRead(pin2 - 2);
-                
-	while (ticks1 > 0 || ticks2 > 0) //another new encoding loop
-	{
-		newTick1 = analogRead(pin1 - 2);
-                newTick2 = analogRead(pin2 - 2);
-                
-                if(oldTick1 < 512 && newTick1 > 512)
-                        ticks1--;
-                if(oldTick2 < 512 && newTick2 > 512)
-                        ticks2--;
-                if(ticks1 <= 0)
-                        dc_motors[pin1].write(halt);
-                if(ticks2 <= 0)
-                        dc_motors[pin2].write(halt);
-                oldTick1 = newTick1;
-                oldTick2 = newTick2;
-	}
+        
+        if(pin1 == 0 && pin2 == 1)
+        {
+                while(encoder1 < ticks1 || encoder2 < ticks2)
+                {
+                        if(encoder1 >= ticks1)
+                                dc_motors[pin1].write(halt);
+                        if(encoder2 >= ticks2)
+                                dc_motors[pin2].write(halt);
+                }
+        }
+        else if(pin1 == 1 && pin2 == 0)
+        {
+                while(encoder1 < ticks2 || encoder2 < ticks1)
+                {
+                        if(encoder1 >= ticks2)
+                                dc_motors[pin2].write(halt);
+                        if(encoder2 >= ticks1)
+                                dc_motors[pin1].write(halt);
+                }
+        }
+        else
+                return;
+        encoder1 = 0;
+        encoder2 = 0;
 	dc_motors[pin1].write(halt);
 	dc_motors[pin2].write(halt);
 }
@@ -357,20 +384,16 @@ void readpin()
 		case 'd':
 			messageSendChar('d');
 			pinMode(1, INPUT);
-			pinMode(7, INPUT);
-			pinMode(8, INPUT);
 			pinMode(11, INPUT);
 			pinMode(12, INPUT);
 			messageSendInt(digitalRead(1));
-			messageSendInt(digitalRead(7));
-			messageSendInt(digitalRead(8));
 			messageSendInt(digitalRead(11));
 			messageSendInt(digitalRead(12));
 			messageEnd();
 			break;
 		case 'a':
 			messageSendChar('a');
-			for (char i=2;i < 4; ++i)
+			for (char i=0;i < 6; ++i)
 				messageSendInt(analogRead(i));
 			messageEnd();
 			break;
@@ -438,32 +461,6 @@ void ping()
 	duration = pulseIn(13, HIGH);
 	cm = duration / 29 / 2;
         messageSendInt(cm);
-        messageEnd();
-}
-
-void compass()
-{
-        byte headingData[2];
-        int i, headingValue;
-        messageSendChar('c');
-        Wire.beginTransmission(slaveAddress);
-        Wire.write("A");              // The "Get Data" command
-        Wire.endTransmission();
-        delay(10);                   // The HMC6352 needs at least a 70us (microsecond) delay
-        // after this command.  Using 10ms just makes it safe
-        // Read the 2 heading bytes, MSB first
-        // The resulting 16bit word is the compass heading in 10th's of a degree
-        // For example: a heading of 1345 would be 134.5 degrees
-        Wire.requestFrom(slaveAddress, 2);        // Request the 2 byte heading (MSB comes first)
-        i = 0;
-      //  while(Wire.available() && i < 2)
-        while(i < 2)
-        { 
-                headingData[i] = Wire.read();
-                i++;
-        }
-        headingValue = headingData[0]*256 + headingData[1];  // Put the MSB and LSB together
-        messageSendInt(int (headingValue / 10));
         messageEnd();
 }
 
