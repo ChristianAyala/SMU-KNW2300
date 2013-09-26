@@ -302,6 +302,7 @@ public abstract class SerialCommunication
         {
                 try
                 {
+                        debug("Sleeping for " + length + " milliseconds");
                         Thread.sleep(length);
                 }
                 catch (InterruptedException e)

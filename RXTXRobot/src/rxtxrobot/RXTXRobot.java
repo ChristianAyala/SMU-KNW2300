@@ -149,34 +149,6 @@ public class RXTXRobot extends SerialCommunication
                                 out = sPort.getOutputStream();
                                 sleep(2500);
                                 this.getOutStream().println("Connected!\n");
-                                if (this.getHasEncodedMotors())
-                                {
-                                        this.getOutStream().println("Connecting encoded motors...\n");
-                                        this.encMotor = new EncoderPhidget();
-                                        this.encMotor.openAny();
-                                        for (int x = 0; x < 50; ++x)
-                                        {
-                                                if (encMotor.isAttached())
-                                                        break;
-                                                sleep(500);
-                                        }
-                                        if (!encMotor.isAttached())
-                                        {
-                                                error("Could not find attached encoded motors in time", "RXTXRobot", "connect");
-                                                System.exit(1);
-                                        }
-                                        else
-                                        {
-                                                this.getOutStream().println("Motors connected!\n");
-                                        }
-                                        if (encMotor.getDeviceID() == EncoderPhidget.PHIDID_ENCODER_HS_4ENCODER_4INPUT)
-                                        {
-                                                encMotor.setEnabled(0, true);
-                                                encMotor.setEnabled(1, true);
-                                                encMotor.setEnabled(2, true);
-                                                encMotor.setEnabled(3, true);
-                                        }
-                                }
                         }
                 }
                 catch (NoSuchPortException e)
@@ -315,7 +287,7 @@ public class RXTXRobot extends SerialCommunication
                         {
                                 out.write((str + "\r\n").getBytes());
                                 buffer = new byte[1024];
-                                sleep(sleep);
+                                sleep(500);
                                 --retries;
                                 if (!waitForResponse)
                                 {
@@ -675,9 +647,9 @@ public class RXTXRobot extends SerialCommunication
                         error("Robot is not connected!", "RXTXRobot", "runMotor");
                         return;
                 }
-                if (!getOverrideValidation() && (speed < -255 || speed > 255))
+                if (!getOverrideValidation() && (speed < -500 || speed > 500))
                 {
-                        error("You must give the motors a speed between -255 and 255 (inclusive).", "RXTXRobot", "runMotor");
+                        error("You must give the motors a speed between -500 and 500 (inclusive).", "RXTXRobot", "runMotor");
                         return;
                 }
                 if (!getOverrideValidation() && RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
@@ -744,9 +716,9 @@ public class RXTXRobot extends SerialCommunication
                         error("Robot is not connected!", "RXTXRobot", "runMotor");
                         return;
                 }
-                if (!getOverrideValidation() && (speed1 < -255 || speed1 > 255 || speed2 < -255 || speed2 > 255))
+                if (!getOverrideValidation() && (speed1 < -500 || speed1 > 500 || speed2 < -500 || speed2 > 500))
                 {
-                        error("You must give the motors a speed between -255 and 255 (inclusive).", "RXTXRobot", "runMotor");
+                        error("You must give the motors a speed between -500 and 500 (inclusive).", "RXTXRobot", "runMotor");
                         return;
                 }
                 if (!getOverrideValidation() && RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
@@ -821,7 +793,7 @@ public class RXTXRobot extends SerialCommunication
          * @param speed4 The speed that the fourth DC motor should run at
          * @param time The amount of time that the DC motors should run
          */
-        public void runMotor(int motor1, int speed1, int motor2, int speed2, int motor3, int speed3, int motor4, int speed4, int time)
+        protected void runMotor(int motor1, int speed1, int motor2, int speed2, int motor3, int speed3, int motor4, int speed4, int time)
         {
                 if (!isConnected())
                 {
@@ -878,25 +850,12 @@ public class RXTXRobot extends SerialCommunication
                         error("Robot is not connected!", "RXTXRobot", "runEncodedMotor");
                         return;
                 }
-                try
+                if (!getOverrideValidation() && (speed < -500 || speed > 500))
                 {
-                        if (!getOverrideValidation() && (!this.getHasEncodedMotors() || !this.encMotor.isAttached()))
-                        {
-                                error("Encoded motors are not on or attached.", "RXTXRobot", "runEncodedMotor");
-                                return;
-                        }
-                }
-                catch (Exception e)
-                {
-                        error("Encoded motors are not on or attached.", "RXTXRobot", "runEncodedMotor");
+                        error("You must give the motors a speed between -500 and 500 (inclusive).", "RXTXRobot", "runEncodedMotor");
                         return;
                 }
-                if (!getOverrideValidation() && (speed < -255 || speed > 255))
-                {
-                        error("You must give the motors a speed between -255 and 255 (inclusive).", "RXTXRobot", "runEncodedMotor");
-                        return;
-                }
-                if (!getOverrideValidation() && (motor < RXTXRobot.MOTOR1 || motor > RXTXRobot.MOTOR4))
+                if (!getOverrideValidation() && (motor < RXTXRobot.MOTOR1 || motor > RXTXRobot.MOTOR2))
                 {
                         error("runEncodedMotor was not given a correct motor argument.", "RXTXRobot", "runEncodedMotor");
                         return;
@@ -920,49 +879,13 @@ public class RXTXRobot extends SerialCommunication
                         }
                 }
                 debug("Running encoded motor " + motor + " to tick " + ticks + " at speed " + speed);
-                try
+                
+                if (!"".equals(sendRaw("e " + motor + " " + speed + " " + ticks)))
                 {
-                        encMotor.setPosition(motor, 0);
-                }
-                catch (Exception e)
-                {
-                        error("Set position error: " + e.getMessage(), "RXTXRobot", "runEncodedMotor");
-                }
-                if (!"".equals(sendRaw("d " + motor + " " + speed + " 0")))
-                {
-                        if (speed != 0)
-                        {
-                                int test;
-                                int lastTest = -1;
-                                long counter = 0;
-                                while (true)
-                                {
-                                        ++counter;
-                                        try
-                                        {
-                                                test = Math.abs(encMotor.getPosition(motor));
-                                                debug("Goal: " + ticks + ", Position: " + test);
-                                                if (test >= ticks)
-                                                {
-                                                        break;
-                                                }
-                                                if (counter%20 == 0 && test == lastTest)
-                                                {
-                                                        this.getErrStream().println("Warning: Detected infinite motor running.  Make sure the wiring is correct and that the Phidget is getting sufficient power!  (Goal = "+ticks+", Current = "+test+")");
-                                                        lastTest = test;
-                                                }
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                                error("Get position error: " + ex.getMessage(), "RXTXRobot", "runEncodedMotor");
-                                        }
-                                }
-                        }
-                        this.attemptTryAgain = true;
-                        sendRaw("d " + motor + " 0 0");
-                        this.attemptTryAgain = false;
+                    debug("Done running encoded motor");
                 }
                 motorsRunning[motor] = false;
+                sleep(1000);
         }
 
         /**
@@ -997,22 +920,10 @@ public class RXTXRobot extends SerialCommunication
                         error("Robot is not connected!", "RXTXRobot", "runEncodedMotor");
                         return;
                 }
-                try
+//              
+                if (!getOverrideValidation() && (speed1 < -500 || speed1 > 500 || speed2 < -500 || speed2 > 500))
                 {
-                        if (!getOverrideValidation() && (!this.getHasEncodedMotors() || !this.encMotor.isAttached()))
-                        {
-                                error("Encoded motors are not on or attached", "RXTXRobot", "runEncodedMotor");
-                                return;
-                        }
-                }
-                catch (Exception e)
-                {
-                        error("Encoded motors are not on or attached", "RXTXRobot", "runEncodedMotor");
-                        return;
-                }
-                if (!getOverrideValidation() && (speed1 < -255 || speed1 > 255 || speed2 < -255 || speed2 > 255))
-                {
-                        error("You must give the motors a speed between -255 and 255 (inclusive).", "RXTXRobot", "runEncodedMotor");
+                        error("You must give the motors a speed between -500 and 500 (inclusive).", "RXTXRobot", "runEncodedMotor");
                         return;
                 }
                 if (!getOverrideValidation() && RXTXRobot.ONLY_ALLOW_TWO_MOTORS)
@@ -1041,78 +952,19 @@ public class RXTXRobot extends SerialCommunication
                         error("runEncodedMotor was not given a tick that is positive", "RXTXRobot", "runEncodedMotor");
                         return;
                 }
-                if (!getOverrideValidation() && ((motor1 < RXTXRobot.MOTOR1 || motor1 > RXTXRobot.MOTOR4) || (motor2 < RXTXRobot.MOTOR1 || motor2 > RXTXRobot.MOTOR4)))
+                if (!getOverrideValidation() && ((motor1 < RXTXRobot.MOTOR1 || motor1 > RXTXRobot.MOTOR2) || (motor2 < RXTXRobot.MOTOR2 || motor2 > RXTXRobot.MOTOR2)))
                 {
                         error("runEncodedMotor was not given a correct motor argument.", "RXTXRobot", "runEncodedMotor");
                 }
                 debug("Running two motors, motor " + motor1 + " at speed " + speed1 + " for " + tick1 + " ticks and motor " + motor2 + " at speed " + speed2 + " for " + tick2 + " ticks");
-                try
+
+                if (!"".equals(sendRaw("E " + motor1 + " " + speed1 + " " + tick1 + " " + motor2 + " " + speed2 + " " + tick2)))
                 {
-                        encMotor.setPosition(motor1, 0);
-                        encMotor.setPosition(motor2, 0);
-                }
-                catch (Exception e)
-                {
-                        error("Set position error: " + e.getMessage(), "RXTXRobot", "runEncodedMotor");
-                }
-                if (!"".equals(sendRaw("D " + motor1 + " " + speed1 + " " + motor2 + " " + speed2 + " 0")))
-                {
-                        if (speed1 != 0 && speed2 != 0)
-                        {
-                                int test1;
-                                int test2;
-                                int lastTest1 = -1;
-                                int lastTest2 = -1;
-                                long counter = 0;
-                                boolean firstDone = false;
-                                boolean secondDone = false;
-                                while (true)
-                                {
-                                        try
-                                        {
-                                                test1 = Math.abs(encMotor.getPosition(motor1));
-                                                test2 = Math.abs(encMotor.getPosition(motor2));
-                                                debug("test1: " + test1 + ", test2: " + test2);
-                                                if (!firstDone && test1 > tick1)
-                                                {
-                                                        firstDone = true;
-                                                        if (tick1 == tick2)
-                                                        {
-                                                                secondDone = true;
-                                                                sendRaw("D " + motor1 + " 0 " + motor2 + " 0 0");
-                                                        }
-                                                        else
-                                                                sendRaw("d " + motor1 + " 0 0 ");
-                                                }
-                                                if (!secondDone && test2 > tick2)
-                                                {
-                                                        secondDone = true;
-                                                        if (tick1 == tick2)
-                                                        {
-                                                                firstDone = true;
-                                                                sendRaw("D " + motor1 + " 0 " + motor2 + " 0 0");
-                                                        }
-                                                        else
-                                                                sendRaw("d " + motor2 + " 0 0 ");
-                                                }
-                                                if (firstDone && secondDone)
-                                                        break;
-                                                if (counter%20 == 0 && (test1 == lastTest1 || test2 == lastTest2))
-                                                {
-                                                        this.getErrStream().println("Warning: Detected infinite motor running.  Make sure the wiring is correct and that the Phidget is getting sufficient power!  (Goal 1 = " + tick1 + ", Current 1 = " + test1 + " | Goal 2 = " + tick2 + ", Current 2 = " + test2 +")");
-                                                        lastTest1 = test1;
-                                                        lastTest2 = test2;
-                                                }
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                                error("A generic error occurred: " + ex.getMessage(), "RXTXRobot", "runEncodedMotor");
-                                        }
-                                }
-                        }
+                    debug("Done running 2 encoded motors");
                 }
                 motorsRunning[motor1] = false;
                 motorsRunning[motor2] = false;
+                sleep(1000);
         }
 
         /**

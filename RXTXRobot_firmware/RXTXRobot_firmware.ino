@@ -192,14 +192,11 @@ void moveDCmotor()
 void moveEncodedDCmotor()
 {
 	int pin, speed, tickInput;
-	messageSendChar('e');
+	
 	pin = messageGetInt();
-	messageSendInt(pin);
 	speed = messageGetInt();
-	messageSendInt(speed);
 	tickInput = messageGetInt();
-	messageSendInt(tickInput);
-	messageEnd();
+	
         
         long ticks = (long)tickInput * 100;
         speed += 1500;
@@ -234,6 +231,12 @@ void moveEncodedDCmotor()
         dc_motors[pin].write(halt);
         encoder1 = 0;
         encoder2 = 0;
+        
+        messageSendChar('e');
+        messageSendInt(pin);
+        messageSendInt(speed);
+        messageSendInt(tickInput);
+        messageEnd();
 }
 
 void move2DCmotor()
@@ -283,20 +286,12 @@ void move2DCmotor()
 void move2EncodedDCmotor()
 {
 	int pin1, speed1, tickInput1, pin2, speed2, tickInput2;
-	messageSendChar('E');
 	pin1 = messageGetInt();
-	messageSendInt(pin1);
 	speed1 = messageGetInt();
-	messageSendInt(speed1);
 	tickInput1 = messageGetInt();
-	messageSendInt(tickInput1);
 	pin2 = messageGetInt();
-	messageSendInt(pin2);
 	speed2 = messageGetInt();
-	messageSendInt(speed2);
 	tickInput2 = messageGetInt();
-	messageSendInt(tickInput2);
-	messageEnd();
 
         long ticks1 = (long)tickInput1 * 100;
         long ticks2 = (long)tickInput2 * 100;
@@ -345,6 +340,15 @@ void move2EncodedDCmotor()
         encoder2 = 0;
 	dc_motors[pin1].write(halt);
 	dc_motors[pin2].write(halt);
+
+        messageSendChar('E');
+        messageSendInt(pin1);
+        messageSendInt(speed1);
+        messageSendInt(tickInput1);
+        messageSendInt(pin2);
+        messageSendInt(speed2);
+        messageSendInt(tickInput2);
+        messageEnd();
 }
 
 void moveservo()
