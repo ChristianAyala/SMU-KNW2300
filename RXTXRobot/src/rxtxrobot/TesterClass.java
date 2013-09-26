@@ -14,7 +14,7 @@ public class TesterClass {
     public static void main(String[] args) {
 	System.out.println("Hello world");
         robot= new RXTXRobot(); // Create RXTXRobot object
-        robot.setPort("/dev/tty.usbmodem14121"); // Set the port to COM3
+        robot.setPort("/dev/ttyUSB0"); // Set the port to COM3
         robot.setVerbose(true); // Turn on debugging messages
         robot.connect();
         robot.setHasEncodedMotors(true);
@@ -66,7 +66,8 @@ public class TesterClass {
         robot.runEncodedMotor(RXTXRobot.MOTOR1, 500, 300, RXTXRobot.MOTOR2, 500, 300);
         robot.runEncodedMotor(RXTXRobot.MOTOR1, -500, 300, RXTXRobot.MOTOR2, -500, 300);
         //delay(2000);
-        robot.runEncodedMotor(RXTXRobot.MOTOR1, -500, 300, RXTXRobot.MOTOR2, 500, 300);
+        robot.runEncodedMotor(RXTXRobot.MOTOR1, -500, 3000, RXTXRobot.MOTOR2, 500, 3000);
         robot.runEncodedMotor(RXTXRobot.MOTOR1, 500, 300, RXTXRobot.MOTOR2, -500, 300);
+        
     }
 }

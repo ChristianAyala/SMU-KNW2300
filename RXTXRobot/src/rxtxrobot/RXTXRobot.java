@@ -302,7 +302,14 @@ public class RXTXRobot extends SerialCommunication
                                 }
                         }
                         while (in.available() == 0 && attemptTryAgain && !waitForResponse && retries != 0);
-                        int bytesRead = in.read(buffer);
+                        int bytesRead = 0;
+                        String t = "";
+                        do
+                        { bytesRead += in.read(buffer, bytesRead, 1024-bytesRead);
+                        t = new String(buffer).trim();
+                        System.out.println("\"" + str + "\" : \"" + t +"\"");
+                        System.out.flush();
+                        } while (!str.equals(t));
                         String ret = (new String(buffer)).trim();
                         debug("Received " + bytesRead + " bytes from the Arduino: " + ret);
                         return ret;
@@ -879,7 +886,7 @@ public class RXTXRobot extends SerialCommunication
                         }
                 }
                 debug("Running encoded motor " + motor + " to tick " + ticks + " at speed " + speed);
-                
+                this.waitForResponse = true;
                 if (!"".equals(sendRaw("e " + motor + " " + speed + " " + ticks)))
                 {
                     debug("Done running encoded motor");

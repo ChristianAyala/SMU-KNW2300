@@ -234,7 +234,7 @@ void moveEncodedDCmotor()
         
         messageSendChar('e');
         messageSendInt(pin);
-        messageSendInt(speed);
+        messageSendInt(speed-1500);
         messageSendInt(tickInput);
         messageEnd();
 }
@@ -343,10 +343,10 @@ void move2EncodedDCmotor()
 
         messageSendChar('E');
         messageSendInt(pin1);
-        messageSendInt(speed1);
+        messageSendInt(speed1-1500);
         messageSendInt(tickInput1);
         messageSendInt(pin2);
-        messageSendInt(speed2);
+        messageSendInt(speed2-1500);
         messageSendInt(tickInput2);
         messageEnd();
 }
