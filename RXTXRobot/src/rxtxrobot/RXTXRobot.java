@@ -79,6 +79,7 @@ public class RXTXRobot extends SerialCommunication
         // This is a flag to set if the communication should try again
         private boolean attemptTryAgain;
         private boolean waitForResponse;
+        private boolean moveEncodedMotor;
 
         /**
          * Creates a new RXTXRobot object.
@@ -92,6 +93,7 @@ public class RXTXRobot extends SerialCommunication
                 digitalPinCache = null;
                 mixerSpeed = 30;
                 resetOnClose = true;
+                moveEncodedMotor = false;
                 overrideValidation = false;
                 attemptTryAgain = false;
                 waitForResponse = false;
@@ -305,11 +307,10 @@ public class RXTXRobot extends SerialCommunication
                         int bytesRead = 0;
                         String t = "";
                         do
-                        { bytesRead += in.read(buffer, bytesRead, 1024-bytesRead);
-                        t = new String(buffer).trim();
-                        System.out.println("\"" + str + "\" : \"" + t +"\"");
-                        System.out.flush();
-                        } while (!str.equals(t));
+                        {
+                            bytesRead += in.read(buffer, bytesRead, 1024-bytesRead);
+                            t = new String(buffer).trim();
+                        } while (this.moveEncodedMotor && !str.equals(t));
                         String ret = (new String(buffer)).trim();
                         debug("Received " + bytesRead + " bytes from the Arduino: " + ret);
                         return ret;
@@ -886,11 +887,12 @@ public class RXTXRobot extends SerialCommunication
                         }
                 }
                 debug("Running encoded motor " + motor + " to tick " + ticks + " at speed " + speed);
-                this.waitForResponse = true;
+                this.moveEncodedMotor = true;
                 if (!"".equals(sendRaw("e " + motor + " " + speed + " " + ticks)))
                 {
                     debug("Done running encoded motor");
                 }
+                this.moveEncodedMotor = false;
                 motorsRunning[motor] = false;
                 sleep(1000);
         }
@@ -964,11 +966,12 @@ public class RXTXRobot extends SerialCommunication
                         error("runEncodedMotor was not given a correct motor argument.", "RXTXRobot", "runEncodedMotor");
                 }
                 debug("Running two motors, motor " + motor1 + " at speed " + speed1 + " for " + tick1 + " ticks and motor " + motor2 + " at speed " + speed2 + " for " + tick2 + " ticks");
-
+                this.moveEncodedMotor = true;
                 if (!"".equals(sendRaw("E " + motor1 + " " + speed1 + " " + tick1 + " " + motor2 + " " + speed2 + " " + tick2)))
                 {
                     debug("Done running 2 encoded motors");
                 }
+                this.moveEncodedMotor = false;
                 motorsRunning[motor1] = false;
                 motorsRunning[motor2] = false;
                 sleep(1000);
