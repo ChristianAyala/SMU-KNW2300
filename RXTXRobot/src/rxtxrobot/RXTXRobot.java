@@ -634,7 +634,7 @@ public class RXTXRobot extends SerialCommunication
          * Accepts a DC motor, either {@link #MOTOR1 RXTXRobot.MOTOR1},
          * {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3},
          * or {@link #MOTOR4 RXTXRobot.MOTOR4}, the speed that the motor should
-         * run at (-255 - 255), and the time with which the motor should run (in
+         * run at (-500 - 500), and the time with which the motor should run (in
          * milliseconds). <br /><br /> If speed is negative, the motor will run
          * in reverse. <br /><br /> If time is 0, the motor will run infinitely
          * until another call to that motor is made, even if the Java program
@@ -644,7 +644,7 @@ public class RXTXRobot extends SerialCommunication
          * @param motor The DC motor you want to run:
          * {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3},
          * or {@link #MOTOR4 RXTXRobot.MOTOR4}
-         * @param speed The speed that the motor should run at (-255 - 255)
+         * @param speed The speed that the motor should run at (-500 - 500)
          * @param time The number of milliseconds the motor should run (0 for
          * infinite) (may not be above 30,000 (30 seconds))
          */
@@ -697,7 +697,7 @@ public class RXTXRobot extends SerialCommunication
          * Accepts a DC motor, either {@link #MOTOR1 RXTXRobot.MOTOR1},
          * {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3},
          * or {@link #MOTOR4 RXTXRobot.MOTOR4}, the speed in which that motor
-         * should run (-255 - 255), accepts another DC motor, the speed in which
+         * should run (-500 - 500), accepts another DC motor, the speed in which
          * that motor should run, and the time with which both motors should run
          * (in milliseconds). <br /><br /> If speed is negative for either
          * motor, that motor will run in reverse. <br /><br /> If time is 0, the
@@ -774,7 +774,7 @@ public class RXTXRobot extends SerialCommunication
          * (Potential blocking method) Accepts DC motors, either {@link #MOTOR1 RXTXRobot.MOTOR1},
          * {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3},
          * {@link #MOTOR4 RXTXRobot.MOTOR4}, the speed in which those motor
-         * should run (-255 - 255), accepts another DC motor, the speed in which
+         * should run (-500 - 500), accepts another DC motor, the speed in which
          * that motor should run, etc, and the time with which both motors
          * should run (in milliseconds). <br /><br /> If speed is negative for
          * any motor, that motor will run in reverse. <br /><br /> If time is 0,
@@ -840,7 +840,7 @@ public class RXTXRobot extends SerialCommunication
          * Accepts a DC motor, either {@link #MOTOR1 RXTXRobot.MOTOR1},
          * {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3},
          * or {@link #MOTOR4 RXTXRobot.MOTOR4}, the speed that the motor should
-         * run at (-255 - 255), and the tick to move to. <br /><br /> If speed
+         * run at (-500 - 500), and the tick to move to. <br /><br /> If speed
          * is negative, the motor will run in reverse. <br /><br /> An error
          * message will display on error. <br /><br /> Note: This method is a
          * blocking method
@@ -848,7 +848,7 @@ public class RXTXRobot extends SerialCommunication
          * @param motor The DC motor you want to run:
          * {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3},
          * or {@link #MOTOR4 RXTXRobot.MOTOR4}
-         * @param speed The speed that the motor should run at (-255 - 255)
+         * @param speed The speed that the motor should run at (-500 - 500)
          * @param ticks The tick that the motor should move
          */
         public void runEncodedMotor(int motor, int speed, int ticks)
@@ -904,7 +904,7 @@ public class RXTXRobot extends SerialCommunication
          * Accepts a DC motor, either {@link #MOTOR1 RXTXRobot.MOTOR1},
          * {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3},
          * or {@link #MOTOR4 RXTXRobot.MOTOR4}, the speed in which that motor
-         * should run (-255 - 255), accepts another DC motor, the speed in which
+         * should run (-500 - 500), accepts another DC motor, the speed in which
          * that motor should run, and the time with which both motors should run
          * (in milliseconds). <br /><br /> If speed is negative for either
          * motor, that motor will run in reverse. <br /><br /> An error message
