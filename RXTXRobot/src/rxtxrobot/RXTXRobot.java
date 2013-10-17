@@ -51,7 +51,7 @@ public class RXTXRobot extends SerialCommunication
          * The maximum number of digital pins that can be read from the Arduino
          * (0 &le; pins &lt; NUM_DIGITAL_PINS)
          */
-        final public static int NUM_DIGITAL_PINS = 4;
+        final public static int NUM_DIGITAL_PINS = 3;
         /**
          * The maximum number of analog pins that can be read from the Arduino
          * (0 &le; pins &lt; NUM_ANALOG_PINS)
