@@ -466,8 +466,14 @@ public class RXTXRobot extends SerialCommunication
                 final int[][] mapping =
                 {
                         {
-                                13, 0
-                        }
+                                1, 0
+                        },
+			{
+				11, 1
+			},
+			{
+				12, 2
+			}
                 };
                 if (digitalPinCache == null)
                         this.refreshDigitalPins();
