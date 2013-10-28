@@ -68,11 +68,10 @@ NEW CHANGES FOR VERSION 4:
     * allows for more accurate tracking of ticks as well as speed control
   - got rid of the compass implementation to free up Analog pin space
   |||CLEANED AND TESTED|||
+  + Motors with encoders can now track how far they've travelled.
  */
 
 #define BAUD_RATE 9600
-#define FORWARD 1L
-#define BACKWARD 0L
 
 
 #include <SimpleMessageSystem.h>
@@ -95,20 +94,13 @@ Servo encodedMotor0;
 Servo encodedMotor1;
 Servo dc_motors[] = {encodedMotor0, encodedMotor1, motor0, motor1};
 
+const long forward = 1;
+const long backward = -1;
 int halt = 1500;
 int encoders_length = 2;
 long encoderPositions[] = {0L, 0L};
 long encoderTicks[] = {0L, 0L};
-long encoderDirections[] = {FORWARD, FORWARD};
-
-/*
-long encoder1Position = 0;
-long encoder2Position = 0;
-long encoder1 = 0;
-long encoder2 = 0;
-long encoder1Direction = FORWARD;
-long encoder2Direction = FORWARD;
-*/
+long encoderDirections[] = {forward, backward};
 
 OneWire temp0(4);
 
@@ -173,21 +165,13 @@ void loop()
 void incrementEncoder1()
 {
         ++(encoderTicks[0]);
-        if (encoderDirections[0] == FORWARD)
-                ++(encoderPositions[0]);
-        else
-                --(encoderPositions[0]);
-        //++encoder1;
+        encoderPositions[0] += encoderDirections[0];
 }
 
 void incrementEncoder2()
 {
         ++(encoderTicks[1]);
-        if (encoderDirections[1] == FORWARD)
-                ++(encoderPositions[1]);
-        else
-                --(encoderPositions[1]);
-        //++encoder2;
+        encoderPositions[1] += encoderDirections[1];
 }
 
 void moveDCmotor()
@@ -207,7 +191,7 @@ void moveDCmotor()
 	if (pin < 0)
 		return;
         if (pin < encoders_length)
-                encoderDirections[pin] = (speed > halt) ? FORWARD : BACKWARD;
+                encoderDirections[pin] = (speed > halt) ? forward : backward;
         if(speed > 2000)
                 dc_motors[pin].write(2000);
         else if(speed < 1000)
@@ -236,7 +220,9 @@ void moveEncodedDCmotor()
 	if (pin < 0)
 		return;
         
-        encoderDirections[pin] = (speed > halt) ? FORWARD : BACKWARD;
+        encoderTicks[pin] = 0L;
+
+        encoderDirections[pin] = (speed > halt) ? forward : backward;
         if(speed > 2000)
                 dc_motors[pin].write(2000);
         else if(speed < 1000)
@@ -249,33 +235,8 @@ void moveEncodedDCmotor()
                 delayMicroseconds(2);
         }
         
-        /*
-        if(pin == 0)
-        {
-                encoder1Direction = (speed > 0) ? FORWARD : BACKWARD;
-                while(encoder1 < ticks)
-                {
-                        delayMicroseconds(2);//waits for encoder1 value to reach ticks via the interrupt
-                }
-                
-        }
-        else if(pin == 1)
-        {
-                encoder2Direction = (speed > 0) ? FORWARD : BACKWARD;
-                while(encoder2 < ticks)
-                {
-                        delayMicroseconds(2);//waits for encoder2 value to reach ticks via the interrupt
-                }
-        }
-        else
-                return;
-        */
         dc_motors[pin].write(halt);
         encoderTicks[pin] = 0L;
-        /*
-        encoder1 = 0;
-        encoder2 = 0;
-        */
         
         messageSendChar('e');
         messageSendInt(pin);
@@ -306,8 +267,10 @@ void move2DCmotor()
 	if (pin1 < 0 || pin2 < 0)
 		return;
 
-        encoderDirections[pin1] = (speed1 > halt) ? FORWARD : BACKWARD;
-        encoderDirections[pin2] = (speed2 > halt) ? FORWARD : BACKWARD;
+        if (pin1 < encoders_length)
+                encoderDirections[pin1] = (speed1 > halt) ? forward : backward;
+        if (pin2 < encoders_length)
+                encoderDirections[pin2] = (speed2 > halt) ? forward : backward;
         
         if(speed1 > 2000)
                 dc_motors[pin1].write(2000);
@@ -343,13 +306,16 @@ void move2EncodedDCmotor()
 
         long ticks1 = (long)tickInput1 * 100;
         long ticks2 = (long)tickInput2 * 100;
+        
         speed1 += 1500;
         speed2 += 1500;
 	if (pin1 < 0 || pin2 < 0)
 		return;
 
-        encoderDirections[pin1] = (speed1 > halt) ? FORWARD : BACKWARD;
-        encoderDirections[pin2] = (speed2 > halt) ? FORWARD : BACKWARD;
+        encoderTicks[pin1] = 0L;
+        encoderTicks[pin2] = 0L;
+        encoderDirections[pin1] = (speed1 > halt) ? forward : backward;
+        encoderDirections[pin2] = (speed2 > halt) ? forward : backward;
         
         if(speed1 > 2000)
                 dc_motors[pin1].write(2000);
