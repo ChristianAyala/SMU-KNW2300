@@ -1,4 +1,4 @@
-Instructions for compilation and distribution:
+Instructions for Java API compilation and distribution:
 
 
 ******  The "build" script referenced below only works in Linux, Unix, and Mac OS  ******
@@ -33,5 +33,3 @@ Instructions for compilation and distribution:
 		2) Login
 		3) Upload the JAR ZIP that is created in the above instructions
 		4) Follow onscreen instructions
-
-

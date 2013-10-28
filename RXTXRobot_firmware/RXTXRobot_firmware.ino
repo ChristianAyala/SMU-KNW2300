@@ -14,9 +14,11 @@
  v [num] [position] -> move servo number [num] to position [position] (position is (0,180)
  d [num] [speed] [t] -> set dc motor number [num] at speed [speed] for time [t], if t=0 then keep on.
  e [num] [speed] [ticks] -> run encoded dc motor number [num] at speed [speed] for ticks [ticks]
+ p [num] -> get the current encoder tick value for motor number [num]
+ z [num] -> zero out the encoder tick value for motor number [num]
  
  The next 3 do the same thing for 2 motors as close to simultaneously as possible:
- V [position1] [position2]-> move servos to position 1 and 2 [position] (position is (0,180)
+ V [position1] [position2] -> move servos to position 1 and 2 [position] (position is (0,180)
  D [num1] [speed1] [num2] [speed2] [t] -> set dc motor number [num] at speed [speed] for time [t], if t=0 then keep on.
  E [num1] [speed1] [ticks1] [num2] [speed2] [ticks2] -> run 2 encoded dc motors at same time
 
@@ -55,6 +57,7 @@ Authors:
  Temperature addition: Chris King
  Cleanup and complete rewrite: Chris King
  Version 4 Update: Charlie Albright
+ The other guy: Chris Ayala
  
 ATTENTION:
 NEW CHANGES FOR VERSION 4:
@@ -68,6 +71,8 @@ NEW CHANGES FOR VERSION 4:
  */
 
 #define BAUD_RATE 9600
+#define FORWARD 1L
+#define BACKWARD 0L
 
 
 #include <SimpleMessageSystem.h>
@@ -89,11 +94,21 @@ Servo motor1;
 Servo encodedMotor0;
 Servo encodedMotor1;
 Servo dc_motors[] = {encodedMotor0, encodedMotor1, motor0, motor1};
-int dc_motors_length = 2;
 
 int halt = 1500;
+int encoders_length = 2;
+long encoderPositions[] = {0L, 0L};
+long encoderTicks[] = {0L, 0L};
+long encoderDirections[] = {FORWARD, FORWARD};
+
+/*
+long encoder1Position = 0;
+long encoder2Position = 0;
 long encoder1 = 0;
 long encoder2 = 0;
+long encoder1Direction = FORWARD;
+long encoder2Direction = FORWARD;
+*/
 
 OneWire temp0(4);
 
@@ -133,6 +148,12 @@ void loop()
 			case 'e':
 				moveEncodedDCmotor();
 				break;
+                        case 'p':
+                                getEncoderPosition();
+                                break;
+                        case 'z':
+                                zeroEncoderPosition();
+                                break;
 			case 'V':
 				move2servo();
 				break;
@@ -142,21 +163,31 @@ void loop()
 			case 'E':
 				move2EncodedDCmotor();
 				break;
-            case 'q':
-                ping();
-            	break;
+                        case 'q':
+                                ping();
+            	                break;
 		}
 	}
 }
 
 void incrementEncoder1()
 {
-        encoder1++;
+        ++(encoderTicks[0]);
+        if (encoderDirections[0] == FORWARD)
+                ++(encoderPositions[0]);
+        else
+                --(encoderPositions[0]);
+        //++encoder1;
 }
 
 void incrementEncoder2()
 {
-        encoder2++;
+        ++(encoderTicks[1]);
+        if (encoderDirections[1] == FORWARD)
+                ++(encoderPositions[1]);
+        else
+                --(encoderPositions[1]);
+        //++encoder2;
 }
 
 void moveDCmotor()
@@ -170,18 +201,20 @@ void moveDCmotor()
 	time = messageGetInt();
 	messageSendInt(time);
 	messageEnd();
-        
+                
         speed += 1500;
 
 	if (pin < 0)
 		return;
+        if (pin < encoders_length)
+                encoderDirections[pin] = (speed > halt) ? FORWARD : BACKWARD;
         if(speed > 2000)
                 dc_motors[pin].write(2000);
         else if(speed < 1000)
                 dc_motors[pin].write(1000);
         else
                 dc_motors[pin].write(speed);
-                
+        
 	if (time != 0)
 	{
 		delay(time);
@@ -196,13 +229,14 @@ void moveEncodedDCmotor()
 	pin = messageGetInt();
 	speed = messageGetInt();
 	tickInput = messageGetInt();
-	
-        
+	        
         long ticks = (long)tickInput * 100;
         speed += 1500;
         
 	if (pin < 0)
 		return;
+        
+        encoderDirections[pin] = (speed > halt) ? FORWARD : BACKWARD;
         if(speed > 2000)
                 dc_motors[pin].write(2000);
         else if(speed < 1000)
@@ -210,8 +244,15 @@ void moveEncodedDCmotor()
         else
                 dc_motors[pin].write(speed);
         
+        while (encoderTicks[pin] < ticks)
+        {
+                delayMicroseconds(2);
+        }
+        
+        /*
         if(pin == 0)
         {
+                encoder1Direction = (speed > 0) ? FORWARD : BACKWARD;
                 while(encoder1 < ticks)
                 {
                         delayMicroseconds(2);//waits for encoder1 value to reach ticks via the interrupt
@@ -220,6 +261,7 @@ void moveEncodedDCmotor()
         }
         else if(pin == 1)
         {
+                encoder2Direction = (speed > 0) ? FORWARD : BACKWARD;
                 while(encoder2 < ticks)
                 {
                         delayMicroseconds(2);//waits for encoder2 value to reach ticks via the interrupt
@@ -227,10 +269,13 @@ void moveEncodedDCmotor()
         }
         else
                 return;
-        
+        */
         dc_motors[pin].write(halt);
+        encoderTicks[pin] = 0L;
+        /*
         encoder1 = 0;
         encoder2 = 0;
+        */
         
         messageSendChar('e');
         messageSendInt(pin);
@@ -261,6 +306,9 @@ void move2DCmotor()
 	if (pin1 < 0 || pin2 < 0)
 		return;
 
+        encoderDirections[pin1] = (speed1 > halt) ? FORWARD : BACKWARD;
+        encoderDirections[pin2] = (speed2 > halt) ? FORWARD : BACKWARD;
+        
         if(speed1 > 2000)
                 dc_motors[pin1].write(2000);
         else if(speed1 < 1000)
@@ -300,6 +348,9 @@ void move2EncodedDCmotor()
 	if (pin1 < 0 || pin2 < 0)
 		return;
 
+        encoderDirections[pin1] = (speed1 > halt) ? FORWARD : BACKWARD;
+        encoderDirections[pin2] = (speed2 > halt) ? FORWARD : BACKWARD;
+        
         if(speed1 > 2000)
                 dc_motors[pin1].write(2000);
         else if(speed1 < 1000)
@@ -313,7 +364,17 @@ void move2EncodedDCmotor()
                 dc_motors[pin2].write(1000);
         else
                 dc_motors[pin2].write(speed2);
+                
+        while (encoderTicks[pin1] < ticks1 || encoderTicks[pin2] < ticks2)
+        {
+                delayMicroseconds(2);
+                if (encoderTicks[pin1] > ticks1)
+                        dc_motors[pin1].write(halt);
+                if (encoderTicks[pin2] > ticks2)
+                        dc_motors[pin2].write(halt);
+        }
         
+        /*
         if(pin1 == 0 && pin2 == 1)
         {
                 while(encoder1 < ticks1 || encoder2 < ticks2)
@@ -334,10 +395,14 @@ void move2EncodedDCmotor()
                                 dc_motors[pin1].write(halt);
                 }
         }
+        
         else
                 return;
-        encoder1 = 0;
-        encoder2 = 0;
+        */
+        
+        //encoder1 = 0;
+        //encoder2 = 0;
+        encoderTicks[pin1] = encoderTicks[pin2] = 0L;
 	dc_motors[pin1].write(halt);
 	dc_motors[pin2].write(halt);
 
@@ -348,6 +413,26 @@ void move2EncodedDCmotor()
         messageSendInt(pin2);
         messageSendInt(speed2-1500);
         messageSendInt(tickInput2);
+        messageEnd();
+}
+
+void getEncoderPosition()
+{
+        int pin;
+        messageSendChar('p');
+        pin = messageGetInt();
+        messageSendInt(pin);
+        messageSendInt(int(encoderPositions[pin]/100));
+        messageEnd();
+}
+
+void zeroEncoderPosition()
+{
+        int pin;
+        messageSendChar('z');
+        pin = messageGetInt();
+        messageSendInt(pin);
+        encoderPositions[pin] = 0L;
         messageEnd();
 }
 

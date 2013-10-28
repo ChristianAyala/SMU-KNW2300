@@ -1,0 +1,43 @@
+To flash an Arduino, follow these steps. Steps 1-4 should only be done once:
+
+1) Get the Arduino IDE, found at http://arduino.cc/en/main/software. 
+   Download the version for your OS, and install it appropriately.
+2) Copy the library folders that were extracted from this archive.
+3) Go to your Arduino IDE installation, and find the libraries folder.
+   As an example, on OSX it is found in /Applications/Arduino.app/Contents/Resources/Java/libraries
+   Paste the library folders from step 2 here.
+4) Open the Arduino IDE (or restart it). You can make sure the libraries
+   were added correctly by going to File > Examples, and checking that
+   there are examples for the libraries added.
+
+
+5) Open the RXTXRobot_firmware.pde file. Click the checkmark at the top left 
+   of the IDE (Verify). This will compile the firmware. Fix errors as needed.
+6) Plug in an Arduino.
+7) Go to Tools > Serial Port. Make sure the port corresponding to your Arduino
+   is checked. On Linux, it will be something like /dev/tty.ACM#. On Mac, it
+   will be /dev/tty.usbmodem####. On Windows, it will be something like COM# (check
+   the Device Manager to make sure you connect to the right COM port).
+8) Click the right-facing arrow at the top left of the IDE (Upload). This will
+   compile and upload the firmware to the Arduino. You are done!
+
+
+Not working?:
+- If you try to upload and the IDE says "programmer not responding", try unplugging
+  everything from the arduino and trying again. Sometimes a connected pin will cause a 
+  short in the communication (typically a floating ground issue), and the Arduino
+  is not necessarily broken.
+- If that doesn't work, and the Arduino still doesn't respond, then the controller chip
+  may have been shorted and fried. If possible, replace the Arduino controller
+  (ATMega328). Then try again.
+- If all else fails, cry and tell an adult. If you are an adult, just cry.
+
+Other things:
+- To test that the arduino works without having to use the Java API, you can 
+  use terminal's screen command (on Mac and Linux) to send/receive commands.
+  Use the command "screen /dev/[PORT]", where [PORT] is the port the Arduino
+  is on. Then, look at the code for what possible commands are available. For
+  each command, be sure to hit enter. To exit screen, hit Ctrl+a, Ctrl+\.
+- For Windows machines, you can use PuTTY, which has screen.
+- Alternatively, the Arduino IDE has a screen tool (Tools > Serial Monitor).
+  Be sure the baud rate is set to 9600.

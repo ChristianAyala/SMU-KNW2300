@@ -843,17 +843,15 @@ public class RXTXRobot extends SerialCommunication
          * Runs a DC encoded motor at a specific speed for a specific distance
          * (Blocking Method).
          *
-         * Accepts a DC motor, either {@link #MOTOR1 RXTXRobot.MOTOR1},
-         * {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3},
-         * or {@link #MOTOR4 RXTXRobot.MOTOR4}, the speed that the motor should
+         * Accepts a DC motor, either {@link #MOTOR1 RXTXRobot.MOTOR1} or
+         * {@link #MOTOR2 RXTXRobot.MOTOR2}, the speed that the motor should
          * run at (-500 - 500), and the tick to move to. <br /><br /> If speed
          * is negative, the motor will run in reverse. <br /><br /> An error
          * message will display on error. <br /><br /> Note: This method is a
          * blocking method
          *
          * @param motor The DC motor you want to run:
-         * {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3},
-         * or {@link #MOTOR4 RXTXRobot.MOTOR4}
+         * {@link #MOTOR1 RXTXRobot.MOTOR1} or {@link #MOTOR2 RXTXRobot.MOTOR2}
          * @param speed The speed that the motor should run at (-500 - 500)
          * @param ticks The tick that the motor should move
          */
@@ -907,9 +905,8 @@ public class RXTXRobot extends SerialCommunication
          * Runs a DC encoded motor at a specific speed for a specific distance
          * (Blocking Method).
          *
-         * Accepts a DC motor, either {@link #MOTOR1 RXTXRobot.MOTOR1},
-         * {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3},
-         * or {@link #MOTOR4 RXTXRobot.MOTOR4}, the speed in which that motor
+         * Accepts a DC motor, either {@link #MOTOR1 RXTXRobot.MOTOR1} or
+         * {@link #MOTOR2 RXTXRobot.MOTOR2}, the speed in which that motor
          * should run (-500 - 500), accepts another DC motor, the speed in which
          * that motor should run, and the time with which both motors should run
          * (in milliseconds). <br /><br /> If speed is negative for either
@@ -918,13 +915,11 @@ public class RXTXRobot extends SerialCommunication
          * method unless time = 0
          *
          * @param motor1 The first DC motor:
-         * {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3},
-         * or {@link #MOTOR4 RXTXRobot.MOTOR4}
+         * {@link #MOTOR1 RXTXRobot.MOTOR1} or {@link #MOTOR2 RXTXRobot.MOTOR2}
          * @param speed1 The speed that the first DC motor should run at
          * @param tick1 The tick that the first DC motor should move to
          * @param motor2 The second DC motor:
-         * {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3},
-         * or {@link #MOTOR4 RXTXRobot.MOTOR4}
+         * {@link #MOTOR1 RXTXRobot.MOTOR1} or {@link #MOTOR2 RXTXRobot.MOTOR2}
          * @param speed2 The speed that the second DC motor should run at
          * @param tick2 The tick that the second DC motor should move
          */
@@ -984,33 +979,82 @@ public class RXTXRobot extends SerialCommunication
         }
 
         /**
-         * Gets the number of ticks that a motor has turned.
+         * Gets the net number of ticks that a motor has turned.
          *
          * This method returns the number of ticks that a motor has moved since it was last reset.
-         * @param motor The motor number to get the ticks from.
-         * @return Positive integer representing the distance a motor has moved.
+         * This includes all motion, including distance traveled using {@link #runEncodedMotor(int, int, int) runEncodedMotor} 
+         * and {@link #runMotor(int, int, int) runMotor}. Running a motor with a 
+         * positive speed in either case increases its tick count. Running a motor
+         * with a negative speed decreases its tick count, which means the current tick
+         * count may be negative. To reset the encoder tick position back to 0,
+         * use the {@link #resetEncodedMotorPosition(int) resetEncodedMotorPosition} method.
+         * @param motor The motor number to get the ticks from. Can be either
+         * {@link #MOTOR1 RXTXRobot.MOTOR1} or {@link #MOTOR2 RXTXRobot.MOTOR2}
+         * @return Integer representing the current tick count of the encoder on the motor.
          */
         public int getEncodedMotorPosition(int motor)
         {
-                try
+                if (!isConnected())
                 {
-                        return Math.abs(encMotor.getPosition(motor));
+                        error("Robot is not connected!", "RXTXRobot", "getEncodedMotorPosition");
+                        return -1;
                 }
+                if (!getOverrideValidation() && (motor < RXTXRobot.MOTOR1 || motor > RXTXRobot.MOTOR2))
+                {
+                        error("getEncodedMotorPosition was not given a correct motor argument", "RXTXRobot", "getEncodedMotorPosition");
+                        return -1;
+                }
+                debug("Checking tick position for encoder " + motor);
+                //try
+                //{
+                this.attemptTryAgain = true;
+                String[] split = sendRaw("p " + motor).split("\\s+");
+                this.attemptTryAgain = false;
+                if (split.length != 3) 
+                {
+                        error("Incorrect length returned: " + split.length, "RXTXRobot", "getEncodedMotorPosition");
+                        return -1;
+                }
+                return Integer.parseInt(split[2]);
+                        //return Math.abs(encMotor.getPosition(motor));
+                /*}
+                
                 catch (PhidgetException e)
                 {
                         this.error("Could not get motor position!  " + e.getDescription(), "RXTXRobot", "getEncodedMotorPosition");
                         return -1;
                 }
+                */ 
         }
 
         /**
          * Resets the position of a motor to 0.
          *
          * This method resets the position of a motor back to 0 so distances can begin to be measured.
-         * @param motor The motor number to reset the ticks of.
+         * @param motor The motor number to reset the ticks of. Can be either
+         * {@link #MOTOR1 RXTXRobot.MOTOR1} or {@link #MOTOR2 RXTXRobot.MOTOR2}
          */
         public void resetEncodedMotorPosition(int motor)
         {
+                if (!isConnected())
+                {
+                        error("Robot is not connected!", "RXTXRobot", "resetEncodedMotorPosition");
+                        return;
+                }
+                if (!getOverrideValidation() && (motor < RXTXRobot.MOTOR1 || motor > RXTXRobot.MOTOR2))
+                {
+                        error("resetEncodedMotorPosition was not given a correct motor argument", "RXTXRobot", "resetEncodedMotorPosition");
+                        return;
+                }
+                if (!"".equals(sendRaw("z " + motor))) 
+                {
+                        debug("Done resetting the encoder tick count");
+                }
+                else
+                {
+                        error("Empty response from the arduino");
+                }
+                /*
                 try
                 {
                         encMotor.setPosition(motor, 0);
@@ -1019,6 +1063,7 @@ public class RXTXRobot extends SerialCommunication
                 {
                         this.error("Could not get motor position!  " + e.getDescription(), "RXTXRobot", "resetEncodedMotorPosition");
                 }
+                */
         }
 
         /*
