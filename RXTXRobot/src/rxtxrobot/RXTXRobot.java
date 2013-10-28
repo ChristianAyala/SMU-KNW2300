@@ -1005,8 +1005,6 @@ public class RXTXRobot extends SerialCommunication
                         return -1;
                 }
                 debug("Checking tick position for encoder " + motor);
-                //try
-                //{
                 this.attemptTryAgain = true;
                 String[] split = sendRaw("p " + motor).split("\\s+");
                 this.attemptTryAgain = false;
@@ -1016,15 +1014,6 @@ public class RXTXRobot extends SerialCommunication
                         return -1;
                 }
                 return Integer.parseInt(split[2]);
-                        //return Math.abs(encMotor.getPosition(motor));
-                /*}
-                
-                catch (PhidgetException e)
-                {
-                        this.error("Could not get motor position!  " + e.getDescription(), "RXTXRobot", "getEncodedMotorPosition");
-                        return -1;
-                }
-                */ 
         }
 
         /**
@@ -1054,16 +1043,6 @@ public class RXTXRobot extends SerialCommunication
                 {
                         error("Empty response from the arduino");
                 }
-                /*
-                try
-                {
-                        encMotor.setPosition(motor, 0);
-                }
-                catch (PhidgetException e)
-                {
-                        this.error("Could not get motor position!  " + e.getDescription(), "RXTXRobot", "resetEncodedMotorPosition");
-                }
-                */
         }
 
         /*
