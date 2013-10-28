@@ -1,7 +1,5 @@
 package rxtxrobot;
 
-import com.phidgets.EncoderPhidget;
-import com.phidgets.PhidgetException;
 import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
 import gnu.io.NoSuchPortException;
@@ -75,7 +73,6 @@ public class RXTXRobot extends SerialCommunication
         private SerialPort sPort;
         private CommPort cPort;
         private boolean hasEncodedMotors;
-        private EncoderPhidget encMotor;
         // This is a flag to set if the communication should try again
         private boolean attemptTryAgain;
         private boolean waitForResponse;
