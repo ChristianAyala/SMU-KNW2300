@@ -10,6 +10,7 @@
  r d -> read digital pins
  r t -> read temperature sensor from pin 4
  q -> Gets a ping result on pin 13, in centimeters
+ c -> Gets a conductivity reading
 
  v [num] [position] -> move servo number [num] to position [position] (position is (0,180)
  d [num] [speed] [t] -> set dc motor number [num] at speed [speed] for time [t], if t=0 then keep on.
@@ -36,8 +37,8 @@ Sensor layout:
 		8 - DC Motor 2
 		9 - Servo
 		10 - Servo
-		11 - Unused
-		12 - Unused 
+		11 - Conductivity Digital Pin 1
+		12 - Conductivity Digital Pin 2
 		13 - Ping Sensor
 
 	Analog Pins:
@@ -45,8 +46,8 @@ Sensor layout:
 		1 - Unused
 		2 - Unused
 		3 - Unused
-		4 - Unused
-		5 - Unused
+		4 - Conductivity Analog Pin 1
+		5 - Conductivity Analog Pin 2
 
 
  
@@ -57,7 +58,7 @@ Authors:
  Temperature addition: Chris King
  Cleanup and complete rewrite: Chris King
  Version 4 Update: Charlie Albright
- The other guy: Chris Ayala
+ Conductivity addition: Chris Ayala
  
 ATTENTION:
 NEW CHANGES FOR VERSION 4:
