@@ -156,8 +156,11 @@ void loop()
 				move2EncodedDCmotor();
 				break;
                         case 'q':
-                                ping();
+                                getPing();
             	                break;
+                        case 'c':
+                                getConductivity();
+                                break;
 		}
 	}
 }
@@ -501,21 +504,60 @@ float getTemp()
 	return (tempRead / 16);
 }
 
-void ping()
+void getPing()
 {
 	long duration;
         int cm;
+        int pin = 12;
 	messageSendChar('q');
-        pinMode(13, OUTPUT);
-	digitalWrite(13, LOW);
+        pinMode(pin, OUTPUT);
+	digitalWrite(pin, LOW);
 	delayMicroseconds(2);
-	digitalWrite(13, HIGH);
+	digitalWrite(pin, HIGH);
 	delayMicroseconds(5);
-	digitalWrite(13, LOW);
-	pinMode(13, INPUT);
-	duration = pulseIn(13, HIGH);
+	digitalWrite(pin, LOW);
+	pinMode(pin, INPUT);
+	duration = pulseIn(pin, HIGH);
 	cm = duration / 29 / 2;
         messageSendInt(cm);
+        messageEnd();
+}
+
+void getConductivity()
+{
+        int dPin1 = 11, dPin2 = 12;
+        int aPin1 = 4,  aPin2 = 5;
+        int reading1, reading2;
+        int readingTime = messageGetInt();
+        unsigned long loopCount = ((unsigned long)readingTime)*100ul*1000ul;
+        messageSendChar('c');
+        messageSendInt(readingTime);
+        
+        pinMode(dPin1, OUTPUT);
+        pinMode(dPin2, OUTPUT);
+        digitalWrite(dPin1, LOW);
+        digitalWrite(dPin2, LOW);
+        
+        //For this to work, we needed simultaneous digital pin writes. This
+        //was not possible with digitalWrite(). Refer to
+        //http://www.arduino.cc/en/Reference/PortManipulation
+        for (unsigned long i = 0; i < loopCount; ++i) 
+        {
+                //The AND turns off pin 12, OR turns on pin 11
+                PORTB = B00001000 | (PORTB & B11101111);
+                delayMicroseconds(5);
+                
+                //AND turns off pin 11, OR turns on pin 12
+                PORTB = B00010000 | (PORTB & B11110111);
+                delayMicroseconds(5);
+        }  
+      
+        reading1 = analogRead(aPin1);
+        reading2 = analogRead(aPin2);
+        messageSendInt(abs(reading1 - reading2));
+        digitalWrite(dPin1, LOW);
+        digitalWrite(dPin2, LOW);
+
         messageEnd();
 }
 
