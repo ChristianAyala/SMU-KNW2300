@@ -15,7 +15,7 @@ public abstract class SerialCommunication
         /*
          * Private variables
          */
-        final private static String API_VERSION = "3.2.5";
+        final private static String API_VERSION = "3.3.0";
         private String port;
         private boolean verbose;
         private int baud_rate;

@@ -286,7 +286,7 @@ public class RXTXRobot extends SerialCommunication
                         {
                                 out.write((str + "\r\n").getBytes());
                                 buffer = new byte[1024];
-                                sleep(500);
+                                sleep(sleep);
                                 --retries;
                                 if (!waitForResponse)
                                 {
@@ -565,6 +565,45 @@ public class RXTXRobot extends SerialCommunication
                 {
                         error("Incorrect response from Arduino (Invalid datatype)!", "RXTXRobot", "getPing");
                         debug("Ping Response: " + response);
+                }
+                return -1;
+        }
+        
+        /**
+         * Gets the result from the conductivity sensor.
+         * 
+         * The conductivity sensor requires a total of 4 pins: 2 digital pins on
+         * digital pins 11 and 12, and 2 analog pins on analog pins 4 and 5.
+         * @return The conductivity measurement
+         */
+        public int getConductivity()
+        {
+                if (!isConnected())
+                {
+                        error("Robot isn't connected!", "RXTXRobot", "getConductivity");
+                        return -1;
+                }
+                
+                this.attemptTryAgain = true;
+                String response = this.sendRaw("c 3", 3000);
+                String[] arr = response.split("\\s+");
+                this.attemptTryAgain = false;
+                
+                if (arr.length != 3)
+                {
+                        error("Incorrect response from Arduino (Invalid length)!", "RXTXRobot", "getConductivity");
+                        debug("Conductivity Response: " + response);
+                        return -1;
+                }
+                
+                try
+                {
+                        return Integer.parseInt(arr[2]);
+                }
+                catch (Exception e)
+                {
+                        error("Incorrect response from Arduino (Invalid datatype)!", "RXTXRobot", "getConductivity");
+                        debug("Conductivity Response: " + response);
                 }
                 return -1;
         }

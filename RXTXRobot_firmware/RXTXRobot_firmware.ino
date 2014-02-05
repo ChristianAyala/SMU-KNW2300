@@ -531,8 +531,6 @@ void getConductivity()
         int reading1, reading2;
         int readingTime = messageGetInt();
         unsigned long loopCount = ((unsigned long)readingTime)*100ul*1000ul;
-        messageSendChar('c');
-        messageSendInt(readingTime);
         
         pinMode(dPin1, OUTPUT);
         pinMode(dPin2, OUTPUT);
@@ -547,7 +545,7 @@ void getConductivity()
                 //The AND turns off pin 12, OR turns on pin 11
                 PORTB = B00001000 | (PORTB & B11101111);
                 delayMicroseconds(5);
-                
+
                 //AND turns off pin 11, OR turns on pin 12
                 PORTB = B00010000 | (PORTB & B11110111);
                 delayMicroseconds(5);
@@ -555,6 +553,8 @@ void getConductivity()
       
         reading1 = analogRead(aPin1);
         reading2 = analogRead(aPin2);
+        messageSendChar('c');
+        messageSendInt(readingTime);
         messageSendInt(abs(reading1 - reading2));
         digitalWrite(dPin1, LOW);
         digitalWrite(dPin2, LOW);
