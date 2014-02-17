@@ -31,7 +31,7 @@ if [ $VERSION -lt 5 ]; then
 	JFILE="$SCRIPTDIR/libs/less_leopard.jnilib"
 elif [ $VERSION -eq 5 ] || [ $VERSION -eq 6 ]; then
 	JFILE="$SCRIPTDIR/libs/leop_snow.jnilib"
-elif [ $VERSION -eq 7 ] || [ $VERSION -eq 8 ]; then
+elif [ $VERSION -eq 7 ] || [ $VERSION -eq 8 ] || [ $VERSION -eq 9 ]; then
 	JFILE="$SCRIPTDIR/libs/mnt_lion.jnilib"
 else
 	echo "error\n\nFATAL ERROR: Your Mac OS is not supported.  You have $(sw_vers -productVersion) and this only supports 10.0.x - 10.8.x"
@@ -99,12 +99,13 @@ hdiutil detach -quiet "/Volumes/FTDIUSBSerialDriver_v2_2_18"
 
 echo ""
 echo ""
-echo "Follow the instructions to install the drivers for the Phidget motors."
-hdiutil attach -quiet -noautoopen -nobrowse "$SCRIPTDIR/libs/Phidget.dmg" &> /dev/null
-sleep 2
-open -W "/Volumes/Phidgets21/Phidgets.mpkg"
-hdiutil detach -quiet "/Volumes/Phidgets21" &> /dev/null
-echo ""
+# echo "Follow the instructions to install the drivers for the Phidget motors."
+# hdiutil attach -quiet -noautoopen -nobrowse "$SCRIPTDIR/libs/Phidget.dmg" &> /dev/null
+# sleep 2
+# open -W "/Volumes/Phidgets21/Phidgets.mpkg"
+# hdiutil detach -quiet "/Volumes/Phidgets21" &> /dev/null
+# echo ""
+
 echo "The driver installation has completed!  You may need to restart your computer for it to finish successfully"
 
 
