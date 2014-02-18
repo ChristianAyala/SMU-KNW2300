@@ -83,9 +83,12 @@ NEW CHANGES FOR VERSION 4:
 
 Servo servo0;
 Servo servo1;
+Servo servo2;
 
-Servo servos[] = { servo0, servo1 };
-int servos_length = 2;
+Servo servos[] = { servo0, servo1, servo2 };
+int servos_length = 3;
+int conductivity1, conductivity2, finalConductivity;
+boolean toggle0 = 0;
 
 Servo motor0;
 Servo motor1;
@@ -109,6 +112,7 @@ void setup()
 	Serial.begin(BAUD_RATE);
 	servo0.attach(9);
 	servo1.attach(10);
+        servo2.attach(11);
 
 	encodedMotor0.attach(5);
 	encodedMotor1.attach(6);
@@ -116,7 +120,62 @@ void setup()
 	motor1.attach(8);
 
         attachInterrupt(0, incrementEncoder1, RISING);
-        attachInterrupt(1, incrementEncoder2, RISING);        
+        attachInterrupt(1, incrementEncoder2, RISING);
+        pinMode(12, OUTPUT);
+        
+        initializeConductivityInterrupt();        
+}
+
+void initializeConductivityInterrupt()
+{
+          //We're attaching a clock interrupt to toggle pin 12 every 200Hz
+          //for the conductivity sensor. Check out this site for details:
+          //http://www.instructables.com/id/Arduino-Timer-Interrupts/step2/Structuring-Timer-Interrupts/
+          
+          //Turn off interrupt
+          cli();
+          
+          //set timer1 interrupt at 200Hz
+          
+          TCCR0A = 0;// set entire TCCR2A register to 0
+          TCCR0B = 0;// same for TCCR2B
+          TCNT0  = 0;//initialize counter value to 0
+          // set compare match register for 1khz increments
+          OCR0A = 15;// = (16*10^6) / (1000*1024) - 1 (must be <256)
+          // turn on CTC mode
+          TCCR0A |= (1 << WGM01);
+          // Set CS01 and CS00 bits for 1024 prescaler
+          TCCR0B |= (1 << CS02) | (1 << CS00);   
+          // enable timer compare interrupt
+          TIMSK0 |= (1 << OCIE0A);
+          
+          //Turn on interrupt
+          sei();
+}
+
+//Interrupt function for conductivity sensor
+ISR(TIMER0_COMPA_vect)
+{
+          //For this to work, we needed simultaneous digital pin writes. This
+          //was not possible with digitalWrite(). Refer to
+          //http://www.arduino.cc/en/Reference/PortManipulation
+          if (toggle0)
+          {
+                  //The AND turns off pin 12
+                  PORTB &= B11101111;
+                  toggle0 = 0;
+          }
+          else 
+          {
+                  //OR turns on pin 12
+                  PORTB |= B00010000;
+                  toggle0 = 1;
+                  
+                  //Get a reading
+                  conductivity1 = analogRead(5);
+                  conductivity2 = analogRead(4);
+                  finalConductivity = abs(conductivity1 - conductivity2);
+          }
 }
 
 void loop()
@@ -144,7 +203,7 @@ void loop()
                                 zeroEncoderPosition();
                                 break;
 			case 'V':
-				move2servo();
+				moveAllServo();
 				break;
 			case 'D':
 				move2DCmotor();
@@ -388,17 +447,20 @@ void moveservo()
 	servos[pin].write(position);
 }
 
-void move2servo()
+void moveAllServo()
 {
-	int position1, position2;
+	int position1, position2, position3;
 	messageSendChar('V');
 	position1 = messageGetInt();
 	messageSendInt(position1);
 	position2 = messageGetInt();
 	messageSendInt(position2);
+        position3 = messageGetInt();
+        messageSendInt(position3);
 	messageEnd();
 	servos[0].write(position1);
 	servos[1].write(position2);
+        servos[2].write(position3);
 }
 
 void readpin()
@@ -483,39 +545,12 @@ void getPing()
 
 void getConductivity()
 {
-        int dPin1 = 11, dPin2 = 12;
-        int aPin1 = 4,  aPin2 = 5;
         int reading1, reading2;
-        int readingTime = messageGetInt();
-        unsigned long loopCount = ((unsigned long)readingTime)*100ul*1000ul;
-        
-        pinMode(dPin1, OUTPUT);
-        pinMode(dPin2, OUTPUT);
-        digitalWrite(dPin1, LOW);
-        digitalWrite(dPin2, LOW);
-        
-        //For this to work, we needed simultaneous digital pin writes. This
-        //was not possible with digitalWrite(). Refer to
-        //http://www.arduino.cc/en/Reference/PortManipulation
-        for (unsigned long i = 0; i < loopCount; ++i) 
-        {
-                //The AND turns off pin 12, OR turns on pin 11
-                PORTB = B00001000 | (PORTB & B11101111);
-                delayMicroseconds(5);
 
-                //AND turns off pin 11, OR turns on pin 12
-                PORTB = B00010000 | (PORTB & B11110111);
-                delayMicroseconds(5);
-        }  
-      
-        reading1 = analogRead(aPin1);
-        reading2 = analogRead(aPin2);
+        cli();
         messageSendChar('c');
-        messageSendInt(readingTime);
-        messageSendInt(abs(reading1 - reading2));
-        digitalWrite(dPin1, LOW);
-        digitalWrite(dPin2, LOW);
-
+        messageSendInt(finalConductivity);
         messageEnd();
+        sei();
 }
 

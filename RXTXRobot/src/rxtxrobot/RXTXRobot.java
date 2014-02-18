@@ -22,13 +22,17 @@ public class RXTXRobot extends SerialCommunication
          */
         final private static boolean ONLY_ALLOW_TWO_MOTORS = true;
         /**
-         * Refers to the servo motor located in SERVO1
+         * Refers to the servo motor located in SERVO1 (pin 9)
          */
-        final public static int SERVO1 = 1;
+        final public static int SERVO1 = 0;
         /**
-         * Refers to the servo motor located in SERVO2
+         * Refers to the servo motor located in SERVO2 (pin 10)
          */
-        final public static int SERVO2 = 0;
+        final public static int SERVO2 = 1;
+        /**
+         * Refers to the servo motor located in SERVO3 (pin 11)
+         */
+        final public static int SERVO3 = 2;
         /**
          * Refers to the M1 DC MOTOR
          */
@@ -233,7 +237,7 @@ public class RXTXRobot extends SerialCommunication
                 if (getResetOnClose())
                 {
                         this.getOutStream().println("Resetting servos and motors...");
-                        this.moveBothServos(90, 90);
+                        this.moveAllServos(90, 90, 90);
                         this.runMotor(RXTXRobot.MOTOR1, 0, RXTXRobot.MOTOR2, 0, 0);
                         this.runMotor(RXTXRobot.MOTOR3, 0, RXTXRobot.MOTOR4, 0, 0);
                 }
@@ -585,11 +589,11 @@ public class RXTXRobot extends SerialCommunication
                 }
                 
                 this.attemptTryAgain = true;
-                String response = this.sendRaw("c 3", 3000);
+                String response = this.sendRaw("c", 3000);
                 String[] arr = response.split("\\s+");
                 this.attemptTryAgain = false;
                 
-                if (arr.length != 3)
+                if (arr.length != 2)
                 {
                         error("Incorrect response from Arduino (Invalid length)!", "RXTXRobot", "getConductivity");
                         debug("Conductivity Response: " + response);
@@ -598,7 +602,7 @@ public class RXTXRobot extends SerialCommunication
                 
                 try
                 {
-                        return Integer.parseInt(arr[2]);
+                        return Integer.parseInt(arr[1]);
                 }
                 catch (Exception e)
                 {
@@ -618,7 +622,8 @@ public class RXTXRobot extends SerialCommunication
          * error.
          *
          * @param servo The servo motor that you would like to move:
-         * {@link #SERVO1 RXTXRobot.SERVO1} or {@link #SERVO2 RXTXRobot.SERVO2}.
+         * {@link #SERVO1 RXTXRobot.SERVO1}, {@link #SERVO2 RXTXRobot.SERVO2},
+         * or {@link #SERVO3 RXTXRobot.SERVO3}.
          * @param position The position (in degrees) where you want the servo to
          * turn to: 0 &lt; position &lt; 180.
          */
@@ -629,7 +634,7 @@ public class RXTXRobot extends SerialCommunication
                         error("Robot is not connected!", "RXTXRobot", "moveServo");
                         return;
                 }
-                if (!getOverrideValidation() && servo != RXTXRobot.SERVO1 && servo != RXTXRobot.SERVO2)
+                if (!getOverrideValidation() && servo != RXTXRobot.SERVO1 && servo != RXTXRobot.SERVO2 && servo != RXTXRobot.SERVO3)
                 {
                         error("Invalid servo argument.", "RXTXRobot", "moveServo");
                         return;
@@ -646,27 +651,29 @@ public class RXTXRobot extends SerialCommunication
          *
          * Accepts two angular positions between 0 and 180 inclusive and moves
          * the servo motors to the corresponding angular position.
-         * {@link #SERVO1 SERVO1} moves {@code pos1} degrees and
-         * {@link #SERVO2 SERVO2} moves {@code pos2} degrees. <br /><br /> The
+         * {@link #SERVO1 SERVO1} moves {@code pos1} degrees,
+         * {@link #SERVO2 SERVO2} moves {@code pos2} degrees, and
+         * {@link #SERVO3 SERVO3} moves {@code pos3} degrees. <br /><br /> The
          * servos start at 90 degrees, so a number &lt; 90 will turn it one way,
          * and a number &gt; 90 will turn it the other way. <br /><br /> An
          * error message will be displayed on error.
          *
          * @param pos1 The angular position of RXTXRobot.SERVO1
          * @param pos2 The angular position of RXTXRobot.SERVO2
+         * @param pos3 The angular position of RXTXRobot.SERVO3
          */
-        public void moveBothServos(int pos1, int pos2)
+        public void moveAllServos(int pos1, int pos2, int pos3)
         {
                 if (!isConnected())
                 {
                         error("Robot is not connected!", "RXTXRobot", "moveBothServos");
                         return;
                 }
-                debug("Moving both servos to positions " + pos1 + " and " + pos2);
-                if (!getOverrideValidation() && (pos1 < 0 || pos1 > 180 || pos2 < 0 || pos2 > 180))
+                debug("Moving servos to positions " + pos1 + ", " + pos2 + ", and " + pos3);
+                if (!getOverrideValidation() && (pos1 < 0 || pos1 > 180 || pos2 < 0 || pos2 > 180 || pos3 < 0 || pos3 > 180))
                         error("Positions must be >=0 and <=180.  You supplied " + pos1 + " and " + pos2 + ".  One or more are invalid.", "RXTXRobot", "moveBothServos");
                 else
-                        sendRaw("V " + pos1 + " " + pos2);
+                        sendRaw("V " + pos1 + " " + pos2 + " " + pos3);
         }
 
         /**
