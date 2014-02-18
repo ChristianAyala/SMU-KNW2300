@@ -81,9 +81,6 @@ NEW CHANGES FOR VERSION 4:
 #include <OneWire.h>
 #include <NewPing.h>
 
-int HMC6352Address = 0x42;
-int slaveAddress;
-
 Servo servo0;
 Servo servo1;
 
@@ -119,9 +116,7 @@ void setup()
 	motor1.attach(8);
 
         attachInterrupt(0, incrementEncoder1, RISING);
-        attachInterrupt(1, incrementEncoder2, RISING);
-        
-        slaveAddress = HMC6352Address >> 1;
+        attachInterrupt(1, incrementEncoder2, RISING);        
 }
 
 void loop()
@@ -177,13 +172,6 @@ void incrementEncoder2()
 {
         ++(encoderTicks[1]);
         encoderPositions[1] += encoderDirections[1];
-}
-
-void getI2CPosition()
-{
-        //messageSendInt(encoder.getSpeed());
-        //messageSendInt(encoder.getPosition());
-        messageEnd();
 }
 
 void moveDCmotor()
@@ -352,34 +340,6 @@ void move2EncodedDCmotor()
                         dc_motors[pin2].write(halt);
         }
         
-        /*
-        if(pin1 == 0 && pin2 == 1)
-        {
-                while(encoder1 < ticks1 || encoder2 < ticks2)
-                {
-                        if(encoder1 >= ticks1)
-                                dc_motors[pin1].write(halt);
-                        if(encoder2 >= ticks2)
-                                dc_motors[pin2].write(halt);
-                }
-        }
-        else if(pin1 == 1 && pin2 == 0)
-        {
-                while(encoder1 < ticks2 || encoder2 < ticks1)
-                {
-                        if(encoder1 >= ticks2)
-                                dc_motors[pin2].write(halt);
-                        if(encoder2 >= ticks1)
-                                dc_motors[pin1].write(halt);
-                }
-        }
-        
-        else
-                return;
-        */
-        
-        //encoder1 = 0;
-        //encoder2 = 0;
         encoderTicks[pin1] = encoderTicks[pin2] = 0L;
 	dc_motors[pin1].write(halt);
 	dc_motors[pin2].write(halt);
