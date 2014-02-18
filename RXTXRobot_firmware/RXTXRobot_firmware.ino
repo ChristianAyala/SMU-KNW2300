@@ -79,6 +79,7 @@ NEW CHANGES FOR VERSION 4:
 #include <Servo.h>
 #include <AFMotor.h>
 #include <OneWire.h>
+#include <NewPing.h>
 
 int HMC6352Address = 0x42;
 int slaveAddress;
@@ -104,7 +105,7 @@ long encoderTicks[] = {0L, 0L};
 long encoderDirections[] = {forward, backward};
 
 OneWire temp0(4);
-
+NewPing sonar(13, 13, 300);
 
 void setup()
 {
@@ -176,6 +177,13 @@ void incrementEncoder2()
 {
         ++(encoderTicks[1]);
         encoderPositions[1] += encoderDirections[1];
+}
+
+void getI2CPosition()
+{
+        //messageSendInt(encoder.getSpeed());
+        //messageSendInt(encoder.getPosition());
+        messageEnd();
 }
 
 void moveDCmotor()
@@ -392,7 +400,7 @@ void getEncoderPosition()
         messageSendChar('p');
         pin = messageGetInt();
         messageSendInt(pin);
-        messageSendInt(int(encoderPositions[pin]/100));
+        messageSendInt(int(encoderPositions[pin]));
         messageEnd();
 }
 
@@ -507,20 +515,9 @@ float getTemp()
 
 void getPing()
 {
-	long duration;
-        int cm;
-        int pin = 12;
-	messageSendChar('q');
-        pinMode(pin, OUTPUT);
-	digitalWrite(pin, LOW);
-	delayMicroseconds(2);
-	digitalWrite(pin, HIGH);
-	delayMicroseconds(5);
-	digitalWrite(pin, LOW);
-	pinMode(pin, INPUT);
-	duration = pulseIn(pin, HIGH);
-	cm = duration / 29 / 2;
-        messageSendInt(cm);
+        unsigned int microSeconds = sonar.ping();
+        messageSendChar('q');
+        messageSendInt(microSeconds/US_ROUNDTRIP_CM);
         messageEnd();
 }
 
