@@ -1,0 +1,193 @@
+
+* Introduction
+This library uses the Wire library for I2C to talk to the Vex
+Integrated encoders. It provides a fairly simple interface to get the
+speed and position of the encoder. You can get this in terms of the
+encoder, the motor output shaft or even the output of your
+transmission. It allows you to use either the 269 or the 393
+integrated motor encoders.
+
+* How to Use
+** Installation
+Download this code and copy the I2CEncoder to your Arduino libraries
+directory. This location depends on where you installed the Arduino
+software. For more instructions, check out the [[http://arduino.cc/en/Hacking/Libraries][Arduino Website]].
+
+** Wiring
+The following table shows where the VEX Encoder wires should hook up
+on either an Arduino Uno or an Arduino Mega for the GND, Voltage,
+Clock and Data lines.
+
+|              | GND   | V   | SCL        | SDA        |
+|--------------+-------+-----+------------+------------|
+| Wire         | Black | Red | Yellow     | White      |
+| Arduino Uno  | GND   | V   | Analog 5   | Analog 4   |
+| Arduino Mega | GND   | V   | Digital 21 | Digital 20 |
+  
+** Includes
+In order to use this library, you must include both the Wire
+Library[4] and this library (I2CEncoder).
+#+BEGIN_SRC c++
+  #include <Wire.h>
+  #include <I2CEncoder.h>
+#+END_SRC
+
+** Initializing
+The order in which you initialize the encoders is very important!
+First, the wire library must be started by calling =Wire.begin()=,
+then you must call the =init()= of each encoder method *in the order
+that they are chained together.* The one plugged into the Arduino
+first, then the one plugged into that and so on until the last encoder. 
+
+The first argument of the =init()= method is should convert encoder
+revolutions to output rotations. Three of these are defined by
+default:
+- MOTOR_269_ROTATIONS :: The 269 motor and it's matching encoder.
+- MOTOR_393_SPEED_ROTATIONS :: The 393 motor and it's matching encoder
+     when geared for speed.
+- MOTOR_393_TORQUE_ROTATIONS :: The 393 motor and it's matching encoder
+     when geared for torque.
+These can be augmented to take into account your gear ratio by
+multiplying by a conversion factor. This will affect both what value
+you the speed gives you and your position. For example, if your wheel
+spun once every 3 time your 269s out It also supports dealing with
+automatically dealing with conversion put shaft did, you could use
+=(1.0/3.0)*MOTOR_269_ROTATIONS= and your speed would be measured in
+rpm of the wheel, while position would in rotations of the
+wheel. Alternatively, if you want your measurements in terms of feet
+moved and the circumference of you wheel is 1/2 foot, you can use
+=(1.0/2.0)*(1.0/3.0)*MOTOR_269_ROTATIONS= and now your position is
+measured in feet and your speed is in feet-per-minute.
+
+The second argument is a conversion factor for the time-delta of the
+encoder. These are separate for the 269 encoders and 393
+encoders. Simply select =MOTOR_269_TIME_DELTA= or
+=MOTOR_393_TIME_DELTA= depending on your motor choice.
+
+#+BEGIN_SRC c++
+  I2CEncoder encoder;
+  Wire.begin();
+  encoder1.init(MOTOR_269_ROTATIONS, MOTOR_269_TIME_DELTA);
+#+END_SRC
+
+** Getting Speed
+Returns the revolutions of the encoder shaft multiplied by the
+conversion factor. If your using one of the default conversion
+factors, it will be the RPM of the output shaft of the
+motor. Unfortunately, due to the implementation of the encoders it
+takes 4 seconds to get 0 when stopped. The speed gradually gets closer
+and closer to 0 over the course of those 4 seconds, but you should not
+rely on this to detect instantaneous stopping.
+#+BEGIN_SRC c++
+  encoder.getSpeed();
+#+END_SRC
+
+** Getting Position
+Returns the position of the encoder in ticks multiplied by the
+conversion factor. If your using one of the default conversion
+factors, it will be the number of rotations of the output shaft of the
+motor. It currently only uses 4 of the 6 bytes of accuracy, which
+should be more than sufficient for short lived applications.
+#+BEGIN_SRC c++
+  encoder.getPosition()
+#+END_SRC
+
+** Zeroing Position
+Sets the position to 0 on this encoder.
+#+BEGIN_SRC c++
+  encoder.zero();
+#+END_SRC
+
+** Other Useful Functions
+- =void setReversed(bool is_reversed)= :: Sets whether or not to
+     reverse the position of this encoder.
+- =unsigned int getVelocityBits()= :: Get the raw velocity bits from
+     the encoder. These represent the time-delta in between
+     revolutions of the encoder.
+- =long getRawPosition()= :: This returns the position of the encoder
+     in terms of ticks.
+- =void unTerminate()= :: Tells the encoder to pass I2C messages along
+     to any device down the line from it.
+- =void terminate()= :: Tells the encoder to stop passing I2C messages
+     along to any device down the line from it.
+- =unsigned char getAddress()= :: Returns the 7-bit I2C address of
+     this encoder for sending your own messages.
+
+* How the VEX Encoders Work
+This section describes how VEX Encoder I2C protocol works with respect
+to Arduino. It does not describe how I2C works. If you want to know
+how I2C itself works, there are plenty of other good guides. It also
+does not go into detail on the register addresses and other
+information that can be found in spec[1]. Instead, it highlights the
+interesting mis-matches between the VEX Encoder I2C and I2C as
+implemented by the Arduino Wire library[4]. It also goes into further
+detail on termination and initialization.
+
+** Addresses
+Standard I2C addresses are 7-bit addresses that get bit-shifted to the
+left by one. The eighth bit is then used to indicate whether or not to
+read or write. On the other hand, The VEX encoders use even 8-bit
+addressees. These addresses are identical to the 7-bit addresses after
+shifting to the left by one. Throughout this library, the addresses
+used are standard 7-bit and they are left-shifted when needed for
+compatibility with the encoders.
+
+** Registers
+You can use the registers defined in the spec[1] to read position and
+speed of the encoder. Other registers are used to write configuration
+data such as changing the address, changing the termination state or
+re-zeroing the encoder.
+
+*** Reading Registers
+Using the Wire library to read =N= bytes from a register =reg= on a
+device with address =addr= is as simple as:
+
+#+BEGIN_SRC c++
+  Wire.beginTransmission(addr);
+  Wire.write(reg);
+  Wire.endTransmission();
+  Wire.requestFrom(address, N);
+  while (Wire.available()) {
+    Wire.read(); // Do something with each byte.
+  }
+#+END_SRC
+
+*** Writing Registers
+Using the Wire library to write byte =b= to a register =reg= on a
+device with address =addr= is as simple as:
+
+#+BEGIN_SRC c++
+  Wire.beginTransmission(addr);
+  Wire.write(reg);
+  Wire.write(b);
+  Wire.endTransmission();
+#+END_SRC
+
+** Termination
+By default, the encoder is terminated. That means that it won't pass
+messages along to any I2C devices plugged into it. This is important
+during initialization where multiple encoders would have the same
+address. However, in order to talk to the other I2C device(s) plugged
+into this one, you must write to the disable terminator register in
+order to pass messages along.
+
+** Initialization
+When the encoder receives power it starts up. It does not retain it's
+previous address, position or most other data from before it was
+powered down. When it comes back on, it is set to a default
+address. To initialize the device, it must be assigned a new
+address. Once it has been assigned an address it is said to be
+initialized. From this point, you can read it's speed, position and
+change other configuration options. The most important configuration
+to make sure you change when necessary is to disable the termination
+of the encoder if there are any other I2C devices after the encoder.
+Otherwise, you can't communicate with them. If the next device is an
+encoder, you just repeat this process to initialize it too. As a
+result of this initialization process, the order you plug encoders
+into each other is very important.
+
+* Resources
+- [1] [[http://www.vexforum.com/showthread.php?p=255691][Spec]]
+- [2] [[http://www.vexforum.com/wiki/index.php/Intergrated_Motor_Encoders][Wiki]]
+- [3] [[http://www.vexforum.com/showthread.php?p=281977][VexForum Post]]
+- [4] [[http://www.arduino.cc/en/Reference/Wire][Wire Library]]
