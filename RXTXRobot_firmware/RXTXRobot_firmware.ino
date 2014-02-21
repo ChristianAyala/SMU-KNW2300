@@ -273,7 +273,7 @@ void moveEncodedDCmotor()
 	speed = messageGetInt();
 	tickInput = messageGetInt();
 	        
-        long ticks = (long)tickInput * 100;
+        long ticks = (long)tickInput;// * 100;
         speed += 1500;
         
 	if (pin < 0)
@@ -363,8 +363,8 @@ void move2EncodedDCmotor()
 	speed2 = messageGetInt();
 	tickInput2 = messageGetInt();
 
-        long ticks1 = (long)tickInput1 * 100;
-        long ticks2 = (long)tickInput2 * 100;
+        long ticks1 = (long)tickInput1; //* 100;
+        long ticks2 = (long)tickInput2; //* 100;
         
         speed1 += 1500;
         speed2 += 1500;
