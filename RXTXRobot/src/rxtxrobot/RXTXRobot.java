@@ -51,6 +51,14 @@ public class RXTXRobot extends SerialCommunication
          */
         final public static int MOTOR4 = 3;
         /**
+         * Motor value if using Vex Shaft Encoders
+         */
+        final public static int VEX_SHAFT_ENCODERS = 0;
+        /**
+         * Motor value if using Phidget Motors
+         */
+        final public static int PHIDGET_ENCODERS = 1;
+        /**
          * The maximum number of digital pins that can be read from the Arduino
          * (0 &le; pins &lt; NUM_DIGITAL_PINS)
          */
@@ -73,6 +81,7 @@ public class RXTXRobot extends SerialCommunication
         private boolean resetOnClose;
         private boolean overrideValidation;
         private int mixerSpeed;
+        private int encoderType;
         private InputStream in;
         private OutputStream out;
         private SerialPort sPort;
@@ -94,6 +103,7 @@ public class RXTXRobot extends SerialCommunication
                 analogPinCache = null;
                 digitalPinCache = null;
                 mixerSpeed = 30;
+                encoderType = VEX_SHAFT_ENCODERS;
                 resetOnClose = true;
                 moveEncodedMotor = false;
                 overrideValidation = false;
@@ -453,6 +463,17 @@ public class RXTXRobot extends SerialCommunication
                 return new AnalogPin(x, analogPinCache[x]);
         }
 
+        /**
+         * Returns the reading of the specified analog pin.
+         * 
+         * This returns a value between [0, 1023], and refers to a voltage
+         * between 0 and 5 volts. A reading of 1023 refers to the max 5V, and
+         * a reading of 0 refers to 0V.
+         * 
+         * @param pinNumber The number of the pin: 0 &lt; x &lt;
+         * {@link #NUM_ANALOG_PINS NUM_ANALOG_PINS}
+         * @return The reading of the analog pin, or -1 if error.
+         */
         public int getAnalogPinReading(int pinNumber)
         {
                 if (!isConnected())
@@ -521,6 +542,15 @@ public class RXTXRobot extends SerialCommunication
                 return null;
         }
         
+        /**
+         * Returns the reading of the specified digital pin.        
+         * 
+         * @param pinNumber The number of the pin: currently only supports pin 4.
+         * The other digital pins are already assigned to other components (check
+         * the Arduino Pinout guide for a reminder of what pins map to what
+         * components).
+         * @return The reading of the digital pin, or -1 if error
+         */
         public int getDigitalPinReading(int pinNumber)
         {
                 if (!isConnected())
@@ -1004,7 +1034,7 @@ public class RXTXRobot extends SerialCommunication
                 }
                 debug("Running encoded motor " + motor + " to tick " + ticks + " at speed " + speed);
                 this.moveEncodedMotor = true;
-                if (!"".equals(sendRaw("e " + motor + " " + speed + " " + ticks)))
+                if (!"".equals(sendRaw("e " + encoderType + " " + motor + " " + speed + " " + ticks)))
                 {
                     debug("Done running encoded motor");
                 }
@@ -1080,7 +1110,7 @@ public class RXTXRobot extends SerialCommunication
                 }
                 debug("Running two motors, motor " + motor1 + " at speed " + speed1 + " for " + tick1 + " ticks and motor " + motor2 + " at speed " + speed2 + " for " + tick2 + " ticks");
                 this.moveEncodedMotor = true;
-                if (!"".equals(sendRaw("E " + motor1 + " " + speed1 + " " + tick1 + " " + motor2 + " " + speed2 + " " + tick2)))
+                if (!"".equals(sendRaw("E " + encoderType + " " + motor1 + " " + speed1 + " " + tick1 + " " + motor2 + " " + speed2 + " " + tick2)))
                 {
                     debug("Done running 2 encoded motors");
                 }
@@ -1352,6 +1382,27 @@ public class RXTXRobot extends SerialCommunication
         public boolean getHasEncodedMotors()
         {
                 return this.hasEncodedMotors;
+        }
+        
+        /**
+         * Sets the type of motor encoder attached to the robot.
+         * 
+         * Different types of encoders have different ticks-per-revolution ratios.
+         * Call this method BEFORE running any motor motion command, in particular
+         * the {@link #runEncodedMotor(int, int, int) runEncodedMotor()} method.
+         * 
+         * @param encoderType The type of encoder being used to measure ticks.
+         * Must be one of {@link #VEX_SHAFT_ENCODERS RXTXRobot.VEX_SHAFT_ENCODERS}
+         * or {@link #PHIDGET_ENCODERS RXTXRobot.PHIDGET_ENCODERS}.
+         */
+        public void setMotorEncoderType(int encoderType)
+        {
+                if (encoderType != VEX_SHAFT_ENCODERS && encoderType != PHIDGET_ENCODERS)
+                {
+                        error("Invalid encoder type: " + encoderType, "RXTXRobot", "setMotorEncoderType");
+                        return;
+                }
+                this.encoderType = encoderType;
         }
 
         /**

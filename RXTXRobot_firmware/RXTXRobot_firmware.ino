@@ -6,22 +6,23 @@
 
  Control Arduino board functions with the following messages:
  
- r a -> read analog pins
- r d -> read digital pins
- r t -> read temperature sensor from pin 4
+ r a [num] -> read analog pin [num]
+ r d [num] -> read digital pin [num]
  q -> Gets a ping result on pin 13, in centimeters
  c -> Gets a conductivity reading
 
  v [num] [position] -> move servo number [num] to position [position] (position is (0,180)
  d [num] [speed] [t] -> set dc motor number [num] at speed [speed] for time [t], if t=0 then keep on.
- e [num] [speed] [ticks] -> run encoded dc motor number [num] at speed [speed] for ticks [ticks]
+ e [type] [num] [speed] [ticks] -> run encoded dc motor number [num] at speed [speed] for ticks [ticks].
+                                -> [type] is 0 for Vex Shaft encoder, 1 for phidget encoder
  p [num] -> get the current encoder tick value for motor number [num]
  z [num] -> zero out the encoder tick value for motor number [num]
  
  The next 3 do the same thing for 2 motors as close to simultaneously as possible:
  V [position1] [position2] [position3] -> move servos to position 1, 2, and 3 [position] (position is between [0,180])
  D [num1] [speed1] [num2] [speed2] [t] -> set dc motor number [num] at speed [speed] for time [t], if t=0 then go forever.
- E [num1] [speed1] [ticks1] [num2] [speed2] [ticks2] -> run 2 encoded dc motors at same time
+ E [type] [num1] [speed1] [ticks1] [num2] [speed2] [ticks2] -> run 2 encoded dc motors at same time
+                                                            -> [type] is 0 for Vex Shaft encoder, 1 for phidget encoder
 
 
 
@@ -265,13 +266,18 @@ void moveDCmotor()
 
 void moveEncodedDCmotor()
 {
-	int pin, speed, tickInput;
+	int encoderType, pin, speed, tickInput;
 	
+        encoderType = messageGetInt();
 	pin = messageGetInt();
 	speed = messageGetInt();
 	tickInput = messageGetInt();
 	        
-        long ticks = (long)tickInput;// * 100;
+        long ticks = (long)tickInput;
+        
+        if (encoderType == 1)
+                ticks *= 100L;
+        
         speed += 1500;
         
 	if (pin < 0)
@@ -296,6 +302,7 @@ void moveEncodedDCmotor()
         encoderTicks[pin] = 0L;
         
         messageSendChar('e');
+        messageSendInt(encoderType);
         messageSendInt(pin);
         messageSendInt(speed-1500);
         messageSendInt(tickInput);
@@ -353,7 +360,8 @@ void move2DCmotor()
 
 void move2EncodedDCmotor()
 {
-	int pin1, speed1, tickInput1, pin2, speed2, tickInput2;
+	int encoderType, pin1, speed1, tickInput1, pin2, speed2, tickInput2;
+        encoderType = messageGetInt();
 	pin1 = messageGetInt();
 	speed1 = messageGetInt();
 	tickInput1 = messageGetInt();
@@ -361,8 +369,13 @@ void move2EncodedDCmotor()
 	speed2 = messageGetInt();
 	tickInput2 = messageGetInt();
 
-        long ticks1 = (long)tickInput1; //* 100;
-        long ticks2 = (long)tickInput2; //* 100;
+        long ticks1 = (long)tickInput1;
+        long ticks2 = (long)tickInput2;
+        if (encoderType == 1)
+        {
+                ticks1 *= 100L;
+                ticks2 *= 100L;
+        }
         
         speed1 += 1500;
         speed2 += 1500;
@@ -402,6 +415,7 @@ void move2EncodedDCmotor()
 	dc_motors[pin2].write(halt);
 
         messageSendChar('E');
+        messageSendInt(encoderType);
         messageSendInt(pin1);
         messageSendInt(speed1-1500);
         messageSendInt(tickInput1);
