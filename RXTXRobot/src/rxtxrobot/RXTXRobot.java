@@ -9,6 +9,7 @@ import gnu.io.UnsupportedCommOperationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 
 /**
  * @author Chris King
@@ -53,7 +54,7 @@ public class RXTXRobot extends SerialCommunication
          * The maximum number of digital pins that can be read from the Arduino
          * (0 &le; pins &lt; NUM_DIGITAL_PINS)
          */
-        final public static int NUM_DIGITAL_PINS = 3;
+        final public static int NUM_DIGITAL_PINS = 13;
         /**
          * The maximum number of analog pins that can be read from the Arduino
          * (0 &le; pins &lt; NUM_ANALOG_PINS)
@@ -452,6 +453,39 @@ public class RXTXRobot extends SerialCommunication
                 return new AnalogPin(x, analogPinCache[x]);
         }
 
+        public int getAnalogPinReading(int pinNumber)
+        {
+                if (!isConnected())
+                {
+                        error("Robot isn't connected!", "RXTXRobot", "getAnalogPinReading");
+                        return -1;
+                }
+                if (pinNumber < 0 || pinNumber > NUM_ANALOG_PINS)
+                {
+                        error("Invalid analog pin number: " + pinNumber, "RXTXRobot", "getAnalogPinReading");
+                        return -1;
+                }
+                int pinValue = -1;
+                this.attemptTryAgain = true;
+                String response = this.sendRaw("r a " + pinNumber,200);
+                String[] arr = response.split("\\s+");
+                this.attemptTryAgain = false;
+                if (arr.length != 3)
+                {
+                        error("Invalid length returned: " + arr.length, "RXTXRobot", "getAnalogPinReading");
+                        return -1;
+                }
+                try
+                {
+                        pinValue = Integer.parseInt(arr[2]);
+                        return pinValue;
+                } 
+                catch (NumberFormatException e)
+                {
+                        error("Unable to parse Arduino response to an integer", "RXTXRobot", "getAnalogPinReading");
+                }
+                return -1;
+        }
         /**
          * Returns a DigitalPin object for the specified pin.
          *
@@ -485,6 +519,41 @@ public class RXTXRobot extends SerialCommunication
                 }
                 error("Digital pin " + x + " doesn't exist.", "RXTXRobot", "getDigitalPin");
                 return null;
+        }
+        
+        public int getDigitalPinReading(int pinNumber)
+        {
+                if (!isConnected())
+                {
+                        error("Robot isn't connected!", "RXTXRobot", "getDigitalPinReading");
+                        return -1;
+                }
+                int[] availableDigitalPins = {4};
+                if (Arrays.binarySearch(availableDigitalPins, pinNumber) < 0)
+                {
+                        error("Invalid digital pin number: " + pinNumber, "RXTXRobot", "getDigitalPinReading");
+                        return -1;
+                }
+                int pinValue = -1;
+                this.attemptTryAgain = true;
+                String response = this.sendRaw("r d " + pinNumber,200);
+                String[] arr = response.split("\\s+");
+                this.attemptTryAgain = false;
+                if (arr.length != 3)
+                {
+                        error("Invalid length returned: " + arr.length, "RXTXRobot", "getDigitalPinReading");
+                        return -1;
+                }
+                try
+                {
+                        pinValue = Integer.parseInt(arr[2]);
+                        return pinValue;
+                } 
+                catch (NumberFormatException e)
+                {
+                        error("Unable to parse Arduino response to an integer", "RXTXRobot", "getAnalogPinReading");
+                }
+                return -1;
         }
 
         /**

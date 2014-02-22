@@ -19,26 +19,26 @@
  z [num] -> zero out the encoder tick value for motor number [num]
  
  The next 3 do the same thing for 2 motors as close to simultaneously as possible:
- V [position1] [position2] -> move servos to position 1 and 2 [position] (position is (0,180)
- D [num1] [speed1] [num2] [speed2] [t] -> set dc motor number [num] at speed [speed] for time [t], if t=0 then keep on.
+ V [position1] [position2] [position3] -> move servos to position 1, 2, and 3 [position] (position is between [0,180])
+ D [num1] [speed1] [num2] [speed2] [t] -> set dc motor number [num] at speed [speed] for time [t], if t=0 then go forever.
  E [num1] [speed1] [ticks1] [num2] [speed2] [ticks2] -> run 2 encoded dc motors at same time
 
 
 
 Sensor layout:
 	Digital Pins:
-		1 - Unused
+		0 and 1 - RX/TX pins, not recommended to be used
 		2 - Motor 1 Encoder
 		3 - Motor 2 Encoder
-		4 - Temperature
+		4 - Unused
 		5 - Encoded DC Motor 1
 		6 - Encoded DC Motor 2
 		7 - DC Motor 1
 		8 - DC Motor 2
 		9 - Servo
 		10 - Servo
-		11 - Conductivity Digital Pin 1
-		12 - Conductivity Digital Pin 2
+		11 - Servo
+		12 - Conductivity Digital Pin
 		13 - Ping Sensor
 
 	Analog Pins:
@@ -78,7 +78,6 @@ NEW CHANGES FOR VERSION 4:
 #include <SimpleMessageSystem.h>
 #include <Servo.h>
 #include <AFMotor.h>
-#include <OneWire.h>
 #include <NewPing.h>
 
 Servo servo0;
@@ -104,7 +103,6 @@ long encoderPositions[] = {0L, 0L};
 long encoderTicks[] = {0L, 0L};
 long encoderDirections[] = {forward, backward};
 
-OneWire temp0(4);
 NewPing sonar(13, 13, 300);
 
 void setup()
@@ -188,7 +186,7 @@ void loop()
 				readpin();
 				break;
 			case 'v':
-				moveservo();
+				moveServo();
 				break;
 			case 'd':
 				moveDCmotor();
@@ -433,7 +431,7 @@ void zeroEncoderPosition()
         messageEnd();
 }
 
-void moveservo()
+void moveServo()
 {
 	int pin, position;
 	messageSendChar('v');
@@ -465,74 +463,25 @@ void moveAllServo()
 
 void readpin()
 {
-	int maximum_allowed_temperature = 50;
-	int temperature_reading = maximum_allowed_temperature+1;
-	int retries = 10;
+        int pin;
 	switch (messageGetChar())
 	{
 		case 'd':
 			messageSendChar('d');
-			pinMode(1, INPUT);
-			pinMode(11, INPUT);
-			pinMode(12, INPUT);
-			messageSendInt(digitalRead(1));
-			messageSendInt(digitalRead(11));
-			messageSendInt(digitalRead(12));
+                        pin = messageGetInt();
+                        messageSendInt(pin);
+                        pinMode(pin, INPUT);
+                        messageSendInt(digitalRead(pin));
 			messageEnd();
 			break;
 		case 'a':
 			messageSendChar('a');
-			for (char i=0;i < 6; ++i)
-				messageSendInt(analogRead(i));
-			messageEnd();
-			break;
-		case 't':
-			do
-			{
-				temperature_reading = (int)getTemp();
-				--retries;
-			}
-			while ((temperature_reading > maximum_allowed_temperature || temperature_reading <= -1000) && retries > 0);
-			messageSendChar('t');
-			messageSendInt(temperature_reading);
-			messageEnd();
-			break;
+                        pin = messageGetInt();
+                        messageSendInt(pin);
+                        messageSendInt(analogRead(pin));
+                        messageEnd();
+                        break;
 	}
-}
-
-// This function is to get the temperature (in Celcius) from the sensor.
-// It is taken from http://bildr.org/2011/07/ds18b20-arduino/
-float getTemp()
-{
-	byte data[12];
-	byte addr[8];
-	if (!temp0.search(addr))
-	{
-		temp0.reset_search();
-		return -1001;
-	}
-	if (OneWire::crc8(addr, 7) != addr[7])
-	{
-		return -1002;
-	}
-	if (addr[0] != 0x10 && addr[0] != 0x28)
-	{
-		return -1003;
-	}
-	temp0.reset();
-	temp0.select(addr);
-	temp0.write(0x44,1);
-	delay(750);
-	byte present = temp0.reset();
-	temp0.select(addr);
-	temp0.write(0xBE);
-	for (int i=0; i < 9; ++i)
-		data[i] = temp0.read();
-	temp0.reset_search();
-	byte MSB = data[1];
-	byte LSB = data[0];
-	float tempRead = ((MSB << 8) | LSB);
-	return (tempRead / 16);
 }
 
 void getPing()
@@ -545,8 +494,6 @@ void getPing()
 
 void getConductivity()
 {
-        int reading1, reading2;
-
         cli();
         messageSendChar('c');
         messageSendInt(finalConductivity);
