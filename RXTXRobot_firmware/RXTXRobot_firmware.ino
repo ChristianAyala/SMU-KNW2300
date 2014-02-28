@@ -30,15 +30,15 @@ Sensor layout:
 		1 - Unused
 		2 - Motor 1 Encoder
 		3 - Motor 2 Encoder
-		4 - Temperature
+		4 - Unused
 		5 - Encoded DC Motor 1
 		6 - Encoded DC Motor 2
 		7 - DC Motor 1
 		8 - DC Motor 2
 		9 - Servo
 		10 - Servo
-		11 - Conductivity Digital Pin 1
-		12 - Conductivity Digital Pin 2
+		11 - Servo
+		12 - Conductivity Digital Pin 1
 		13 - Ping Sensor
 
 	Analog Pins:
@@ -77,9 +77,7 @@ NEW CHANGES FOR VERSION 4:
 
 #include <SimpleMessageSystem.h>
 #include <Servo.h>
-#include <AFMotor.h>
 #include <OneWire.h>
-#include <NewPing.h>
 
 Servo servo0;
 Servo servo1;
@@ -105,7 +103,6 @@ long encoderTicks[] = {0L, 0L};
 long encoderDirections[] = {forward, backward};
 
 OneWire temp0(4);
-NewPing sonar(13, 13, 300);
 
 void setup()
 {
@@ -123,7 +120,7 @@ void setup()
         attachInterrupt(1, incrementEncoder2, RISING);
         pinMode(12, OUTPUT);
         
-        initializeConductivityInterrupt();        
+        //initializeConductivityInterrupt();        
 }
 
 void initializeConductivityInterrupt()
@@ -134,28 +131,28 @@ void initializeConductivityInterrupt()
           
           //Turn off interrupt
           cli();
-          
-          //set timer1 interrupt at 200Hz
-          
-          TCCR0A = 0;// set entire TCCR2A register to 0
-          TCCR0B = 0;// same for TCCR2B
-          TCNT0  = 0;//initialize counter value to 0
+  
+          //set timer2 interrupt at 1kHz
+          TCCR2A = 0;// set entire TCCR2A register to 0
+          TCCR2B = 0;// same for TCCR2B
+          TCNT2  = 0;//initialize counter value to 0
           // set compare match register for 1khz increments
-          OCR0A = 15;// = (16*10^6) / (1000*1024) - 1 (must be <256)
+          OCR2A = 249;// = (16*10^6) / (1000*64) - 1 (must be <256)
           // turn on CTC mode
-          TCCR0A |= (1 << WGM01);
-          // Set CS01 and CS00 bits for 1024 prescaler
-          TCCR0B |= (1 << CS02) | (1 << CS00);   
+          TCCR2A |= (1 << WGM21);
+          // Set CS21 bit for 64 prescaler
+          TCCR2B |= (1 << CS22);   
           // enable timer compare interrupt
-          TIMSK0 |= (1 << OCIE0A);
-          
+          TIMSK2 |= (1 << OCIE2A);
+
           //Turn on interrupt
           sei();
 }
 
 //Interrupt function for conductivity sensor
-ISR(TIMER0_COMPA_vect)
+ISR(TIMER2_COMPA_vect)
 {
+  
           //For this to work, we needed simultaneous digital pin writes. This
           //was not possible with digitalWrite(). Refer to
           //http://www.arduino.cc/en/Reference/PortManipulation
@@ -176,6 +173,7 @@ ISR(TIMER0_COMPA_vect)
                   conductivity2 = analogRead(4);
                   finalConductivity = abs(conductivity1 - conductivity2);
           }
+    
 }
 
 void loop()
@@ -537,9 +535,20 @@ float getTemp()
 
 void getPing()
 {
-        unsigned int microSeconds = sonar.ping();
-        messageSendChar('q');
-        messageSendInt(microSeconds/US_ROUNDTRIP_CM);
+        long duration;
+        int cm;
+        int pin = 13;
+	messageSendChar('q');
+        pinMode(pin, OUTPUT);
+	digitalWrite(pin, LOW);
+	delayMicroseconds(2);
+	digitalWrite(pin, HIGH);
+	delayMicroseconds(5);
+	digitalWrite(pin, LOW);
+	pinMode(pin, INPUT);
+	duration = pulseIn(pin, HIGH);
+	cm = duration / 29 / 2;
+        messageSendInt(cm);
         messageEnd();
 }
 
