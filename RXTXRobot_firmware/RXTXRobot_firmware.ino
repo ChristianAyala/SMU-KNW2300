@@ -55,21 +55,10 @@ Authors:
  Base: Thomas Ouellet Fredericks 
  Additions: Alexandre Quessy
  Motor Additions: Marc Christensen
- Temperature addition: Chris King
  Cleanup and complete rewrite: Chris King
- Version 4 Update: Charlie Albright
- Conductivity addition: Chris Ayala
+ Current Maintainers: Chris Ayala, Charlie Albright
+                      Austin Wells, Luke Oglesbee
  
-ATTENTION:
-NEW CHANGES FOR VERSION 4:
-  + added speed control for DC motors
-    + speed range is now -500 to 500 (based on pulse width)
-    + safeguards are in place if speed inputted is over 500 or under -500
-  * fixed encoding logic by implementing interrupt pins on Digital 2 and 3 
-    * allows for more accurate tracking of ticks as well as speed control
-  - got rid of the compass implementation to free up Analog pin space
-  |||CLEANED AND TESTED|||
-  + Motors with encoders can now track how far they've travelled.
  */
 
 #define BAUD_RATE 9600
@@ -100,7 +89,7 @@ int halt = 1500;
 int encoders_length = 2;
 long encoderPositions[] = {0L, 0L};
 long encoderTicks[] = {0L, 0L};
-long encoderDirections[] = {forward, backward};
+long encoderDirections[] = {forward, forward};
 
 OneWire temp0(4);
 
@@ -231,6 +220,35 @@ void incrementEncoder2()
         encoderPositions[1] += encoderDirections[1];
 }
 
+void rampUpMotorSpeed(int pin, int speed)
+{
+        //the time for motor to reach full speed is divisions * delay (in ms.)
+        int increment, incrementDivisions = 10, incrementDelay = 100;
+        
+        increment = (speed - 1500) / incrementDivisions;
+        
+        for (int i = 0; i < incrementDivisions; ++i)
+        {
+                dc_motors[pin].write(halt + (i * increment));
+                delay(incrementDelay);
+        }
+}
+
+void rampUpMotorSpeed(int pin1, int speed1, int pin2, int speed2)
+{
+        int increment1, increment2, incrementDivisions = 10, incrementDelay = 100;
+        
+        increment1 = (speed1 - 1500) / incrementDivisions;
+        increment2 = (speed2 - 1500) / incrementDivisions;
+        
+        for (int i = 0; i < incrementDivisions; ++i)
+        {
+                dc_motors[pin1].write(halt + (i * increment1));
+                dc_motors[pin2].write(halt + (i * increment2));
+                delay(incrementDelay);
+        }
+}
+
 void moveDCmotor()
 {
 	int pin, speed, time;
@@ -242,7 +260,7 @@ void moveDCmotor()
 	time = messageGetInt();
 	messageSendInt(time);
 	messageEnd();
-                
+
         speed += 1500;
 
 	if (pin < 0)
@@ -250,12 +268,12 @@ void moveDCmotor()
         if (pin < encoders_length)
                 encoderDirections[pin] = (speed > halt) ? forward : backward;
         if(speed > 2000)
-                dc_motors[pin].write(2000);
+                speed = 2000;
         else if(speed < 1000)
-                dc_motors[pin].write(1000);
-        else
-                dc_motors[pin].write(speed);
+                speed = 1000;
         
+        rampUpMotorSpeed(pin, speed);
+                
 	if (time != 0)
 	{
 		delay(time);
@@ -271,7 +289,7 @@ void moveEncodedDCmotor()
 	speed = messageGetInt();
 	tickInput = messageGetInt();
 	        
-        long ticks = (long)tickInput;// * 100;
+        long ticks = (long)tickInput;
         speed += 1500;
         
 	if (pin < 0)
@@ -281,11 +299,11 @@ void moveEncodedDCmotor()
 
         encoderDirections[pin] = (speed > halt) ? forward : backward;
         if(speed > 2000)
-                dc_motors[pin].write(2000);
+                speed = 2000;
         else if(speed < 1000)
-                dc_motors[pin].write(1000);
-        else
-                dc_motors[pin].write(speed);
+                speed = 1000;
+        
+        rampUpMotorSpeed(pin, speed);
         
         while (encoderTicks[pin] < ticks)
         {
@@ -330,18 +348,16 @@ void move2DCmotor()
                 encoderDirections[pin2] = (speed2 > halt) ? forward : backward;
         
         if(speed1 > 2000)
-                dc_motors[pin1].write(2000);
+                speed1 = 2000;
         else if(speed1 < 1000)
-                dc_motors[pin1].write(1000);
-        else
-	        dc_motors[pin1].write(speed1);
+                speed1 = 1000;
 
         if(speed2 > 2000)
-                dc_motors[pin2].write(2000);
+                speed2 = 2000;
         else if(speed2 < 1000)
-                dc_motors[pin2].write(1000);
-        else
-                dc_motors[pin2].write(speed2);
+                speed2 = 1000;
+                
+        rampUpMotorSpeed(pin1, speed1, pin2, speed2);
                 
 	if (time != 0)
 	{
@@ -361,8 +377,8 @@ void move2EncodedDCmotor()
 	speed2 = messageGetInt();
 	tickInput2 = messageGetInt();
 
-        long ticks1 = (long)tickInput1; //* 100;
-        long ticks2 = (long)tickInput2; //* 100;
+        long ticks1 = (long)tickInput1;
+        long ticks2 = (long)tickInput2;
         
         speed1 += 1500;
         speed2 += 1500;
@@ -375,18 +391,16 @@ void move2EncodedDCmotor()
         encoderDirections[pin2] = (speed2 > halt) ? forward : backward;
         
         if(speed1 > 2000)
-                dc_motors[pin1].write(2000);
+                speed1 = 2000;
         else if(speed1 < 1000)
-                dc_motors[pin1].write(1000);
-        else
-	        dc_motors[pin1].write(speed1);
+                speed1 = 1000;
 
         if(speed2 > 2000)
-                dc_motors[pin2].write(2000);
+                speed2 = 2000;
         else if(speed2 < 1000)
-                dc_motors[pin2].write(1000);
-        else
-                dc_motors[pin2].write(speed2);
+                speed2 = 1000;
+        
+        rampUpMotorSpeed(pin1, speed1, pin2, speed2);
                 
         while (encoderTicks[pin1] < ticks1 || encoderTicks[pin2] < ticks2)
         {
@@ -533,6 +547,8 @@ float getTemp()
 	return (tempRead / 16);
 }
 
+//Check out this site for implementation details:
+//http://arduino.cc/en/Tutorial/Ping
 void getPing()
 {
         long duration;
@@ -554,8 +570,6 @@ void getPing()
 
 void getConductivity()
 {
-        int reading1, reading2;
-
         cli();
         messageSendChar('c');
         messageSendInt(finalConductivity);
