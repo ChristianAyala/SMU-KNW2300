@@ -6,6 +6,7 @@
 
  Control Arduino board functions with the following messages:
  
+ n -> Gets full version number
  r a -> read analog pins
  r d -> read digital pins
  r t -> read temperature sensor from pin 4
@@ -193,6 +194,9 @@ void loop()
 	{
 		switch (messageGetChar())
 		{
+			case 'n':
+				getVersionNumber();
+				break;
 			case 'r':
 				readpin();
 				break;
@@ -470,6 +474,16 @@ void moveAllServo()
 	servos[0].write(position1);
 	servos[1].write(position2);
         servos[2].write(position3);
+}
+
+
+void getVersionNumber()
+{
+	messageSendChar('n');
+	messageSendInt(versionMajor);
+	messageSendInt(versionMinor);
+	messageSendInt(versionSubminor);
+	messageEnd();
 }
 
 void readpin()
