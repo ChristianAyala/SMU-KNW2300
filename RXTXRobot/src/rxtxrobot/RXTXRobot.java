@@ -20,6 +20,15 @@ public class RXTXRobot extends SerialCommunication
          * Constants - These should not change unless you know what you are
          * doing
          */
+
+         /**
+         * Version numbers to be checked against 
+         * firmware versioning numbers
+         */
+        final private static int VERSION_MAJOR = 0;
+        final private static int VERSION_MINOR = 0;
+        final private static int VERSION_SUBMINOR = 0; 
+
         final private static boolean ONLY_ALLOW_TWO_MOTORS = true;
         /**
          * Refers to the servo motor located in SERVO1 (pin 9)
@@ -204,6 +213,42 @@ public class RXTXRobot extends SerialCommunication
                         }
                         System.exit(1);
                 }
+
+                String response = this.sendRaw("n",0);
+                String[] arr = response.split("\\s+");
+                if (arr.length != 4)
+                {
+                    error("Incorrect response from Arduino (Invalid length)!", "RXTXRobot", "versionNumber"); 
+                    debug("Version Response: " + response); 
+                    return; 
+                }
+                try
+                {
+                    int firmwareVMajor = Integer.parseInt(arr[1]); 
+                    int firmwareVMinor = Integer.parseInt(arr[2]);
+                    int firmwareVSubminor = Integer.parseInt(arr[3]); 
+                    if(firmwareVMajor > VERSION_MAJOR)
+                    {
+                       System.out.println("Version number mismatch. Please update API");
+                    } 
+                    else if (firmwareVMinor > VERSION_MINOR)
+                    {
+                        System.out.println("Version number mismatch. API update suggested"); 
+                    }
+                    else if (firmwareVSubminor > VERSION_SUBMINOR)
+                    {
+                        System.out.println("Subminor firmware update, no action necessary"); 
+                    }
+                    System.out.println("\nFirmware version: " + firmwareVMajor + "." + firmwareVMinor + "." + firmwareVSubminor +
+                        "\nAPI version: " + VERSION_MAJOR + "." + VERSION_MINOR + "." + VERSION_SUBMINOR); 
+                }
+                catch(Exception e)
+                {
+                    error("Incorrect response from Arduino (Invalid datatype)!","RXTXRobot","versionNumber");
+                    debug("Version Response: " + response);
+                }
+
+
         }
 
         /**
