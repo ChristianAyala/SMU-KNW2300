@@ -80,12 +80,12 @@ NEW CHANGES FOR VERSION 4:
 #include <OneWire.h>
 
 /*
-firmware version numbers, split into major, minor subminor.
-Must match version numbers in API.
-Major - requires api update
-Minor - suggest api update
-Subminor - no api update needed 
-*/
+ * firmware version numbers, split into major, minor subminor.
+ * must match version numbers in API.
+ * Major - requires api update
+ * Minor - suggest api update
+ * Subminor - no api update needed 
+ */
 const int versionMajor = 0;
 const int versionMinor = 0;
 const int versionSubminor = 0; 
