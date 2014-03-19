@@ -1088,6 +1088,45 @@ public class RXTXRobot extends SerialCommunication
                 }
         }
 
+        /**
+         * Sets the amount of time it takes for the motors to reach their intended speed.
+         *
+         * This method sets the ramp-up time for the motors. By default, motors
+         * have a ramp-up time of 0 milliseconds; that is, they reach their full
+         * intended speed in 0 milliseconds. Use this method to set how long it
+         * takes to reach their intended speed. If running a motor based on time,
+         * the ramp-up time is included in the total time. For example, setting
+         * the ramp-up time to 1500 ms. then running a motor for 5000 ms. results
+         * in only 3500 seconds at the intended speed.
+         * @param millis The desired ramp-up time in milliseconds. Default = 0ms.
+         * Note that this affects ALL connected motors, not just a single motor.
+         * Subsequent calls to motion methods, like
+         * {@link #runEncodedMotor(int, int, int) runEncodedMotor} or
+         * {@link #runMotor(int, int, int) runMotor} will have the ramp-up time
+         * applied.
+         */
+        public void setMotorRampUpTime(int millis)
+        {
+                if (!isConnected())
+                {
+                        error("Robot is not connected!", "RXTXRobot", "setMotorRampUpTime");
+                        return;
+                }
+                if (millis < 0)
+                {
+                        error("Invalid argument (time must be at least 0): " + millis, "RXTXRobot", "setMotorRampUpTime");
+                        return;
+                }
+                if (!"".equals(sendRaw("m " + millis)))
+                {
+                        debug("Done setting the ramp up time");
+                }
+                else
+                {
+                        error("Empty response from the arduino");
+                }
+        }
+
         /*
          * This method just checks to make sure that only two DC motors are
          * running

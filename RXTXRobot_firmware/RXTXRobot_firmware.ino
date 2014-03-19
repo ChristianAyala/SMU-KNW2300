@@ -24,11 +24,9 @@
  D [num1] [speed1] [num2] [speed2] [t] -> set dc motor number [num] at speed [speed] for time [t], if t=0 then keep on.
  E [num1] [speed1] [ticks1] [num2] [speed2] [ticks2] -> run 2 encoded dc motors at same time
 
-
-
 Sensor layout:
 	Digital Pins:
-		1 - Unused
+                0/1 - RX/TX Pins, don't use
 		2 - Motor 1 Encoder
 		3 - Motor 2 Encoder
 		4 - Unused
@@ -59,15 +57,12 @@ Authors:
  Cleanup and complete rewrite: Chris King
  Current Maintainers: Chris Ayala, Charlie Albright
                       Austin Wells, Luke Oglesbee
- 
  */
 
 #define BAUD_RATE 9600
 
-
 #include <SimpleMessageSystem.h>
 #include <Servo.h>
-#include <OneWire.h>
 
 Servo servo0;
 Servo servo1;
@@ -93,8 +88,6 @@ int encoders_length = 2;
 long encoderPositions[] = {0L, 0L};
 long encoderTicks[] = {0L, 0L};
 long encoderDirections[] = {forward, forward};
-
-OneWire temp0(4);
 
 void setup()
 {
@@ -282,13 +275,14 @@ void rampUpMotorSpeed(int pin1, int speed1, int pin2, int speed2)
 void moveDCmotor()
 {
 	int pin, speed, time;
-	messageSendChar('d');
 	pin = messageGetInt();
-	messageSendInt(pin);
 	speed = messageGetInt();
-	messageSendInt(speed);
 	time = messageGetInt();
-	messageSendInt(time);
+	
+        messageSendChar('d');
+        messageSendInt(pin);
+        messageSendInt(speed);
+        messageSendInt(time);
 	messageEnd();
 
         speed += 1500;
@@ -302,13 +296,16 @@ void moveDCmotor()
         else if(speed < 1000)
                 speed = 1000;
         
-        rampUpMotorSpeed(pin, speed);
+        rampUpMotorSpeed(pin, speed);      
                 
-	if (time != 0)
+	if (time > 0)
 	{
-		delay(time);
-		dc_motors[pin].write(halt);
+                time -= (motorIncrements * incrementDelay);
+                if (time > 0)
+		        delay(time);
+                dc_motors[pin].write(halt);
 	}
+        
 }
 
 void moveEncodedDCmotor()
@@ -353,18 +350,19 @@ void moveEncodedDCmotor()
 void move2DCmotor()
 {
 	int pin1, speed1, pin2, speed2, time;
-	messageSendChar('D');
 	pin1 = messageGetInt();
-	messageSendInt(pin1);
 	speed1 = messageGetInt();
-	messageSendInt(speed1);
 	pin2 = messageGetInt();
-	messageSendInt(pin2);
-	speed2 = messageGetInt();
-	messageSendInt(speed2);
+	speed2 = messageGetInt();	
 	time = messageGetInt();
-	messageSendInt(time);
-	messageEnd();
+
+        messageSendChar('D');
+        messageSendInt(pin1);
+        messageSendInt(speed1);
+        messageSendInt(pin2);
+        messageSendInt(speed2);
+        messageSendInt(time);
+        messageEnd();
 	
         speed1 += 1500;
         speed2 += 1500;
@@ -388,10 +386,13 @@ void move2DCmotor()
                 speed2 = 1000;
                 
         rampUpMotorSpeed(pin1, speed1, pin2, speed2);
+        
                 
-	if (time != 0)
+	if (time > 0)
 	{
-		delay(time);
+                time -= (motorIncrements * incrementDelay);
+                if (time > 0)
+                        delay(time);
 		dc_motors[pin1].write(halt);
 		dc_motors[pin2].write(halt);
 	}
@@ -458,8 +459,8 @@ void move2EncodedDCmotor()
 void getEncoderPosition()
 {
         int pin;
-        messageSendChar('p');
         pin = messageGetInt();
+        messageSendChar('p');
         messageSendInt(pin);
         messageSendInt(int(encoderPositions[pin]));
         messageEnd();
@@ -468,22 +469,24 @@ void getEncoderPosition()
 void zeroEncoderPosition()
 {
         int pin;
-        messageSendChar('z');
         pin = messageGetInt();
+        messageSendChar('z');
         messageSendInt(pin);
-        encoderPositions[pin] = 0L;
         messageEnd();
+        encoderPositions[pin] = 0L;
 }
 
 void moveservo()
 {
 	int pin, position;
-	messageSendChar('v');
 	pin = messageGetInt();
-	messageSendInt(pin);
 	position = messageGetInt();
-	messageSendInt(position);
-	messageEnd();
+
+        messageSendChar('v');
+        messageSendInt(pin);
+        messageSendInt(position);
+        messageEnd();
+        
 	if (pin < 0 || pin >= servos_length)
 		return;
 	servos[pin].write(position);
@@ -492,14 +495,16 @@ void moveservo()
 void moveAllServo()
 {
 	int position1, position2, position3;
-	messageSendChar('V');
 	position1 = messageGetInt();
-	messageSendInt(position1);
 	position2 = messageGetInt();
-	messageSendInt(position2);
         position3 = messageGetInt();
+
+        messageSendChar('V');
+        messageSendInt(position1);
+        messageSendInt(position2);
         messageSendInt(position3);
-	messageEnd();
+        messageEnd();
+
 	servos[0].write(position1);
 	servos[1].write(position2);
         servos[2].write(position3);
@@ -507,9 +512,6 @@ void moveAllServo()
 
 void readpin()
 {
-	int maximum_allowed_temperature = 50;
-	int temperature_reading = maximum_allowed_temperature+1;
-	int retries = 10;
 	switch (messageGetChar())
 	{
 		case 'd':
@@ -528,53 +530,7 @@ void readpin()
 				messageSendInt(analogRead(i));
 			messageEnd();
 			break;
-		case 't':
-			do
-			{
-				temperature_reading = (int)getTemp();
-				--retries;
-			}
-			while ((temperature_reading > maximum_allowed_temperature || temperature_reading <= -1000) && retries > 0);
-			messageSendChar('t');
-			messageSendInt(temperature_reading);
-			messageEnd();
-			break;
 	}
-}
-
-// This function is to get the temperature (in Celcius) from the sensor.
-// It is taken from http://bildr.org/2011/07/ds18b20-arduino/
-float getTemp()
-{
-	byte data[12];
-	byte addr[8];
-	if (!temp0.search(addr))
-	{
-		temp0.reset_search();
-		return -1001;
-	}
-	if (OneWire::crc8(addr, 7) != addr[7])
-	{
-		return -1002;
-	}
-	if (addr[0] != 0x10 && addr[0] != 0x28)
-	{
-		return -1003;
-	}
-	temp0.reset();
-	temp0.select(addr);
-	temp0.write(0x44,1);
-	delay(750);
-	byte present = temp0.reset();
-	temp0.select(addr);
-	temp0.write(0xBE);
-	for (int i=0; i < 9; ++i)
-		data[i] = temp0.read();
-	temp0.reset_search();
-	byte MSB = data[1];
-	byte LSB = data[0];
-	float tempRead = ((MSB << 8) | LSB);
-	return (tempRead / 16);
 }
 
 //Check out this site for implementation details:
@@ -584,7 +540,6 @@ void getPing()
         long duration;
         int cm;
         int pin = 13;
-	messageSendChar('q');
         pinMode(pin, OUTPUT);
 	digitalWrite(pin, LOW);
 	delayMicroseconds(2);
@@ -594,6 +549,7 @@ void getPing()
 	pinMode(pin, INPUT);
 	duration = pulseIn(pin, HIGH);
 	cm = duration / 29 / 2;
+        messageSendChar('q');
         messageSendInt(cm);
         messageEnd();
 }
