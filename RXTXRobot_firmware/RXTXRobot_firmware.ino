@@ -117,60 +117,27 @@ void setup()
         attachInterrupt(1, incrementEncoder2, RISING);
         pinMode(12, OUTPUT);
         
-        //initializeConductivityInterrupt();        
+        initializeConductivityInterrupt();        
 }
 
 void initializeConductivityInterrupt()
 {
-          //We're attaching a clock interrupt to toggle pin 12 every 200Hz
+          //We're attaching a clock interrupt to toggle pin 12 every 1KHz ish
           //for the conductivity sensor. Check out this site for details:
           //http://www.instructables.com/id/Arduino-Timer-Interrupts/step2/Structuring-Timer-Interrupts/
           
-          //Turn off interrupt
-          cli();
-  
-          //set timer2 interrupt at 1kHz
-          TCCR2A = 0;// set entire TCCR2A register to 0
-          TCCR2B = 0;// same for TCCR2B
-          TCNT2  = 0;//initialize counter value to 0
-          // set compare match register for 1khz increments
-          OCR2A = 249;// = (16*10^6) / (1000*64) - 1 (must be <256)
-          // turn on CTC mode
-          TCCR2A |= (1 << WGM21);
-          // Set CS21 bit for 64 prescaler
-          TCCR2B |= (1 << CS22);   
-          // enable timer compare interrupt
-          TIMSK2 |= (1 << OCIE2A);
+          TCCR2A = 0;            //Use default overflow counter
+          TCCR2B = _BV(CS22);    //Set the 64 prescaler (triggers every 1.43 ms., check using a scope)
+          TCNT2 = 0;             //Clear the interrupt register
+          TIMSK2 |= _BV(OCIE2A); //Activate the compare interrupt
 
-          //Turn on interrupt
-          sei();
 }
 
 //Interrupt function for conductivity sensor
 ISR(TIMER2_COMPA_vect)
 {
-  
-          //For this to work, we needed simultaneous digital pin writes. This
-          //was not possible with digitalWrite(). Refer to
-          //http://www.arduino.cc/en/Reference/PortManipulation
-          if (toggle0)
-          {
-                  //The AND turns off pin 12
-                  PORTB &= B11101111;
-                  toggle0 = 0;
-          }
-          else 
-          {
-                  //OR turns on pin 12
-                  PORTB |= B00010000;
-                  toggle0 = 1;
-                  
-                  //Get a reading
-                  conductivity1 = analogRead(5);
-                  conductivity2 = analogRead(4);
-                  finalConductivity = abs(conductivity1 - conductivity2);
-          }
-    
+        //Toggle pin 12 (bit 4 in PORTB register)
+        PORTB ^= (1 << 4);
 }
 
 void loop()
@@ -583,7 +550,7 @@ void getConductivity()
 {
         cli();
         messageSendChar('c');
-        messageSendInt(finalConductivity);
+        messageSendInt(abs(analogRead(5) - analogRead(4)));
         messageEnd();
         sei();
 }
