@@ -495,10 +495,10 @@ void readpin()
 	{
 		case 'd':
 			messageSendChar('d');
-			pinMode(1, INPUT);
 			pinMode(11, INPUT);
 			pinMode(12, INPUT);
-			messageSendInt(digitalRead(1));
+			pinMode(4, INPUT); 
+			messageSendInt(digitalRead(4)); 
 			messageSendInt(digitalRead(11));
 			messageSendInt(digitalRead(12));
 			messageEnd();
