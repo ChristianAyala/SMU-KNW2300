@@ -504,18 +504,9 @@ public class RXTXRobot extends SerialCommunication
          */
         public DigitalPin getDigitalPin(int x)
         {
-                final int[][] mapping =
-                {
-                        {
-                                1, 0
-                        },
-			{
-				11, 1
-			},
-			{
-				12, 2
-			}
-                };
+                final int[][] mapping = { {4, 0},
+			                              {11, 1},
+			                              {12, 2}};
                 if (digitalPinCache == null)
                         this.refreshDigitalPins();
                 for (int y = 0; y < mapping.length; ++y)
