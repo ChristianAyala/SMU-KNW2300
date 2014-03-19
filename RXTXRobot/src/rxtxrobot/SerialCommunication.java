@@ -12,10 +12,13 @@ import java.util.List;
  */
 public abstract class SerialCommunication
 {
-        /*
-         * Private variables
+        /**
+         * Version numbers to be checked against 
+         * firmware versioning numbers
          */
-        final private static String API_VERSION = "3.5";
+        final protected static int VERSION_MAJOR = 3;
+        final protected static int VERSION_MINOR = 5;
+        final protected static int VERSION_SUBMINOR = 0; 
         private String port;
         private boolean verbose;
         private int baud_rate;
@@ -45,7 +48,7 @@ public abstract class SerialCommunication
          */
         public static String getVersion()
         {
-                return API_VERSION;
+                return "" + VERSION_MAJOR + "." + VERSION_MINOR + "." + VERSION_SUBMINOR;
         }
 
         /**

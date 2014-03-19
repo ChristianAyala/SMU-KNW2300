@@ -21,14 +21,6 @@ public class RXTXRobot extends SerialCommunication
          * doing
          */
 
-         /**
-         * Version numbers to be checked against 
-         * firmware versioning numbers
-         */
-        final private static int VERSION_MAJOR = 3;
-        final private static int VERSION_MINOR = 5;
-        final private static int VERSION_SUBMINOR = 0; 
-
         final private static boolean ONLY_ALLOW_TWO_MOTORS = true;
         /**
          * Refers to the servo motor located in SERVO1 (pin 9)
