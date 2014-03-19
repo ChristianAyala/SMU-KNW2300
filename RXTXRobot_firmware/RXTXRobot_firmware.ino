@@ -17,6 +17,7 @@
  e [num] [speed] [ticks] -> run encoded dc motor number [num] at speed [speed] for ticks [ticks]
  p [num] -> get the current encoder tick value for motor number [num]
  z [num] -> zero out the encoder tick value for motor number [num]
+ m [t] -> sets the ramp-up time for the motors to be [t] milliseconds (rounds down to nearest hundred) 
  
  The next 3 do the same thing for 2 motors as close to simultaneously as possible:
  V [position1] [position2] -> move servos to position 1 and 2 [position] (position is (0,180)
@@ -86,6 +87,8 @@ Servo dc_motors[] = {encodedMotor0, encodedMotor1, motor0, motor1};
 const long forward = 1;
 const long backward = -1;
 int halt = 1500;
+int motorIncrements = 0;
+int incrementDelay = 100;
 int encoders_length = 2;
 long encoderPositions[] = {0L, 0L};
 long encoderTicks[] = {0L, 0L};
@@ -189,6 +192,9 @@ void loop()
                         case 'z':
                                 zeroEncoderPosition();
                                 break;
+                        case 'm':
+                                setMotorRampUpTime();
+                                break;
 			case 'V':
 				moveAllServo();
 				break;
@@ -220,14 +226,31 @@ void incrementEncoder2()
         encoderPositions[1] += encoderDirections[1];
 }
 
+void setMotorRampUpTime()
+{
+        //The ramp-up time for the motors is the increments * delay between increments.
+        //Hence the division by the delay to get the requested time. The delay is read-only for now.
+        motorIncrements = messageGetInt();
+        messageSendChar('m');
+        messageSendInt(motorIncrements);
+        messageEnd();
+        motorIncrements /= incrementDelay;
+}
+
 void rampUpMotorSpeed(int pin, int speed)
 {
         //the time for motor to reach full speed is divisions * delay (in ms.)
-        int increment, incrementDivisions = 10, incrementDelay = 100;
+        int increment;
         
-        increment = (speed - 1500) / incrementDivisions;
+        if (motorIncrements == 0)
+        {
+                dc_motors[pin].write(speed);
+                return;
+        }
         
-        for (int i = 0; i < incrementDivisions; ++i)
+        increment = (speed - 1500) / motorIncrements;
+        
+        for (int i = 0; i < motorIncrements; ++i)
         {
                 dc_motors[pin].write(halt + (i * increment));
                 delay(incrementDelay);
@@ -236,12 +259,19 @@ void rampUpMotorSpeed(int pin, int speed)
 
 void rampUpMotorSpeed(int pin1, int speed1, int pin2, int speed2)
 {
-        int increment1, increment2, incrementDivisions = 10, incrementDelay = 100;
+        int increment1, increment2;
         
-        increment1 = (speed1 - 1500) / incrementDivisions;
-        increment2 = (speed2 - 1500) / incrementDivisions;
+        if (motorIncrements == 0)
+        {
+                dc_motors[pin1].write(speed1);
+                dc_motors[pin2].write(speed2);
+                return;
+        }
         
-        for (int i = 0; i < incrementDivisions; ++i)
+        increment1 = (speed1 - 1500) / motorIncrements;
+        increment2 = (speed2 - 1500) / motorIncrements;
+        
+        for (int i = 0; i < motorIncrements; ++i)
         {
                 dc_motors[pin1].write(halt + (i * increment1));
                 dc_motors[pin2].write(halt + (i * increment2));
