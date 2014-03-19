@@ -25,8 +25,8 @@ public class RXTXRobot extends SerialCommunication
          * Version numbers to be checked against 
          * firmware versioning numbers
          */
-        final private static int VERSION_MAJOR = 0;
-        final private static int VERSION_MINOR = 0;
+        final private static int VERSION_MAJOR = 3;
+        final private static int VERSION_MINOR = 5;
         final private static int VERSION_SUBMINOR = 0; 
 
         final private static boolean ONLY_ALLOW_TWO_MOTORS = true;
@@ -161,6 +161,7 @@ public class RXTXRobot extends SerialCommunication
                                 out = sPort.getOutputStream();
                                 sleep(2500);
                                 this.getOutStream().println("Connected!\n");
+                                checkFirmwareVersion();
                         }
                 }
                 catch (NoSuchPortException e)
@@ -213,42 +214,44 @@ public class RXTXRobot extends SerialCommunication
                         }
                         System.exit(1);
                 }
-
-                String response = this.sendRaw("n",0);
+        }
+        
+        private void checkFirmwareVersion()
+        {
+                String response = this.sendRaw("n");
                 String[] arr = response.split("\\s+");
                 if (arr.length != 4)
                 {
-                    error("Incorrect response from Arduino (Invalid length)!", "RXTXRobot", "versionNumber"); 
-                    debug("Version Response: " + response); 
-                    return; 
+                        error("Incorrect response from Arduino (Invalid length)!", "RXTXRobot", "versionNumber"); 
+                        debug("Version Response: " + response); 
+                        return; 
                 }
                 try
                 {
-                    int firmwareVMajor = Integer.parseInt(arr[1]); 
-                    int firmwareVMinor = Integer.parseInt(arr[2]);
-                    int firmwareVSubminor = Integer.parseInt(arr[3]); 
-                    if(firmwareVMajor > VERSION_MAJOR)
-                    {
-                       System.out.println("Version number mismatch. Please update API");
-                    } 
-                    else if (firmwareVMinor > VERSION_MINOR)
-                    {
-                        System.out.println("Version number mismatch. API update suggested"); 
-                    }
-                    else if (firmwareVSubminor > VERSION_SUBMINOR)
-                    {
-                        System.out.println("Subminor firmware update, no action necessary"); 
-                    }
-                    System.out.println("\nFirmware version: " + firmwareVMajor + "." + firmwareVMinor + "." + firmwareVSubminor +
-                        "\nAPI version: " + VERSION_MAJOR + "." + VERSION_MINOR + "." + VERSION_SUBMINOR); 
+                        int firmwareVMajor = Integer.parseInt(arr[1]); 
+                        int firmwareVMinor = Integer.parseInt(arr[2]);
+                        int firmwareVSubminor = Integer.parseInt(arr[3]); 
+                        if(firmwareVMajor > VERSION_MAJOR)
+                        {
+                                error("Major version number mismatch. Please update API");
+                        } 
+                        else if (firmwareVMinor > VERSION_MINOR)
+                        {
+                                error("Minor version number mismatch. API update suggested"); 
+                        }
+                        else if (firmwareVSubminor > VERSION_SUBMINOR)
+                        {
+                                debug("Subminor firmware update, no action necessary"); 
+                        }
+                                this.getOutStream().println("\nFirmware version: " + firmwareVMajor + "." + firmwareVMinor + "." + firmwareVSubminor +
+                                      "\nAPI version: " + VERSION_MAJOR + "." + VERSION_MINOR + "." + VERSION_SUBMINOR); 
                 }
                 catch(Exception e)
                 {
-                    error("Incorrect response from Arduino (Invalid datatype)!","RXTXRobot","versionNumber");
-                    debug("Version Response: " + response);
+                        error("Incorrect response from Arduino (Invalid datatype)!","RXTXRobot","versionNumber");
+                        error("Version Response: " + response);
                 }
-
-
+        
         }
 
         /**

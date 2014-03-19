@@ -72,8 +72,8 @@ Authors:
  * Minor - suggest api update
  * Subminor - no api update needed 
  */
-const int versionMajor = 0;
-const int versionMinor = 0;
+const int versionMajor = 3;
+const int versionMinor = 5;
 const int versionSubminor = 0; 
 
 Servo servo0;
