@@ -504,9 +504,10 @@ public class RXTXRobot extends SerialCommunication
          */
         public DigitalPin getDigitalPin(int x)
         {
-                final int[][] mapping = { {4, 0},
-			                              {11, 1},
-			                              {12, 2}};
+                final int[][] mapping = { {4,  0},
+                                          {10, 1},
+			                  {11, 2},
+			                  {12, 3}};
                 if (digitalPinCache == null)
                         this.refreshDigitalPins();
                 for (int y = 0; y < mapping.length; ++y)
@@ -570,12 +571,13 @@ public class RXTXRobot extends SerialCommunication
         }
 
         /**
-         * Gets the result from the Ping sensor (must be on digital pin 13).
+         * Gets the result from the Ping sensor (must be on digital pin 10, 11, or 13).
          *
-         * The Ping sensor must be on digital pin 13 and this method returns the distance in centimeters.
+         * The Ping sensor must be on digital pin 10, 11, or 13 and this method returns the distance in centimeters.
+         * @param The pin number (must be 10, 11, or 13) that the ping sensor is on
          * @return The distance from an object in centimeters
          */
-        public int getPing()
+        public int getPing(int pin)
         {
                 if (!isConnected())
                 {
@@ -583,10 +585,10 @@ public class RXTXRobot extends SerialCommunication
                         return -1;
                 }
                 this.attemptTryAgain = true;
-                String response = this.sendRaw("q",200);
+                String response = this.sendRaw("q " + pin,200);
                 String[] arr = response.split("\\s+");
                 this.attemptTryAgain = false;
-                if (arr.length != 2)
+                if (arr.length != 3)
                 {
                         error("Incorrect response from Arduino (Invalid length)!", "RXTXRobot", "getPing");
                         debug("Ping Response: " + response);
@@ -594,7 +596,7 @@ public class RXTXRobot extends SerialCommunication
                 }
                 try
                 {
-                        return Integer.parseInt(arr[1]);
+                        return Integer.parseInt(arr[2]);
                 }
                 catch (Exception e)
                 {

@@ -105,8 +105,8 @@ void setup()
 {
 	Serial.begin(BAUD_RATE);
 	servo0.attach(9);
-	servo1.attach(10);
-        servo2.attach(11);
+	//servo1.attach(10);
+        //servo2.attach(11);
 
 	encodedMotor0.attach(5);
 	encodedMotor1.attach(6);
@@ -508,10 +508,12 @@ void readpin()
 	{
 		case 'd':
 			messageSendChar('d');
+                        pinMode(4, INPUT); 
+                        pinMode(10, INPUT);
 			pinMode(11, INPUT);
 			pinMode(12, INPUT);
-			pinMode(4, INPUT); 
-			messageSendInt(digitalRead(4)); 
+			messageSendInt(digitalRead(4));
+                        messageSendInt(digitalRead(10));
 			messageSendInt(digitalRead(11));
 			messageSendInt(digitalRead(12));
 			messageEnd();
@@ -531,7 +533,7 @@ void getPing()
 {
         long duration;
         int cm;
-        int pin = 13;
+        int pin = messageGetInt();
         pinMode(pin, OUTPUT);
 	digitalWrite(pin, LOW);
 	delayMicroseconds(2);
@@ -542,6 +544,7 @@ void getPing()
 	duration = pulseIn(pin, HIGH);
 	cm = duration / 29 / 2;
         messageSendChar('q');
+        messageSendInt(pin);
         messageSendInt(cm);
         messageEnd();
 }
