@@ -37,7 +37,7 @@ public class VersionCheckThread extends Thread
                                 builder.append(inputLine);
                         }
                         String onlineVersion = builder.toString();
-                        
+                        Global.debug("Most recent version from website: " + onlineVersion);
                         //Do the comparison
                         if (!Global.getVersion().equals(onlineVersion))
                         {
