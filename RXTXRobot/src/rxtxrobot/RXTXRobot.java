@@ -223,7 +223,8 @@ public class RXTXRobot extends SerialCommunication
         private void checkFirmwareVersion()
         {
                 final String downloadLocation = "http://lyle.smu.edu/fyd/downloads.php";
-                String response = this.sendRaw("n");
+                String response = this.sendRaw("n");                
+                
                 String[] arr = response.split("\\s+");
                 if (arr.length != 4)
                 {

@@ -73,4 +73,10 @@ public class Version implements Comparable {
             }
         }
     }
+    
+    @Override
+    public String toString()
+    {
+        return "" + versionMajor + "." + versionMinor + "." + versionSubMinor;
+    }
 }

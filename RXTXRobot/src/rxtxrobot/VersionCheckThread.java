@@ -36,17 +36,14 @@ public class VersionCheckThread extends Thread
                         {
                                 builder.append(inputLine);
                         }
-                        String onlineVersion = builder.toString();
-                        Global.debug("Most recent version from website: " + onlineVersion);
+                        Version onlineVersion = new Version(builder.toString());
+                        Global.debug("Most recent version from website: " + onlineVersion.toString());
                         //Do the comparison
-                        if (!Global.getVersion().equals(onlineVersion))
-                        {
-                                Global.error("There is an updated version of this API (version " + onlineVersion + ")" +
-                                                   "\nat lyle.smu.edu/fyd/downloads.php", "VersionCheck", "run", false);
-                        }
-                        else
-                        {
-                                Global.debug("You are on the most up-to-date version of the API! (version " + onlineVersion + ")");
+                        if (onlineVersion.compareTo(Global.getVersion()) > 0) {
+                                Global.error("There is an updated version of this API (version " + onlineVersion.toString() + ")" +
+                                                       "\nat lyle.smu.edu/fyd/downloads.php", "VersionCheck", "run", false);
+                        } else {
+                                Global.debug("You are on the most up-to-date version of the API! (version " + Global.getVersion().toString() + ")");
                         }
                 }
                 catch (MalformedURLException e) 

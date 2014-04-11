@@ -60,9 +60,9 @@ public class Global {
                 return err_stream;
         }
         
-        public static String getVersion()
+        public static Version getVersion()
         {
-                return "" + VERSION_MAJOR + "." + VERSION_MINOR + "." + VERSION_SUBMINOR;
+                return new Version("" + VERSION_MAJOR + "." + VERSION_MINOR + "." + VERSION_SUBMINOR);
         }
         
         public static void debug(String str)
@@ -73,7 +73,7 @@ public class Global {
         public static void error(String str, String class_name, String method, boolean fatal)
         {
                 if (fatal)
-                        getErrStream().println("FATAL ERROR (method: " + method + "):");
+                        getErrStream().println("FATAL ERROR (method: " + method + "): ");
                 else
                         getErrStream().println("ERROR (method: " + method + " ): ");
                 getErrStream().println("Message:");
