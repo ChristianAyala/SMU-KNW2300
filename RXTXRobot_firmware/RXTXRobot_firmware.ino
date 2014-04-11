@@ -550,8 +550,9 @@ void getConductivity()
 {
         int reading1, reading2;
         cli();
+        PORTB &= B11101111;
         reading1 = analogRead(5);
-        PORTB ^= (1<<4);
+        //PORTB ^= (1<<4);
         reading2 = analogRead(4);
         sei();
         messageSendChar('c');

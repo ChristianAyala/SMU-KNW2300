@@ -645,7 +645,7 @@ public class RXTXRobot extends SerialCommunication
                 }
                 
                 this.attemptTryAgain = true;
-                String response = this.sendRaw("c", 3000);
+                String response = this.sendRaw("c", 300);
                 String[] arr = response.split("\\s+");
                 this.attemptTryAgain = false;
                 
