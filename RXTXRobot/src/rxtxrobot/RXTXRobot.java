@@ -620,7 +620,7 @@ public class RXTXRobot extends SerialCommunication
                 }
                 
                 this.attemptTryAgain = true;
-                String response = this.sendRaw("c", 3000);
+                String response = this.sendRaw("c", 300);
                 String[] arr = response.split("\\s+");
                 this.attemptTryAgain = false;
                 
@@ -642,6 +642,39 @@ public class RXTXRobot extends SerialCommunication
                 }
                 return -1;
         }
+        
+        public int getCompass()
+        {
+                if (!isConnected())
+                {
+                        error("Robot isn't connected!", "RXTXRobot", "getCompass");
+                        return -1;
+                }
+                
+                this.attemptTryAgain = true;
+                String response = this.sendRaw("s", 300);
+                String[] arr = response.split("\\s+");
+                this.attemptTryAgain = false;
+                
+                if (arr.length != 2)
+                {
+                        error("Incorrect response from Arduino (Invalid length)!", "RXTXRobot", "getCompass");
+                        debug("Compass Response: " + response);
+                        return -1;
+                }
+                
+                try
+                {
+                        return Integer.parseInt(arr[1]);
+                }
+                catch (Exception e)
+                {
+                        error("Incorrect response from Arduino (Invalid datatype)!", "RXTXRobot", "getCompass");
+                        debug("Compass Response: " + response);
+                }
+                return -1;
+        }
+        
         /**
          * Moves the specified servo to the specified angular position.
          *

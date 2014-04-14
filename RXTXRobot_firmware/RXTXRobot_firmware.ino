@@ -12,6 +12,7 @@
  r t -> read temperature sensor from pin 4
  q -> Gets a ping result on pin 13, in centimeters
  c -> Gets a conductivity reading
+ s -> Gets a compass reading
 
  v [num] [position] -> move servo number [num] to position [position] (position is (0,180)
  d [num] [speed] [t] -> set dc motor number [num] at speed [speed] for time [t], if t=0 then keep on.
@@ -64,6 +65,7 @@ Authors:
 
 #include <SimpleMessageSystem.h>
 #include <Servo.h>
+#include <Wire.h>
 
 /*
  * firmware version numbers, split into major, minor subminor.
@@ -116,7 +118,7 @@ void setup()
         attachInterrupt(0, incrementEncoder1, RISING);
         attachInterrupt(1, incrementEncoder2, RISING);
         pinMode(12, OUTPUT);
-        
+        Wire.begin();
         initializeConductivityInterrupt();        
 }
 
@@ -185,6 +187,8 @@ void loop()
                         case 'c':
                                 getConductivity();
                                 break;
+                        case 's':
+                                getCompass();
 		}
 	}
 }
@@ -550,8 +554,35 @@ void getConductivity()
 {
         cli();
         messageSendChar('c');
-        messageSendInt(abs(analogRead(5) - analogRead(4)));
+        messageSendInt(abs(analogRead(3) - analogRead(2)));
         messageEnd();
         sei();
+}
+
+void getCompass()
+{
+        byte headingData[2];
+        int i, headingValue;
+        int slaveAddress = 0x42 >> 1;
+        messageSendChar('s');
+        Wire.beginTransmission(slaveAddress);
+        Wire.write("A");              // The "Get Data" command
+        Wire.endTransmission();
+        delay(10);                   // The HMC6352 needs at least a 70us (microsecond) delay
+        // after this command.  Using 10ms just makes it safe
+        // Read the 2 heading bytes, MSB first
+        // The resulting 16bit word is the compass heading in 10th's of a degree
+        // For example: a heading of 1345 would be 134.5 degrees
+        Wire.requestFrom(slaveAddress, 2);        // Request the 2 byte heading (MSB comes first)
+        i = 0;
+      //  while(Wire.available() && i < 2)
+        while(i < 2)
+        { 
+                headingData[i] = Wire.read();
+                i++;
+        }
+        headingValue = headingData[0]*256 + headingData[1];  // Put the MSB and LSB together
+        messageSendInt(int (headingValue / 10));
+        messageEnd();
 }
 
