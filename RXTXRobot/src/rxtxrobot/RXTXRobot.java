@@ -82,6 +82,10 @@ public class RXTXRobot extends SerialCommunication
         private boolean attemptTryAgain;
         private boolean waitForResponse;
         private boolean moveEncodedMotor;
+        private int[] servoPositons =
+        {
+            90,90,90
+        };
 
         /**
          * Creates a new RXTXRobot object.
@@ -671,10 +675,12 @@ public class RXTXRobot extends SerialCommunication
                         return;
                 }
                 debug("Moving servo " + servo + " to position " + position);
-                if (!getOverrideValidation() && (position < 0 || position > 180))
+                if (!getOverrideValidation() && (position < 0 || position > 180)) {
                         error("Position must be >=0 and <=180.  You supplied " + position + ", which is invalid.", "RXTXRobot", "moveServo");
-                else
+                } else {
                         sendRaw("v " + servo + " " + position);
+                        servoPositons[servo] = position;
+                }
         }
 
         /**
@@ -701,10 +707,42 @@ public class RXTXRobot extends SerialCommunication
                         return;
                 }
                 debug("Moving servos to positions " + pos1 + ", " + pos2 + ", and " + pos3);
-                if (!getOverrideValidation() && (pos1 < 0 || pos1 > 180 || pos2 < 0 || pos2 > 180 || pos3 < 0 || pos3 > 180))
+                if (!getOverrideValidation() && (pos1 < 0 || pos1 > 180 || pos2 < 0 || pos2 > 180 || pos3 < 0 || pos3 > 180)) {
                         error("Positions must be >=0 and <=180.  You supplied " + pos1 + " and " + pos2 + ".  One or more are invalid.", "RXTXRobot", "moveBothServos");
-                else
+                } else {
                         sendRaw("V " + pos1 + " " + pos2 + " " + pos3);
+                        servoPositons[0] = pos1;
+                        servoPositons[1] = pos2;
+                        servoPositons[2] = pos3;
+                }
+        }
+        
+        /**
+         * Gets the angular position of the specified servo.
+         *
+         * Accepts either {@link #SERVO1 RXTXRobot.SERVO1},
+         * {@link #SERVO2 RXTXRobot.SERVO2} or {@link #SERVO1 RXTXRobot.SERVO1}
+         * <br /><br /> The servo angular position is in the range
+         * from 0 degrees up to 180 degrees.
+         *
+         * @param servo The servo motor that you would like to know its
+         * position:
+         * {@link #SERVO1 RXTXRobot.SERVO1}, {@link #SERVO2 RXTXRobot.SERVO2},
+         * or {@link #SERVO3 RXTXRobot.SERVO3}.
+         * 
+         * @return the angular position of the specified servo or -1 if an
+         * invalid servo is specified
+         */
+        public int getServoPosition(int servo)
+        {
+            
+            if (!getOverrideValidation() && servo != RXTXRobot.SERVO1 && servo != RXTXRobot.SERVO2 && servo != RXTXRobot.SERVO3)
+                {
+                        error("Invalid servo argument.", "RXTXRobot", "getServoPosition");
+                        return -1;
+                }
+            
+            return servoPositons[servo];
         }
 
         /**
