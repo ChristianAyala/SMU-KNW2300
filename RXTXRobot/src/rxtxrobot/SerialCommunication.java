@@ -18,7 +18,7 @@ public abstract class SerialCommunication
          */
         final protected static int VERSION_MAJOR = 3;
         final protected static int VERSION_MINOR = 5;
-        final protected static int VERSION_SUBMINOR = 0; 
+        final protected static int VERSION_SUBMINOR = 1; 
         private String port;
         private boolean verbose;
         private int baud_rate;
