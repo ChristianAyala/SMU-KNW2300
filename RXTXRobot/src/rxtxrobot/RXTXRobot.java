@@ -11,8 +11,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * @author Chris King
- * @version 3.1.5
+ * This class is the main class for communicating with the Arduino.
+ * 
+ * Create an instance of this class when connecting to an Arduino Uno.
  */
 public class RXTXRobot extends SerialCommunication
 {
@@ -106,8 +107,10 @@ public class RXTXRobot extends SerialCommunication
          * Attempts to connect to the Arduino/XBee.
          *
          * This method attempts to make a serial connection to the Arduino/XBee
-         * if the port is correct. If there is an error in connecting, then the
-         * appropriate error message will be displayed. <br /><br /> This
+         * if the port is correct. Be sure to call the {@link #setPort(java.lang.String) setPort}
+         * method before connecting. If there is an error in connecting, then the
+         * appropriate error message will be displayed, as well as a list of possible
+         * devices connected to your computer that you can connect to. <br /><br /> This
          * function will terminate runtime if an error is discovered.
          */
         @Override
@@ -148,6 +151,7 @@ public class RXTXRobot extends SerialCommunication
                                 sPort = (SerialPort) cPort;
                                 sPort.setSerialPortParams(getBaudRate(), SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
                                 debug("Resetting robot...");
+                                new VersionCheckThread().start();
                                 sleep(500);
                                 in = sPort.getInputStream();
                                 out = sPort.getOutputStream();
@@ -208,9 +212,19 @@ public class RXTXRobot extends SerialCommunication
                 }
         }
         
+        /**
+         * Checks to make sure that the version in the firmware matches what is found
+         * in this API.
+         * 
+         * It is assumed that the connection has already been established with
+         * the arduino at this point. If the versions do not match, then an
+         * error is generated, but execution continues.
+         */
         private void checkFirmwareVersion()
         {
-                String response = this.sendRaw("n");
+                final String downloadLocation = "http://lyle.smu.edu/fyd/downloads.php";
+                String response = this.sendRaw("n");                
+                
                 String[] arr = response.split("\\s+");
                 if (arr.length != 4)
                 {
@@ -223,20 +237,32 @@ public class RXTXRobot extends SerialCommunication
                         int firmwareVMajor = Integer.parseInt(arr[1]); 
                         int firmwareVMinor = Integer.parseInt(arr[2]);
                         int firmwareVSubminor = Integer.parseInt(arr[3]); 
-                        if(firmwareVMajor > VERSION_MAJOR)
+                        if(firmwareVMajor > Global.VERSION_MAJOR)
                         {
-                                error("Major version number mismatch. Please update API");
-                        } 
-                        else if (firmwareVMinor > VERSION_MINOR)
-                        {
-                                error("Minor version number mismatch. API update suggested"); 
+                                error("This API is behind by a major version. Please update the JAR file immediately "+
+                                      "by going to " + downloadLocation);
+                                System.exit(1);
                         }
-                        else if (firmwareVSubminor > VERSION_SUBMINOR)
+                        else if(firmwareVMajor < Global.VERSION_MAJOR)
+                        {
+                                error("The firmware is behind by a major version. Ask a TA to update the Arduino.");
+                                System.exit(1);
+                        }
+                        if(firmwareVMinor > Global.VERSION_MINOR)
+                        {
+                                error("This API is behind by a minor version. Consider updating to use the " + 
+                                      "newest features: " + downloadLocation); 
+                        }
+                        else if (firmwareVMinor < Global.VERSION_MINOR)
+                        {
+                                error("The firmware is behind by a minor version. Ask a TA to update the Arduino.");
+                        }
+                        else if(firmwareVSubminor != Global.VERSION_SUBMINOR)
                         {
                                 debug("Subminor firmware update, no action necessary"); 
                         }
                                 this.getOutStream().println("\nFirmware version: " + firmwareVMajor + "." + firmwareVMinor + "." + firmwareVSubminor +
-                                      "\nAPI version: " + VERSION_MAJOR + "." + VERSION_MINOR + "." + VERSION_SUBMINOR); 
+                                      "\nAPI version: " + Global.getVersion()); 
                 }
                 catch(Exception e)
                 {
@@ -498,15 +524,15 @@ public class RXTXRobot extends SerialCommunication
          * This will get the value of the pin since the last time
          * {@link #refreshDigitalPins() refreshDigitalPins()} was called.
          *
-         * @param x The number of the pin: 0 &lt; x &lt;
+         * @param x The number of the pin: Must be one of 4, 11, or 12
          * {@link #NUM_DIGITAL_PINS NUM_DIGITAL_PINS}
          * @return DigitalPin object of the specified pin, or null if error.
          */
         public DigitalPin getDigitalPin(int x)
         {
                 final int[][] mapping = { {4, 0},
-			                              {11, 1},
-			                              {12, 2}};
+			                  {11, 1},
+			                  {12, 2}};
                 if (digitalPinCache == null)
                         this.refreshDigitalPins();
                 for (int y = 0; y < mapping.length; ++y)
@@ -607,8 +633,8 @@ public class RXTXRobot extends SerialCommunication
         /**
          * Gets the result from the conductivity sensor.
          * 
-         * The conductivity sensor requires a total of 4 pins: 2 digital pins on
-         * digital pins 11 and 12, and 2 analog pins on analog pins 4 and 5.
+         * The conductivity sensor requires a total of 3 pins: 1 digital pins on
+         * digital pin 12, and 2 analog pins on analog pins 4 and 5.
          * @return The conductivity measurement
          */
         public int getConductivity()
@@ -620,7 +646,7 @@ public class RXTXRobot extends SerialCommunication
                 }
                 
                 this.attemptTryAgain = true;
-                String response = this.sendRaw("c", 3000);
+                String response = this.sendRaw("c", 300);
                 String[] arr = response.split("\\s+");
                 this.attemptTryAgain = false;
                 
@@ -678,7 +704,7 @@ public class RXTXRobot extends SerialCommunication
         }
 
         /**
-         * Moves both servos simultaneously to the desired positions.
+         * Moves all servos simultaneously to the desired positions.
          *
          * Accepts two angular positions between 0 and 180 inclusive and moves
          * the servo motors to the corresponding angular position.
@@ -1057,7 +1083,7 @@ public class RXTXRobot extends SerialCommunication
          *
          * This method returns the number of ticks that a motor has moved since it was last reset.
          * This includes all motion, including distance traveled using {@link #runEncodedMotor(int, int, int) runEncodedMotor} 
-         * and {@link #runMotor(int, int, int) runMotor}. Running a motor with a 
+         * and {@link #runMotor(int, int, int) runMotor}. <br /> <br />Running a motor with a 
          * positive speed in either case increases its tick count. Running a motor
          * with a negative speed decreases its tick count, which means the current tick
          * count may be negative. To reset the encoder tick position back to 0,
@@ -1125,7 +1151,7 @@ public class RXTXRobot extends SerialCommunication
          * This method sets the ramp-up time for the motors. By default, motors
          * have a ramp-up time of 0 milliseconds; that is, they reach their full
          * intended speed in 0 milliseconds. Use this method to set how long it
-         * takes to reach their intended speed. If running a motor based on time,
+         * takes to reach their intended speed. <br /><br />If running a motor based on time,
          * the ramp-up time is included in the total time. For example, setting
          * the ramp-up time to 1500 ms. then running a motor for 5000 ms. results
          * in only 3500 seconds at the intended speed.

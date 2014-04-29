@@ -7,23 +7,17 @@ import java.util.Enumeration;
 import java.util.List;
 
 /**
- * @author Chris King
- * @version 3.1.5
+ * Base class for devices that connect to serial devices.
+ * 
+ * This is an abstract class for serial device connections. Subclasses should
+ * implement the methods {@link #isConnected() isConnected}, {@link #connect() connect},
+ * and {@link #close() close}.
  */
 public abstract class SerialCommunication
-{
-        /**
-         * Version numbers to be checked against 
-         * firmware versioning numbers
-         */
-        final protected static int VERSION_MAJOR = 3;
-        final protected static int VERSION_MINOR = 5;
-        final protected static int VERSION_SUBMINOR = 0; 
+{ 
         private String port;
-        private boolean verbose;
         private int baud_rate;
-        private PrintStream out_stream;
-        private PrintStream err_stream;
+        private boolean verbose;
         private static boolean displayedWelcome = false;
 
         public SerialCommunication()
@@ -35,20 +29,10 @@ public abstract class SerialCommunication
                 verbose = false;
                 if (!displayedWelcome)
                 {
-                        this.getOutStream().println("   RXTXRobot API version " + SerialCommunication.getVersion());
+                        this.getOutStream().println("   RXTXRobot API version " + Global.getVersion());
                         this.getOutStream().println("---------------------------------\n");
                         displayedWelcome = true;
                 }
-        }
-
-        /**
-         * Gets the version number of the API.
-         *
-         * @return A string with the version number
-         */
-        public static String getVersion()
-        {
-                return "" + VERSION_MAJOR + "." + VERSION_MINOR + "." + VERSION_SUBMINOR;
         }
 
         /**
@@ -185,7 +169,7 @@ public abstract class SerialCommunication
         protected void debug(String str)
         {
                 if (this.verbose)
-                        this.getOutStream().println("--> " + str);
+                        Global.debug(str);
         }
 
         /**
@@ -228,13 +212,7 @@ public abstract class SerialCommunication
          */
         protected void error(String str, String class_name, String method, boolean fatal)
         {
-                if (fatal)
-                        this.getErrStream().println("FATAL ERROR (method: " + method + "):");
-                else
-                        this.getErrStream().println("ERROR (method: " + method + " ): ");
-                this.getErrStream().println("Message:");
-                str = str.replaceAll("\\n", "\n\t");
-                this.getErrStream().println("\t" + str);
+                Global.error(str, class_name, method, fatal);
         }
 
         /**
@@ -248,7 +226,7 @@ public abstract class SerialCommunication
          */
         public final void setOutStream(PrintStream o)
         {
-                this.out_stream = o;
+                Global.setOutStream(o);
         }
 
         /**
@@ -260,7 +238,7 @@ public abstract class SerialCommunication
          */
         public final PrintStream getOutStream()
         {
-                return out_stream;
+                return Global.getOutStream();
         }
 
         /**
@@ -274,7 +252,7 @@ public abstract class SerialCommunication
          */
         public final void setErrStream(PrintStream e)
         {
-                this.err_stream = e;
+                Global.setErrStream(e);
         }
 
         /**
@@ -286,7 +264,7 @@ public abstract class SerialCommunication
          */
         public final PrintStream getErrStream()
         {
-                return err_stream;
+                return Global.getErrStream();
         }
 
         /**
