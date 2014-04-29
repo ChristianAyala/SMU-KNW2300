@@ -704,7 +704,7 @@ public class RXTXRobot extends SerialCommunication
         }
 
         /**
-         * Moves both servos simultaneously to the desired positions.
+         * Moves all servos simultaneously to the desired positions.
          *
          * Accepts two angular positions between 0 and 180 inclusive and moves
          * the servo motors to the corresponding angular position.
