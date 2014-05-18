@@ -2,15 +2,7 @@ from __future__ import print_function
 import platform
 import serial
 import glob
-import sys
-
-
-def debug(message):
-    print("----> " + message, file=sys.stdout)
-
-
-def error(message):
-    print("----> " + message, file=sys.stderr)
+import Global
 
 
 class SerialCommunication:
@@ -27,12 +19,12 @@ class SerialCommunication:
     def connect(self):
         try:
             self.serial = serial.Serial(self.port, SerialCommunication.BAUD_RATE, timeout=3)
-            debug("Successfully connected!")
+            Global.debug("Successfully connected!")
             self.sendWithoutConfirmation("r a")
         except serial.SerialException as e:
-            error("Could not connect to the port {} with error:\n{}".format(self.port, e.strerror))
-            error("Possible Serial ports:")
-            error("\t\n".join(SerialCommunication.list_serial_ports()))
+            Global.error("Could not connect to the port {} with error:{}\n".format(self.port, e.strerror))
+            Global.error("Possible Serial ports:")
+            Global.error("\t\n".join(SerialCommunication.list_serial_ports()))
 
     @staticmethod
     def list_serial_ports():
@@ -53,11 +45,11 @@ class SerialCommunication:
             return glob.glob('/dev/tty.usb*')
         else:
             # Assume Linux or something else
-            return glob.glob('/dev/ttyS*') + glob.glob('/dev/ttyUSB*')
+            return glob.glob('/dev/ttyS*') + glob.glob('/dev/ttyUSB*') + glob.glob('/dev/ttyACM*')
 
     def sendWithoutConfirmation(self, message):
         message += '\r'
-        self.serial.write(message.encode("utf-8"))
+        self.serial.write(message.encode())
 
     def sendRaw(self, message):
         message += '\r'
@@ -69,3 +61,11 @@ class SerialCommunication:
 
     def close(self):
         self.serial.close()
+
+    @staticmethod
+    def setVerbose(verbose):
+        Global.verbose = verbose
+
+    @staticmethod
+    def sleep(millis):
+        Global.sleep(millis)
