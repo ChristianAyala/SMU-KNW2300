@@ -10,4 +10,4 @@
 /RXTXRobot/lib/RXTXcomm_INSTALL/Linux/libs/libphidget/*.o
 /RXTXRobot/lib/RXTXcomm_INSTALL/Linux/libs/libphidget/.libs/
 .DS_Store
-
+*.pyc

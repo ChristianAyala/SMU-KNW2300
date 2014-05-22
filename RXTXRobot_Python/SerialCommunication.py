@@ -2,8 +2,7 @@ from __future__ import print_function
 import platform
 import serial
 import glob
-import Global
-
+from Global import *
 
 class SerialCommunication:
 
@@ -17,55 +16,79 @@ class SerialCommunication:
         self.port = port
 
     def connect(self):
+        if self.port is None:
+            error("No port was specified to connect to!")
+            error("Call the connect() method with one of these possible ports:")
+            error("\n\t".join(SerialCommunication.list_serial_ports()), fatal=True)
+        elif self.isConnected():
+            error("Robot is already connected!", fatal=True)
+
         try:
             self.serial = serial.Serial(self.port, SerialCommunication.BAUD_RATE, timeout=3)
-            Global.debug("Successfully connected!")
-            self.sendWithoutConfirmation("r a")
+
         except serial.SerialException as e:
-            Global.error("Could not connect to the port {} with error:{}\n".format(self.port, e.strerror))
-            Global.error("Possible Serial ports:")
-            Global.error("\t\n".join(SerialCommunication.list_serial_ports()))
+            error("Could not connect to the port {} with error: {}\n".format(self.port, e.strerror))
+            error("Possible Serial ports:")
+            error("\n\t".join(SerialCommunication.list_serial_ports()), fatal=True)
 
     @staticmethod
     def list_serial_ports():
         system_name = platform.system()
+        available = [""]
         if system_name == "Windows":
             # Scan for available ports.
-            available = []
             for i in range(256):
                 try:
                     s = serial.Serial(i)
-                    available.append(i)
+                    available.append("COM%i" % i)
                     s.close()
                 except serial.SerialException:
                     pass
             return available
         elif system_name == "Darwin":
             # Mac
-            return glob.glob('/dev/tty.usb*')
+            available.extend(glob.glob('/dev/tty.usb*'))
+            return available
         else:
             # Assume Linux or something else
-            return glob.glob('/dev/ttyS*') + glob.glob('/dev/ttyUSB*') + glob.glob('/dev/ttyACM*')
+            available.extend(glob.glob('/dev/ttyS*') + glob.glob('/dev/ttyUSB*') + glob.glob('/dev/ttyACM*'))
+            return available
 
-    def sendWithoutConfirmation(self, message):
+    def sendRawWithoutConfirmation(self, message):
         message += '\r'
         self.serial.write(message.encode())
+        self.sleep(100)
+        self.serial.readline()
 
-    def sendRaw(self, message):
-        message += '\r'
-        self.serial.write(message.encode())
+    def sendRaw(self, message, sleepMillis=100):
+
+        if not self.isConnected():
+            error("Cannot send the message because the robot is not connected")
+            return
+
+        debug('Sending command: "%s"' % message)
+        self.serial.write((message + "\r").encode())
+        self.sleep(sleepMillis)
+
         response = self.serial.readline()
-        stringResponse = response.decode()
-        stringResponse = stringResponse.rstrip()
-        print(stringResponse)
+        response = response.decode()
+        response = response.rstrip()
+
+        debug('Received %d bytes from the robot' % len(response))
+        debug('Response: "%s"' % response)
+        return response
 
     def close(self):
         self.serial.close()
+        self.serial = None
+
+    def isConnected(self):
+        return self.serial is not None
 
     @staticmethod
     def setVerbose(verbose):
-        Global.verbose = verbose
+        setGlobalVerbose(verbose)
 
     @staticmethod
     def sleep(millis):
-        Global.sleep(millis)
+        sleepMillis(millis)
