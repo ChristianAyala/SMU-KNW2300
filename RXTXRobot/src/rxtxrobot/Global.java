@@ -15,7 +15,7 @@ public class Global {
          * not match the major version of the firmware, the communication with
          * the Arduino will likely not work.
          */
-        final protected static int VERSION_MAJOR = 3;
+        final protected static int VERSION_MAJOR = 4;
         
         /**
          * Global minor version.
@@ -26,7 +26,7 @@ public class Global {
          * If this is behind the minor version of the firmware, then new hardware
          * functionality will not be accessible from this API.
          */
-        final protected static int VERSION_MINOR = 5;
+        final protected static int VERSION_MINOR = 0;
         
         /**
          * Global subminor version.
@@ -36,7 +36,7 @@ public class Global {
          * functionality of the API if this does not match the firmware subminor
          * version.
          */
-        final protected static int VERSION_SUBMINOR = 1;
+        final protected static int VERSION_SUBMINOR = 0;
         private static PrintStream out_stream;
         private static PrintStream err_stream;
         

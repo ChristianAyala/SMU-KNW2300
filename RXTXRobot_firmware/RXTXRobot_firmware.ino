@@ -6,46 +6,61 @@
 
  Control Arduino board functions with the following messages:
  
+ ------------------------------
+ Configuring Arduino
+ ------------------------------
+ a m [num] -> attaches motor number [num] as dictated by the layout below
+ a s [num] -> attaches servo number [num] as dictated by the layout below
+ 
+ ------------------------------
+ Reading sensor values
+ ------------------------------
  n -> Gets full version number
  r a -> read analog pins
  r d -> read digital pins
  r t -> read temperature sensor from pin 4
- q -> Gets a ping result on pin 13, in centimeters
+ q [pin] -> Gets a ping result on pin [pin], in centimeters
  c -> Gets a conductivity reading
 
+ ------------------------------
+ Controlling motors and servos
+ ------------------------------
  v [num] [position] -> move servo number [num] to position [position] (position is (0,180)
  d [num] [speed] [t] -> set dc motor number [num] at speed [speed] for time [t], if t=0 then keep on.
  e [num] [speed] [ticks] -> run encoded dc motor number [num] at speed [speed] for ticks [ticks]
- p [num] -> get the current encoder tick value for motor number [num]
- z [num] -> zero out the encoder tick value for motor number [num]
- m [t] -> sets the ramp-up time for the motors to be [t] milliseconds (rounds down to nearest hundred) 
  
  The next 3 do the same thing for 2 motors as close to simultaneously as possible:
  V [position1] [position2] -> move servos to position 1 and 2 [position] (position is (0,180)
  D [num1] [speed1] [num2] [speed2] [t] -> set dc motor number [num] at speed [speed] for time [t], if t=0 then keep on.
  E [num1] [speed1] [ticks1] [num2] [speed2] [ticks2] -> run 2 encoded dc motors at same time
+ 
+ p [num] -> get the current encoder tick value for motor number [num]
+ z [num] -> zero out the encoder tick value for motor number [num]
+ m [t] -> sets the ramp-up time for the motors to be [t] milliseconds (rounds down to nearest hundred)
+ 
+ 
 
 Sensor layout:
 	Digital Pins:
                 0/1 - RX/TX Pins, don't use
-		2 - Motor 1 Encoder
-		3 - Motor 2 Encoder
-		4 - Unused
-		5 - Encoded DC Motor 1
-		6 - Encoded DC Motor 2
-		7 - DC Motor 1
-		8 - DC Motor 2
-		9 - Servo
-		10 - Servo
-		11 - Servo
+		2 -  Motor 1 Encoder
+		3 -  Motor 2 Encoder
+		4 -  Free
+		5 -  Encoded DC Motor 1
+		6 -  Encoded DC Motor 2
+		7 -  DC Motor 3 or free
+		8 -  DC Motor 4 or free
+		9 -  Servo or free
+		10 - Servo or free
+		11 - Servo or free
 		12 - Conductivity Digital Pin 1
-		13 - Ping Sensor
+		13 - Free
 
 	Analog Pins:
-		0 - Unused
-		1 - Unused
-		2 - Unused
-		3 - Unused
+		0 - Free
+		1 - Free
+		2 - Free
+		3 - Free
 		4 - Conductivity Analog Pin 1
 		5 - Conductivity Analog Pin 2
 
@@ -72,8 +87,8 @@ Authors:
  * Minor - suggest api update
  * Subminor - no api update needed 
  */
-const int versionMajor = 3;
-const int versionMinor = 5;
+const int versionMajor = 4;
+const int versionMinor = 0;
 const int versionSubminor = 0; 
 
 Servo servo0;
@@ -104,14 +119,9 @@ long encoderDirections[] = {forward, forward};
 void setup()
 {
 	Serial.begin(BAUD_RATE);
-	servo0.attach(9);
-	servo1.attach(10);
-        servo2.attach(11);
 
 	encodedMotor0.attach(5);
 	encodedMotor1.attach(6);
-        motor0.attach(7);
-	motor1.attach(8);
 
         attachInterrupt(0, incrementEncoder1, RISING);
         attachInterrupt(1, incrementEncoder2, RISING);
@@ -184,6 +194,9 @@ void loop()
             	                break;
                         case 'c':
                                 getConductivity();
+                                break;
+                        case 'a':
+                                attach();
                                 break;
 		}
 	}
@@ -531,7 +544,7 @@ void getPing()
 {
         long duration;
         int cm;
-        int pin = 13;
+        int pin = messageGetInt();
         pinMode(pin, OUTPUT);
 	digitalWrite(pin, LOW);
 	delayMicroseconds(2);
@@ -563,3 +576,24 @@ void getConductivity()
         
 }
 
+void attach()
+{
+        int pin;
+        switch(messageGetChar())
+        {
+                case 'm':
+                        pin = messageGetInt();
+                        dc_motors[pin].attach(pin+5);
+                        messageSendChar('a');
+                        messageSendChar('m');
+                        break;
+                case 's':
+                        pin = messageGetInt();
+                        servos[pin].attach(pin+9);
+                        messageSendChar('a');
+                        messageSendChar('s');
+                        break;
+        }
+        messageSendInt(pin);
+        messageEnd();
+}

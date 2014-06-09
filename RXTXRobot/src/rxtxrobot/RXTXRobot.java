@@ -71,6 +71,14 @@ public class RXTXRobot extends SerialCommunication
         {
                 false, false, false, false
         };
+        private boolean[] motorsAttached =
+        {
+                true, true, false, false
+        };
+        private boolean[] servosAttached =
+        {
+                false, false, false
+        };
         private boolean resetOnClose;
         private boolean overrideValidation;
         private int mixerSpeed;
@@ -393,6 +401,103 @@ public class RXTXRobot extends SerialCommunication
                 }
                 return "";
         }
+        
+        /**
+         * Attaches a motor to the Arduino.
+         * 
+         * Attaches a motor to the Arduino by binding it to its appropriate
+         * pin. Refer to the Arduino pinout guide for which pins to plug motors
+         * into. Note that MOTOR1 and MOTOR2 are attached by default, and therefore
+         * do not need to be attached manually.
+         * @param motor The DC motor you want to attach:
+         * {@link #MOTOR3 RXTXRobot.MOTOR3} or {@link #MOTOR4 RXTXRobot.MOTOR4}
+         */
+        public void attachMotor(int motor)
+        {
+                if (!isConnected())
+                {
+                        error("Robot is not connected!", "RXTXRobot", "attachMotor");
+                }
+                else if (motor < MOTOR1 || motor > MOTOR4) 
+                {
+                        error("Invalid motor number given", "RXTXRobot", "attachMotor");
+                }
+                else if (motorsAttached[motor] == true)
+                {
+                        error("This motor has already been attached", "RXTXRobot", "attachMotor");
+                }
+                else
+                {
+                        try
+                        {
+                                this.attemptTryAgain = true;
+                                String response = this.sendRaw("a m " + motor);
+                                this.attemptTryAgain = false;
+                                if (!response.equals("a m " + motor))
+                                {
+                                        error("Invalid response from the arduino: " + response, "RXTXRobot", "attachMotor");
+                                }
+                                else
+                                {
+                                        motorsAttached[motor] = true;
+                                        debug("Successfully attached motor " + motor);
+                                }
+                        }
+                        catch (Exception e)
+                        {
+                                error("A generic error occured", "RXTXRobot", "attachMotor");
+                        }
+                }
+        }
+        
+        /**
+         * Attaches a servo to the Arduino.
+         * 
+         * Attaches a servo to the Arduino by binding it to its appropriate
+         * pin. Refer to the Arduino pinout guide for which pins to plug servos
+         * into. No servos are attached by default, so call this method for every
+         * servo you plan to use.
+         * @param servo The servo you want to attach:
+         * {@link #SERVO1 RXTXRobot.SERVO1}, {@link #SERVO2 RXTXRobot.SERVO2},
+         * or {@link #SERVO3 RXTXRobot.SERVO3}
+         */
+        public void attachServo(int servo)
+        {
+                if (!isConnected())
+                {
+                        error("Robot is not connected!", "RXTXRobot", "attachServo");
+                }
+                else if (servo < SERVO1 || servo > SERVO3) 
+                {
+                        error("Invalid servo number given", "RXTXRobot", "attachServo");
+                }
+                else if (servosAttached[servo] == true)
+                {
+                        error("This servo has already been attached", "RXTXRobot", "attachServo");
+                }
+                else
+                {
+                        try
+                        {
+                                this.attemptTryAgain = true;
+                                String response = this.sendRaw("a s " + servo, 500);
+                                this.attemptTryAgain = false;
+                                if (!response.equals("a s " + servo))
+                                {
+                                        error("Invalid response from the arduino: " + response, "RXTXRobot", "attachServo");
+                                }
+                                else
+                                {
+                                        servosAttached[servo] = true;
+                                        debug("Successfully attached servo " + servo);
+                                }
+                        }
+                        catch (Exception e)
+                        {
+                                error("A generic error occured", "RXTXRobot", "attachServo");
+                        }
+                }
+        }
 
         /**
          * Refreshes the Analog pin cache from the robot.
@@ -696,6 +801,11 @@ public class RXTXRobot extends SerialCommunication
                         error("Invalid servo argument.", "RXTXRobot", "moveServo");
                         return;
                 }
+                if (servosAttached[servo] == false)
+                {
+                        error("Servo " + servo + " has not been attached", "RXTXRobot", "moveServo");
+                        return;
+                }
                 debug("Moving servo " + servo + " to position " + position);
                 if (!getOverrideValidation() && (position < 0 || position > 180))
                         error("Position must be >=0 and <=180.  You supplied " + position + ", which is invalid.", "RXTXRobot", "moveServo");
@@ -726,6 +836,15 @@ public class RXTXRobot extends SerialCommunication
                         error("Robot is not connected!", "RXTXRobot", "moveBothServos");
                         return;
                 }
+                for (int i = 0; i < servosAttached.length; ++i)
+                {
+                        if (!servosAttached[i])
+                        {
+                                error("Servo " + i + " has not been attached", "RXTXRobot", "moveBothServos");
+                                return;
+                        }
+                }
+        
                 debug("Moving servos to positions " + pos1 + ", " + pos2 + ", and " + pos3);
                 if (!getOverrideValidation() && (pos1 < 0 || pos1 > 180 || pos2 < 0 || pos2 > 180 || pos3 < 0 || pos3 > 180))
                         error("Positions must be >=0 and <=180.  You supplied " + pos1 + " and " + pos2 + ".  One or more are invalid.", "RXTXRobot", "moveBothServos");
@@ -787,6 +906,11 @@ public class RXTXRobot extends SerialCommunication
                 if (!getOverrideValidation() && (motor < RXTXRobot.MOTOR1 || motor > RXTXRobot.MOTOR4))
                 {
                         error("runMotor was not given a correct motor argument.", "RXTXRobot", "runMotor");
+                        return;
+                }
+                if (!motorsAttached[motor])
+                {
+                        error("Motor " + motor + " has not been attached", "RXTXRobot", "runMotor");
                         return;
                 }
                 debug("Running motor " + motor + " at speed " + speed + " for time of " + time);
@@ -865,6 +989,11 @@ public class RXTXRobot extends SerialCommunication
                 {
                         error("runMotor was not given a correct motor argument.", "RXTXRobot", "runMotor");
                 }
+                if (!motorsAttached[motor1] || !motorsAttached[motor2])
+                {
+                        error("One of these motors has not been attached", "RXTXRobot", "runMotor");
+                        return;
+                }
                 debug("Running two motors, motor " + motor1 + " at speed " + speed1 + " and motor " + motor2 + " at speed " + speed2 + " for time of " + time);
                 if (!"".equals(sendRaw("D " + motor1 + " " + speed1 + " " + motor2 + " " + speed2 + " " + time)))
                         sleep(time);
@@ -932,6 +1061,11 @@ public class RXTXRobot extends SerialCommunication
                 if (!getOverrideValidation() && ((motor1 < 0 || motor1 > 3) || (motor2 < 0 || motor2 > 3) || (motor3 < 0 || motor3 > 3) || (motor4 < 0 || motor4 > 3)))
                 {
                         error("runMotor was not given a correct motor argument.", "RXTXRobot", "runMotor");
+                        return;
+                }
+                if (!motorsAttached[motor1] || !motorsAttached[motor2] || !motorsAttached[motor3] || !motorsAttached[motor4])
+                {
+                        error("One of these motors has not been attached", "RXTXRobot", "runMotor");
                         return;
                 }
                 debug("Running four motors, motor " + motor1 + " at speed " + speed1 + " and motor " + motor2 + " at speed " + speed2 + " and motor " + motor3 + " at speed " + speed3 + " and motor " + motor4 + " at speed " + speed4 + " for time of " + time);
