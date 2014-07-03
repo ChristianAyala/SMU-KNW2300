@@ -91,37 +91,35 @@ const int versionMajor = 4;
 const int versionMinor = 0;
 const int versionSubminor = 0; 
 
-Servo servo0;
-Servo servo1;
-Servo servo2;
-
+Servo servo0, servo1, servo2;
 Servo servos[] = { servo0, servo1, servo2 };
 int servos_length = 3;
+
 int conductivity1, conductivity2, finalConductivity;
 boolean toggle0 = 0;
 
-Servo motor0;
-Servo motor1;
-Servo encodedMotor0;
-Servo encodedMotor1;
+Servo motor0, motor1, encodedMotor0, encodedMotor1;
 Servo dc_motors[] = {encodedMotor0, encodedMotor1, motor0, motor1};
+int encoders_length = 2;
 
 const long forward = 1;
 const long backward = -1;
 int halt = 1500;
 int motorIncrements = 0;
 int incrementDelay = 100;
-int encoders_length = 2;
 long encoderPositions[] = {0L, 0L};
 long encoderTicks[] = {0L, 0L};
 long encoderDirections[] = {forward, forward};
+
+               //Pins: 0     1     2     3     4      5     6     7      8      9      10     11     12    13
+bool pinsAttached[] = {true, true, true, true, false, true, true, false, false, false, false, false, true, false};
 
 void setup()
 {
 	Serial.begin(BAUD_RATE);
 
-	encodedMotor0.attach(5);
-	encodedMotor1.attach(6);
+	dc_motors[0].attach(5);
+	dc_motors[1].attach(6);
 
         attachInterrupt(0, incrementEncoder1, RISING);
         attachInterrupt(1, incrementEncoder2, RISING);
@@ -521,12 +519,14 @@ void readpin()
 	{
 		case 'd':
 			messageSendChar('d');
-			pinMode(11, INPUT);
-			pinMode(12, INPUT);
-			pinMode(4, INPUT); 
-			messageSendInt(digitalRead(4)); 
-			messageSendInt(digitalRead(11));
-			messageSendInt(digitalRead(12));
+                        for (char i=0; i < 14; ++i)
+                        {
+                                if (pinsAttached[i] == false)
+                                {
+                                        pinMode(i, INPUT);
+                                        messageSendInt(digitalRead(i));
+                                }
+                        }
 			messageEnd();
 			break;
 		case 'a':
@@ -555,6 +555,7 @@ void getPing()
 	duration = pulseIn(pin, HIGH);
 	cm = duration / 29 / 2;
         messageSendChar('q');
+        messageSendChar(pin);
         messageSendInt(cm);
         messageEnd();
 }
@@ -584,12 +585,14 @@ void attach()
                 case 'm':
                         pin = messageGetInt();
                         dc_motors[pin].attach(pin+5);
+                        pinsAttached[pin+5] = true;
                         messageSendChar('a');
                         messageSendChar('m');
                         break;
                 case 's':
                         pin = messageGetInt();
                         servos[pin].attach(pin+9);
+                        pinsAttached[pin+9] = true;
                         messageSendChar('a');
                         messageSendChar('s');
                         break;

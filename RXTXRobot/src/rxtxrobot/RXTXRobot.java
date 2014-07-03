@@ -9,6 +9,8 @@ import gnu.io.UnsupportedCommOperationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This class is the main class for communicating with the Arduino.
@@ -61,12 +63,21 @@ public class RXTXRobot extends SerialCommunication
          * (0 &le; pins &lt; NUM_ANALOG_PINS)
          */
         final public static int NUM_ANALOG_PINS = 6;
+        /**
+         * The pin number that motors start being plugged into the Arduino
+         */
+        final private static int MOTOR_PIN_OFFSET = 5;
+        /**
+         * The pin number that servos start being plugged into the Arduino
+         */
+        final private static int SERVO_PIN_OFFSET = 9;
 
         /*
          * Private variables
          */
         private int[] analogPinCache;
         private int[] digitalPinCache;
+        private List<Integer> digitalPinsAvailable;
         private boolean[] motorsRunning =
         {
                 false, false, false, false
@@ -109,8 +120,20 @@ public class RXTXRobot extends SerialCommunication
                 attemptTryAgain = false;
                 waitForResponse = false;
                 hasEncodedMotors = false;
+                initAvailableDigitalPins();
         }
-
+        
+        private void initAvailableDigitalPins()
+        {
+                int[] pinsAvailable = {4, 7, 8, 9, 10, 11, 13};
+                digitalPinsAvailable = new ArrayList<Integer>(pinsAvailable.length);
+                for (int i : pinsAvailable)
+                {
+                        digitalPinsAvailable.add(i);
+                }
+        }
+        
+        
         /**
          * Attempts to connect to the Arduino/XBee.
          *
@@ -440,6 +463,7 @@ public class RXTXRobot extends SerialCommunication
                                 else
                                 {
                                         motorsAttached[motor] = true;
+                                        digitalPinsAvailable.remove(new Integer(motor + MOTOR_PIN_OFFSET));
                                         debug("Successfully attached motor " + motor);
                                 }
                         }
@@ -489,11 +513,13 @@ public class RXTXRobot extends SerialCommunication
                                 else
                                 {
                                         servosAttached[servo] = true;
+                                        digitalPinsAvailable.remove(new Integer(servo + SERVO_PIN_OFFSET));
                                         debug("Successfully attached servo " + servo);
                                 }
                         }
                         catch (Exception e)
                         {
+                                e.printStackTrace();
                                 error("A generic error occured", "RXTXRobot", "attachServo");
                         }
                 }
@@ -557,7 +583,7 @@ public class RXTXRobot extends SerialCommunication
          */
         public void refreshDigitalPins()
         {
-                digitalPinCache = new int[RXTXRobot.NUM_DIGITAL_PINS];
+                digitalPinCache = new int[digitalPinsAvailable.size()];
                 for (int x = 0; x < digitalPinCache.length; ++x)
                         digitalPinCache[x] = -1;
                 if (!isConnected())
@@ -575,7 +601,7 @@ public class RXTXRobot extends SerialCommunication
                                 error("No response was received from the Arduino.", "RXTXRobot", "refreshDigitalPins");
                                 return;
                         }
-                        if (split.length - 1 != RXTXRobot.NUM_DIGITAL_PINS)
+                        if (split.length - 1 != digitalPinsAvailable.size())
                         {
                                 error("Incorrect length returned: " + split.length + ".", "RXTXRobot", "refreshDigitalPins");
                                 if (getVerbose())
@@ -635,17 +661,17 @@ public class RXTXRobot extends SerialCommunication
          */
         public DigitalPin getDigitalPin(int x)
         {
-                final int[][] mapping = { {4, 0},
-			                  {11, 1},
-			                  {12, 2}};
                 if (digitalPinCache == null)
-                        this.refreshDigitalPins();
-                for (int y = 0; y < mapping.length; ++y)
                 {
-                        if (mapping[y][0] == x)
-                                return new DigitalPin(x, digitalPinCache[mapping[y][1]]);
+                        this.refreshDigitalPins();
                 }
-                error("Digital pin " + x + " doesn't exist.", "RXTXRobot", "getDigitalPin");
+                int cacheIndex = digitalPinsAvailable.indexOf(x);
+                if (cacheIndex != -1)
+                {
+                        return new DigitalPin(x, digitalPinCache[cacheIndex]);
+                }
+                
+                error("Digital pin " + x + " doesn't exist, or is attached to something.", "RXTXRobot", "getDigitalPin");
                 return null;
         }
 
@@ -701,23 +727,30 @@ public class RXTXRobot extends SerialCommunication
         }
 
         /**
-         * Gets the result from the Ping sensor (must be on digital pin 13).
+         * Gets the result from the Ping sensor (must be on a free Digital pin).
          *
-         * The Ping sensor must be on digital pin 13 and this method returns the distance in centimeters.
-         * @return The distance from an object in centimeters
+         * The Ping sensor must be on a free digital pin and this method returns the distance in centimeters.
+         * @param pin The pin number the ping sensor is on. Note that you do not
+         * have to call an attach() method for the ping sensors. However, if the
+         * pin has been attached previously, this method will return an error value.
+         * @return The distance from an object in centimeters, or -1 in an error
          */
-        public int getPing()
+        public int getPing(int pin)
         {
                 if (!isConnected())
                 {
                         error("Robot isn't connected!", "RXTXRobot", "getPing");
                         return -1;
                 }
+                if (digitalPinsAvailable.indexOf(new Integer(pin)) == -1)
+                {
+                        error("This pin has already been attached", "RXTXRobot", "getPing");
+                }
                 this.attemptTryAgain = true;
-                String response = this.sendRaw("q",200);
+                String response = this.sendRaw("q " + pin,200);
                 String[] arr = response.split("\\s+");
                 this.attemptTryAgain = false;
-                if (arr.length != 2)
+                if (arr.length != 3)
                 {
                         error("Incorrect response from Arduino (Invalid length)!", "RXTXRobot", "getPing");
                         debug("Ping Response: " + response);
@@ -725,7 +758,7 @@ public class RXTXRobot extends SerialCommunication
                 }
                 try
                 {
-                        return Integer.parseInt(arr[1]);
+                        return Integer.parseInt(arr[2]);
                 }
                 catch (Exception e)
                 {
@@ -1513,6 +1546,19 @@ public class RXTXRobot extends SerialCommunication
         public boolean getHasEncodedMotors()
         {
                 return this.hasEncodedMotors;
+        }
+        
+        /**
+         * Gets the list of remaining available digital pins.
+         * 
+         * These are the pins that have not been attached, or are
+         * not attached by default
+         * 
+         * @return List of Integers representing the pins that can still
+         * be polled using {@link getDigitalPin() getDigitalPin()}.
+         */
+        public List<Integer> getAvailableDigitalPins() {
+            return new java.util.ArrayList<Integer>(digitalPinsAvailable);
         }
 
         /**
