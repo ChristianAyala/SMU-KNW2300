@@ -68,6 +68,7 @@ public class Global {
         public static void debug(String str)
         {
                 getOutStream().println("--> " + str);
+                getOutStream().flush();
         }
         
         public static void error(String str, String class_name, String method, boolean fatal)
@@ -79,5 +80,6 @@ public class Global {
                 getErrStream().println("Message:");
                 str = str.replaceAll("\\n", "\n\t");
                 getErrStream().println("\t" + str);
+                getErrStream().flush();
         }
 }
