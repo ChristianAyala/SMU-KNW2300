@@ -25,7 +25,7 @@
  ------------------------------
  Controlling motors and servos
  ------------------------------
- v [num] [position] -> move servo number [num] to position [position] (position is (0,180)
+ v [num] [position] -> move servo number [num] to position [position] (position is [0,180])
  d [num] [speed] [t] -> set dc motor number [num] at speed [speed] for time [t], if t=0 then keep on.
  e [num] [speed] [ticks] -> run encoded dc motor number [num] at speed [speed] for ticks [ticks]
  
@@ -38,16 +38,18 @@
  z [num] -> zero out the encoder tick value for motor number [num]
  m [t] -> sets the ramp-up time for the motors to be [t] milliseconds (rounds down to nearest hundred)
  
- 
+ ------------------------------
+ Sensor Layout
+ ------------------------------
+ Rather than 
 
-Sensor layout:
 	Digital Pins:
                 0/1 - RX/TX Pins, don't use
-		2 -  Motor 1 Encoder
-		3 -  Motor 2 Encoder
+		2 -  Motor 1 Encoder (hardcoded)
+		3 -  Motor 2 Encoder (hardcoded)
 		4 -  Free
-		5 -  Encoded DC Motor 1
-		6 -  Encoded DC Motor 2
+		5 -  Encoded DC Motor 1 (hardcoded)
+		6 -  Encoded DC Motor 2 (hardcoded)
 		7 -  DC Motor 3 or free
 		8 -  DC Motor 4 or free
 		9 -  Servo or free
@@ -67,12 +69,19 @@ Sensor layout:
 
  
 Authors:
- Base: Thomas Ouellet Fredericks 
- Additions: Alexandre Quessy
- Motor Additions: Marc Christensen
- Cleanup and complete rewrite: Chris King
- Current Maintainers: Chris Ayala, Charlie Albright
-                      Austin Wells, Luke Oglesbee
+ 
+ Past Contributors:
+   -- Ouellet Fredericks
+   -- Alexandre Quessy
+   -- Marc Christensen
+   -- Chris King
+ Current Maintainers
+   -- Mark Fontenot
+   -- Chris Ayala
+   -- Charlie Albright
+   -- Austin Wells
+   -- Luke Oglesbee
+   -- Candie Solis
  */
 
 #define BAUD_RATE 9600
