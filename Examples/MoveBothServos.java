@@ -8,7 +8,10 @@ public class MoveBothServos
 		RXTXRobot r = new RXTXRobot();  // Create RXTXRobot object
 		r.setPort("COM3"); // Set port to COM3
 		r.connect();
-		r.moveBothServos(20,170); // Move Servo 1 to position 20 and Servo 2 to position 170 at the same time
+		r.attachServo(RXTXRobot.SERVO1); //Connect the servos to the Arduino
+		r.attachServo(RXTXRobot.SERVO2);
+		r.attachServo(RXTXRobot.SERVO3);
+		r.moveAllServos(20,170, 0); // Move Servo 1 to position 20, Servo 2 to position 170, and Servo 3 to position 0.
 		r.close();
 	}
 }

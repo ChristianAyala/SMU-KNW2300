@@ -7,9 +7,10 @@ public class RunBothEncodedMotors
 	{
 		RXTXRobot r = new RXTXRobot(); // Create RXTXRobot object
 		r.setPort("COM2"); // Set port to COM2
-		r.setHasEncodedMotors(true);
 		r.connect();
-		r.runEncodedMotor(RXTXRobot.MOTOR1, 255, 100000, RXTXRobot.MOTOR2, 255, 50000); // Run both motors forward, one for 100,000 ticks and one for 50,000 ticks.
+		//We don't have to attach anything because these motors are
+		//attached by default
+		r.runEncodedMotor(RXTXRobot.MOTOR1, 255, 100, RXTXRobot.MOTOR2, 255, 500); // Run both motors forward, one for 100,000 ticks and one for 50,000 ticks.
 		r.close();
 	}
 }
