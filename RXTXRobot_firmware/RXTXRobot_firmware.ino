@@ -591,6 +591,7 @@ void attach()
         int pin;
         switch(messageGetChar())
         {
+                //Attaching a motor (which start on pin 5)
                 case 'm':
                         pin = messageGetInt();
                         dc_motors[pin].attach(pin+5);
@@ -598,6 +599,7 @@ void attach()
                         messageSendChar('a');
                         messageSendChar('m');
                         break;
+                //Attaching a servo (which start on pin 9)
                 case 's':
                         pin = messageGetInt();
                         servos[pin].attach(pin+9);

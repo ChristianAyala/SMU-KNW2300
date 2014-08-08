@@ -808,6 +808,7 @@ public abstract class RXTXRobot extends SerialCommunication
         if (digitalPinsAvailable.indexOf(new Integer(pin)) == -1)
         {
             error("This pin has already been attached", "RXTXRobot", "getPing");
+            return -1;
         }
         this.attemptTryAgain = true;
         String response = this.sendRaw("q " + pin, 200);
