@@ -915,7 +915,7 @@ public abstract class RXTXRobot extends SerialCommunication
     /**
      * Moves all servos simultaneously to the desired positions.
      *
-     * Accepts two angular positions between 0 and 180 inclusive and moves the
+     * Accepts three angular positions between 0 and 180 inclusive and moves the
      * servo motors to the corresponding angular position.
      * {@link #SERVO1 SERVO1} moves {@code pos1} degrees, {@link #SERVO2 SERVO2}
      * moves {@code pos2} degrees, and {@link #SERVO3 SERVO3} moves {@code pos3}
@@ -931,14 +931,14 @@ public abstract class RXTXRobot extends SerialCommunication
     {
         if (!isConnected())
         {
-            error("Robot is not connected!", "RXTXRobot", "moveBothServos");
+            error("Robot is not connected!", "RXTXRobot", "moveAllServos");
             return;
         }
         for (int i = 0; i < servosAttached.length; ++i)
         {
             if (!servosAttached[i])
             {
-                error("Servo " + i + " has not been attached", "RXTXRobot", "moveBothServos");
+                error("Servo " + i + " has not been attached", "RXTXRobot", "moveAllServos");
                 return;
             }
         }
@@ -946,7 +946,7 @@ public abstract class RXTXRobot extends SerialCommunication
         debug("Moving servos to positions " + pos1 + ", " + pos2 + ", and " + pos3);
         if (!getOverrideValidation() && (pos1 < 0 || pos1 > 180 || pos2 < 0 || pos2 > 180 || pos3 < 0 || pos3 > 180))
         {
-            error("Positions must be >=0 and <=180.  You supplied " + pos1 + " and " + pos2 + ".  One or more are invalid.", "RXTXRobot", "moveBothServos");
+            error("Positions must be >=0 and <=180.  You supplied " + pos1 + "," + pos2 + ", and " + pos3 + ".  One or more are invalid.", "RXTXRobot", "moveBothServos");
         } else
         {
             sendRaw("V " + pos1 + " " + pos2 + " " + pos3);

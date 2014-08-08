@@ -30,7 +30,7 @@
  e [num] [speed] [ticks] -> run encoded dc motor number [num] at speed [speed] for ticks [ticks]
  
  The next 3 do the same thing for 2 motors as close to simultaneously as possible:
- V [position1] [position2] -> move servos to position 1 and 2 [position] (position is (0,180)
+ V [position1] [position2] [position3] -> move servos to position 1, 2, and 3 (position is [0,180])
  D [num1] [speed1] [num2] [speed2] [t] -> set dc motor number [num] at speed [speed] for time [t], if t=0 then keep on.
  E [num1] [speed1] [ticks1] [num2] [speed2] [ticks2] -> run 2 encoded dc motors at same time
  
