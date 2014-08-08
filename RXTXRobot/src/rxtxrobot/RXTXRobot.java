@@ -147,7 +147,7 @@ public abstract class RXTXRobot extends SerialCommunication
      * {@link #setPort(java.lang.String) setPort} method before connecting. If
      * there is an error in connecting, then the appropriate error message will
      * be displayed, as well as a list of possible devices connected to your
-     * computer that you can connect to. <br /><br /> This function will
+     * computer that you can connect to. <br><br> This function will
      * terminate runtime if an error is discovered.
      */
     @Override
@@ -332,9 +332,20 @@ public abstract class RXTXRobot extends SerialCommunication
         if (getResetOnClose())
         {
             this.getOutStream().println("Resetting servos and motors...");
-            this.moveAllServos(90, 90, 90);
-            this.runMotor(RXTXRobot.MOTOR1, 0, RXTXRobot.MOTOR2, 0, 0);
-            this.runMotor(RXTXRobot.MOTOR3, 0, RXTXRobot.MOTOR4, 0, 0);
+            for (int i = 0; i < servosAttached.length; ++i)
+            {
+                if (servosAttached[i] == true)
+                {
+                    this.moveServo(i, 90);
+                }
+            }
+            for (int i = 0; i < motorsAttached.length; ++i)
+            {
+                if (motorsAttached[i] == true)
+                {
+                    this.runMotor(i, 0, 0);
+                }
+            }
         }
         if (sPort != null)
         {
@@ -687,12 +698,13 @@ public abstract class RXTXRobot extends SerialCommunication
         {
             this.refreshAnalogPins();
         }
-        if (!getOverrideValidation() && (x >= analogPinCache.length || x < 0))
+        int cacheIndex = analogPinsAvailable.indexOf(x);
+        if (cacheIndex != -1)
         {
-            error("Analog pin " + x + " doesn't exist.", "RXTXRobot", "getAnalogPin");
-            return null;
+            return new AnalogPin(x, analogPinCache[cacheIndex]);
         }
-        return new AnalogPin(x, analogPinCache[x]);
+        error("Analog pin " + x + " doesn't exist, or is attached to something.", "RXTXRobot", "getAnalogPin");
+        return null;
     }
 
     /**
@@ -862,9 +874,9 @@ public abstract class RXTXRobot extends SerialCommunication
      *
      * Accepts either {@link #SERVO1 RXTXRobot.SERVO1} or
      * {@link #SERVO2 RXTXRobot.SERVO2} and an angular position between 0 and
-     * 180 inclusive. <br /><br /> The servo starts at 90 degrees, so a number
+     * 180 inclusive. <br><br> The servo starts at 90 degrees, so a number
      * &lt;90 will turn it one way, and a number &gt;90 will turn it the other
-     * way. <br /><br /> An error message will be displayed on error.
+     * way. <br><br> An error message will be displayed on error.
      *
      * @param servo The servo motor that you would like to move:
      * {@link #SERVO1 RXTXRobot.SERVO1}, {@link #SERVO2 RXTXRobot.SERVO2}, or
@@ -906,9 +918,9 @@ public abstract class RXTXRobot extends SerialCommunication
      * servo motors to the corresponding angular position.
      * {@link #SERVO1 SERVO1} moves {@code pos1} degrees, {@link #SERVO2 SERVO2}
      * moves {@code pos2} degrees, and {@link #SERVO3 SERVO3} moves {@code pos3}
-     * degrees. <br /><br /> The servos start at 90 degrees, so a number &lt; 90
+     * degrees. <br><br> The servos start at 90 degrees, so a number &lt; 90
      * will turn it one way, and a number &gt; 90 will turn it the other way.
-     * <br /><br /> An error message will be displayed on error.
+     * <br><br> An error message will be displayed on error.
      *
      * @param pos1 The angular position of RXTXRobot.SERVO1
      * @param pos2 The angular position of RXTXRobot.SERVO2
@@ -948,10 +960,10 @@ public abstract class RXTXRobot extends SerialCommunication
      * {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or
      * {@link #MOTOR4 RXTXRobot.MOTOR4}, the speed that the motor should run at
      * (-500 - 500), and the time with which the motor should run (in
-     * milliseconds). <br /><br /> If speed is negative, the motor will run in
-     * reverse. <br /><br /> If time is 0, the motor will run infinitely until
+     * milliseconds). <br><br> If speed is negative, the motor will run in
+     * reverse. <br><br> If time is 0, the motor will run infinitely until
      * another call to that motor is made, even if the Java program terminates.
-     * <br /><br /> An error message will display on error. <br /><br /> Note:
+     * <br><br> An error message will display on error. <br><br> Note:
      * This method is a blocking method unless time = 0
      *
      * @param motor The DC motor you want to run:
@@ -1024,11 +1036,11 @@ public abstract class RXTXRobot extends SerialCommunication
      * {@link #MOTOR4 RXTXRobot.MOTOR4}, the speed in which that motor should
      * run (-500 - 500), accepts another DC motor, the speed in which that motor
      * should run, and the time with which both motors should run (in
-     * milliseconds). <br /><br /> If speed is negative for either motor, that
-     * motor will run in reverse. <br /><br /> If time is 0, the motors will run
+     * milliseconds). <br><br> If speed is negative for either motor, that
+     * motor will run in reverse. <br><br> If time is 0, the motors will run
      * infinitely until another call to both specific motors is made, even if
-     * the Java program terminates. <br /><br /> An error message will display
-     * on error. <br /><br /> Note: This method is a blocking method unless time
+     * the Java program terminates. <br><br> An error message will display
+     * on error. <br><br> Note: This method is a blocking method unless time
      * = 0
      *
      * @param motor1 The first DC motor:
@@ -1114,11 +1126,11 @@ public abstract class RXTXRobot extends SerialCommunication
      * {@link #MOTOR4 RXTXRobot.MOTOR4}, the speed in which those motor should
      * run (-500 - 500), accepts another DC motor, the speed in which that motor
      * should run, etc, and the time with which both motors should run (in
-     * milliseconds). <br /><br /> If speed is negative for any motor, that
-     * motor will run in reverse. <br /><br /> If time is 0, the motors will run
+     * milliseconds). <br><br> If speed is negative for any motor, that
+     * motor will run in reverse. <br><br> If time is 0, the motors will run
      * infinitely until another call to both specific motors is made, even if
-     * the Java program terminates. <br /><br /> An error message will display
-     * on error. <br /><br /> Note: This method is a blocking method unless time
+     * the Java program terminates. <br><br> An error message will display
+     * on error. <br><br> Note: This method is a blocking method unless time
      * = 0
      *
      * @param motor1 The first DC motor:
@@ -1184,9 +1196,9 @@ public abstract class RXTXRobot extends SerialCommunication
      *
      * Accepts a DC motor, either {@link #MOTOR1 RXTXRobot.MOTOR1} or
      * {@link #MOTOR2 RXTXRobot.MOTOR2}, the speed that the motor should run at
-     * (-500 - 500), and the tick to move to. <br /><br /> If speed is negative,
-     * the motor will run in reverse. <br /><br /> An error message will display
-     * on error. <br /><br /> Note: This method is a blocking method
+     * (-500 - 500), and the tick to move to. <br><br> If speed is negative,
+     * the motor will run in reverse. <br><br> An error message will display
+     * on error. <br><br> Note: This method is a blocking method
      *
      * @param motor The DC motor you want to run:
      * {@link #MOTOR1 RXTXRobot.MOTOR1} or {@link #MOTOR2 RXTXRobot.MOTOR2}
@@ -1250,9 +1262,9 @@ public abstract class RXTXRobot extends SerialCommunication
      * {@link #MOTOR2 RXTXRobot.MOTOR2}, the speed in which that motor should
      * run (-500 - 500), accepts another DC motor, the speed in which that motor
      * should run, and the time with which both motors should run (in
-     * milliseconds). <br /><br /> If speed is negative for either motor, that
-     * motor will run in reverse. <br /><br /> An error message will display on
-     * error. <br /><br /> Note: This method is a blocking method unless time =
+     * milliseconds). <br><br> If speed is negative for either motor, that
+     * motor will run in reverse. <br><br> An error message will display on
+     * error. <br><br> Note: This method is a blocking method unless time =
      * 0
      *
      * @param motor1 The first DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1} or
@@ -1331,7 +1343,7 @@ public abstract class RXTXRobot extends SerialCommunication
      * This method returns the number of ticks that a motor has moved since it
      * was last reset. This includes all motion, including distance traveled
      * using {@link #runEncodedMotor(int, int, int) runEncodedMotor} and
-     * {@link #runMotor(int, int, int) runMotor}. <br /> <br />Running a motor
+     * {@link #runMotor(int, int, int) runMotor}. <br> <br>Running a motor
      * with a positive speed in either case increases its tick count. Running a
      * motor with a negative speed decreases its tick count, which means the
      * current tick count may be negative. To reset the encoder tick position
@@ -1404,7 +1416,7 @@ public abstract class RXTXRobot extends SerialCommunication
      * This method sets the ramp-up time for the motors. By default, motors have
      * a ramp-up time of 0 milliseconds; that is, they reach their full intended
      * speed in 0 milliseconds. Use this method to set how long it takes to
-     * reach their intended speed. <br /><br />If running a motor based on time,
+     * reach their intended speed. <br><br>If running a motor based on time,
      * the ramp-up time is included in the total time. For example, setting the
      * ramp-up time to 1500 ms. then running a motor for 5000 ms. results in
      * only 3500 seconds at the intended speed.
@@ -1470,10 +1482,10 @@ public abstract class RXTXRobot extends SerialCommunication
      * Accepts a motor location ({@link #MOTOR1 RXTXRobot.MOTOR1},
      * {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or
      * {@link #MOTOR4 RXTXRobot.MOTOR4}), and the time with which the motor
-     * should run (in milliseconds). <br /><br /> If time is 0, the motor will
+     * should run (in milliseconds). <br><br> If time is 0, the motor will
      * run infinitely until a call to {@link #stopMixer(int) stopMixer}, even if
-     * the Java program terminates. <br /><br /> An error message will display
-     * on error. <br /><br /> Note: This method is a blocking method unless time
+     * the Java program terminates. <br><br> An error message will display
+     * on error. <br><br> Note: This method is a blocking method unless time
      * = 0
      *
      * @param motor The motor that the mixer is on:
@@ -1627,7 +1639,7 @@ public abstract class RXTXRobot extends SerialCommunication
      * default
      *
      * @return List of Integers representing the pins that can still be polled
-     * using {@link getDigitalPin() getDigitalPin()}.
+     * using {@link #getDigitalPin(int) getDigitalPin()}.
      */
     public List<Integer> getAvailableDigitalPins()
     {

@@ -81,7 +81,7 @@ public class Labview extends SerialCommunication
          *
          * This method attempts to make a serial connection to Labview if the
          * port is correct. If there is an error in connecting, then the
-         * appropriate error message will be displayed. <br /><br /> This
+         * appropriate error message will be displayed. <br><br> This
          * function will terminate runtime if an error is discovered.
          */
         @Override

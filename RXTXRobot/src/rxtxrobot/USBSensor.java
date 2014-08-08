@@ -95,7 +95,7 @@ public class USBSensor extends SerialCommunication
          * This can be problematic if there are multiple USB Sensors to be
          * connected to. If there are multiple, you should specify a serial
          * number. If there is an error in connecting, then the appropriate
-         * error message will be displayed. <br /><br /> This function will
+         * error message will be displayed. <br><br> This function will
          * terminate runtime if an error is discovered.
          */
         @Override
@@ -110,7 +110,7 @@ public class USBSensor extends SerialCommunication
          * This method attempts to make a serial connection to a specific USB
          * Sensor. The serial number supplied must be equivalent to the serial
          * number on the USB Sensor. If there is an error in connecting, then
-         * the appropriate error message will be displayed. <br /><br /> This
+         * the appropriate error message will be displayed. <br><br> This
          * function will terminate runtime if an error is discovered.
          *
          * @param serial Serial number of the USB Sensor to connect to.

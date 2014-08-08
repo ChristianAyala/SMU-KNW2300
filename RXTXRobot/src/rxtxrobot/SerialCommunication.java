@@ -89,9 +89,9 @@ public abstract class SerialCommunication
          * Sets the port to connect to for serial communication.
          *
          * Set the port to the same port that the device is connected to on your
-         * computer. <br /><br /> For example:<br /> On Windows, "COM3" (check
-         * device manager)<br /> On Mac, "/dev/tty.usbmodem411" (run "ls /dev |
-         * grep usb")<br /> On Linux, "/dev/ttyACM0"<br />
+         * computer. <br><br> For example:<br> On Windows, "COM3" (check
+         * device manager)<br> On Mac, "/dev/tty.usbmodem411" (run "ls /dev |
+         * grep usb")<br> On Linux, "/dev/ttyACM0"<br>
          *
          * @param p Port name that the device is connected to.
          */
@@ -317,7 +317,7 @@ public abstract class SerialCommunication
          *
          * This method attempts to make a serial connection to the device if the
          * port is correct. If there is an error in connecting, then the
-         * appropriate error message will be displayed. <br /><br /> This
+         * appropriate error message will be displayed. <br><br> This
          * function will terminate runtime if an error is discovered.
          */
         public abstract void connect();

@@ -84,7 +84,7 @@ public class RFIDSensor extends SerialCommunication
          *
          * This method attempts to make a serial connection to the RFID Sensor.
          * If there is an error in connecting, then the appropriate error
-         * message will be displayed. <br /><br /> This function will terminate
+         * message will be displayed. <br><br> This function will terminate
          * runtime if an error is discovered.
          */
         @Override
