@@ -3,7 +3,30 @@
 |          RXTXRobot Firmware          |
 ----------------------------------------
 
+ To connect to the Arduino without using an external API, you
+ can do one of the following:
+ 
+ -- Go to Tools > Serial Monitor. Change the "No Line Ending"
+    option to "Both NL & CR", and make sure to use 9600 baud rate,
+    if not already set that way. Then type the commands below.
 
+ -- On Mac: In terminal, use the command:
+ 
+    ls /dev/ | grep usb
+    
+    to get a list of connected USB devices. Pick the one that looks
+    like: "tty.usbmodem####", where #### is some number. Connect to
+    it through screen with the following command:
+    
+    screen /dev/tty.usbmodem####
+    
+    Then type the commands below, hitting enter for each command.
+    To exit, type ctrl-a, ctrl-\, y. (ctrl, not command). This method
+    is particularly useful when debugging on a student's laptop.
+
+ 
+ 
+ 
  Control Arduino board functions with the following messages:
  
  ------------------------------
@@ -52,9 +75,9 @@
 		6 -  Encoded DC Motor 2 (hardcoded)
 		7 -  DC Motor 3 or free
 		8 -  DC Motor 4 or free
-		9 -  Servo or free
-		10 - Servo or free
-		11 - Servo or free
+		9 -  Servo 1 or free
+		10 - Servo 2 or free
+		11 - Servo 3 or free
 		12 - Conductivity Digital Pin 1
 		13 - Free
 

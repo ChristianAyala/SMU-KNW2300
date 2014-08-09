@@ -19,7 +19,7 @@ public class ArduinoProMini extends RXTXRobot
     @Override
     protected int[] getInitialFreeAnalogPins()
     {
-        //Arduino Uno has 6 free analog pins, make them all available
+        //Arduino Pro Mini has 8 free analog pins, make them all available
         return new int[] {0, 1, 2, 3, 4, 5, 6, 7};
     }
 }
