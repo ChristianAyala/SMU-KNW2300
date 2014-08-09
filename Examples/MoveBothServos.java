@@ -5,7 +5,7 @@ public class MoveBothServos
 {
 	public static void main(String[] args)
 	{
-		RXTXRobot r = new RXTXRobot();  // Create RXTXRobot object
+		RXTXRobot r = new ArduinoUno();  // Create RXTXRobot object
 		r.setPort("COM3"); // Set port to COM3
 		r.connect();
 		r.attachServo(RXTXRobot.SERVO1); //Connect the servos to the Arduino

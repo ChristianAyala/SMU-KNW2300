@@ -5,7 +5,7 @@ public class RunBothMotors
 {
 	public static void main(String[] args)
 	{
-		RXTXRobot r = new RXTXRobot(); // Create RXTXRobot object
+		RXTXRobot r = new ArduinoUno(); // Create RXTXRobot object
 		r.setPort("COM2"); // Set port to COM2
 		r.connect();
 		r.runMotor(RXTXRobot.MOTOR1, 500, RXTXRobot.MOTOR2, 500, 0); // Run both motors forward indefinitely

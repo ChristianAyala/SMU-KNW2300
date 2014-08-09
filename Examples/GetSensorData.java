@@ -7,7 +7,7 @@ public class GetSensorData
     {    
 	    // All sensor data will be read from the analog pins
 		
-	    RXTXRobot r = new RXTXRobot(); //Create RXTXRobot object
+	    RXTXRobot r = new ArduinoUno(); //Create RXTXRobot object
 
 		r.setPort("COM5"); // Sets the port to COM5
 		
