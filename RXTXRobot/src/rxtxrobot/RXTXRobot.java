@@ -195,6 +195,7 @@ public abstract class RXTXRobot extends SerialCommunication
                 sleep(2500);
                 initAvailableDigitalPins();
                 initAvailableAnalogPins();
+                refreshAnalogPins();
                 this.getOutStream().println("Connected!\n");
                 checkFirmwareVersion();
             }
@@ -817,7 +818,7 @@ public abstract class RXTXRobot extends SerialCommunication
         if (arr.length != 3)
         {
             error("Incorrect response from Arduino (Invalid length)!", "RXTXRobot", "getPing");
-            debug("Ping Response: " + response);
+            error("Ping Response: " + response);
             return -1;
         }
         try

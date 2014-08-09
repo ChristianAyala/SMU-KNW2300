@@ -564,7 +564,7 @@ void getPing()
 	duration = pulseIn(pin, HIGH);
 	cm = duration / 29 / 2;
         messageSendChar('q');
-        messageSendChar(pin);
+        messageSendInt(pin);
         messageSendInt(cm);
         messageEnd();
 }
