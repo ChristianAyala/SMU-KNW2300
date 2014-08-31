@@ -54,19 +54,19 @@ public abstract class RXTXRobot extends SerialCommunication
      */
     final public static int SERVO3 = 2;
     /**
-     * Refers to the M1 DC MOTOR
+     * Refers to the M1 DC MOTOR (pin 5)
      */
     final public static int MOTOR1 = 0;
     /**
-     * Refers to the M2 DC MOTOR
+     * Refers to the M2 DC MOTOR (pin 6)
      */
     final public static int MOTOR2 = 1;
     /**
-     * Refers to the M3 DC Motor
+     * Refers to the M3 DC Motor (pin 7)
      */
     final public static int MOTOR3 = 2;
     /**
-     * Refers to the M4 DC Motor
+     * Refers to the M4 DC Motor (pin 8)
      */
     final public static int MOTOR4 = 3;
 
