@@ -15,7 +15,23 @@ import java.util.List;
 /**
  * This class is the main class for communicating with the Arduino.
  *
- * Create an instance of this class when connecting to an Arduino Uno.
+ * This is an abstract class that contains most of the functionality
+ * for communicating with an Arduino. You should instantiate a subclass
+ * of this class particular to the Arduino hardware you are using. As
+ * an example:
+ * <br>
+ * 
+ * <pre>
+ * RXTXRobot robot = new ArduinoUno();
+ * robot.setPort("...");
+ * //Continue using methods associated with this class
+ * </pre>
+ * 
+ * <br>
+ * Different Arduino boards have different hardware attributes, in particular
+ * with regards to the number of pins that are available. The subclasses define
+ * what these hardware differences apply to that particular board, while keeping
+ * the rest of the functionality identical.
  */
 public abstract class RXTXRobot extends SerialCommunication
 {
@@ -369,6 +385,7 @@ public abstract class RXTXRobot extends SerialCommunication
      * Arduino is displayed.
      *
      * @param str The command to send to the Arduino
+     * @return The response given by the Arduino
      */
     public String sendRaw(String str)
     {
@@ -384,6 +401,7 @@ public abstract class RXTXRobot extends SerialCommunication
      *
      * @param str The command to send to the Arduino
      * @param sleep The number of milliseconds to wait for a response
+     * @return The response given by the Arduino
      */
     public String sendRaw(String str, int sleep)
     {
@@ -596,14 +614,14 @@ public abstract class RXTXRobot extends SerialCommunication
                 error("No response was received from the Arduino.", "RXTXRobot", "refreshAnalogPins");
                 return;
             }
-            if (split.length - 1 != analogPinCache.length)
+            if (split.length - 1 < analogPinCache.length)
             {
                 error("Incorrect length returned: " + split.length + ".", "RXTXRobot", "refreshAnalogPins");
                 if (getVerbose())
                 {
                     for (int x = 0; x < split.length; ++x)
                     {
-                        this.getErrStream().println("[" + x + "] = " + split[x]);
+                        error("[" + x + "] = " + split[x]);
                     }
                 }
                 return;
@@ -620,7 +638,7 @@ public abstract class RXTXRobot extends SerialCommunication
             error("A generic error occurred.", "RXTXRobot", "refreshAnalogPins");
             if (getVerbose())
             {
-                this.getErrStream().println("Stacktrace: ");
+                error("Stacktrace: ");
                 e.printStackTrace(this.getErrStream());
             }
         }
@@ -653,14 +671,14 @@ public abstract class RXTXRobot extends SerialCommunication
                 error("No response was received from the Arduino.", "RXTXRobot", "refreshDigitalPins");
                 return;
             }
-            if (split.length - 1 != digitalPinCache.length)
+            if (split.length - 1 < digitalPinCache.length)
             {
                 error("Incorrect length returned: " + split.length + ".", "RXTXRobot", "refreshDigitalPins");
                 if (getVerbose())
                 {
                     for (int x = 0; x < split.length; ++x)
                     {
-                        this.getErrStream().println("[" + x + "] = " + split[x]);
+                        error("[" + x + "] = " + split[x]);
                     }
                 }
                 return;

@@ -121,7 +121,7 @@ Authors:
  */
 const int versionMajor = 4;
 const int versionMinor = 0;
-const int versionSubminor = 0; 
+const int versionSubminor = 1; 
 
 Servo servo0, servo1, servo2;
 Servo servos[] = { servo0, servo1, servo2 };
@@ -563,7 +563,7 @@ void readpin()
 			break;
 		case 'a':
 			messageSendChar('a');
-			for (char i=0;i < 6; ++i)
+			for (char i=0;i < 8; ++i)
 				messageSendInt(analogRead(i));
 			messageEnd();
 			break;
