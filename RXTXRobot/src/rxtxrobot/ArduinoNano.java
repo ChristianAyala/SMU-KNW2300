@@ -1,12 +1,12 @@
 package rxtxrobot;
 
 /**
- * This class is used to control a robot running on the Arduino Pro Mini Board.
+ * This class is used to control a robot running on the Arduino Nano Board.
  * 
- * Details for the Arduino Pro Mini board can be found at 
- * http://arduino.cc/en/Main/ArduinoBoardProMini.
+ * Details for the Arduino Nano board can be found at 
+ * <a href="http://arduino.cc/en/Main/arduinoBoardNano">this Arduino page</a>.
  */
-public class ArduinoProMini extends RXTXRobot
+public class ArduinoNano extends RXTXRobot
 {
     @Override
     protected int[] getInitialFreeDigitalPins()

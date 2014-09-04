@@ -4,7 +4,7 @@ package rxtxrobot;
  * This class is used to control a robot running on the Arduino Uno board.
  * 
  * Details for the Arduino Uno board can be found at 
- * http://arduino.cc/en/Main/arduinoBoardUno.
+ * <a href="http://arduino.cc/en/Main/arduinoBoardUno">this Arduino page</a>.
  */
 public class ArduinoUno extends RXTXRobot
 {

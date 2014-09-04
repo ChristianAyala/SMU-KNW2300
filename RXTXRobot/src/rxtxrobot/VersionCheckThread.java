@@ -10,8 +10,7 @@ import java.net.URLConnection;
 
 /**
  * 
- * Thread class to check the most recent version of the API by using the FYD site
- * @author Chris Ayala
+ * Thread class to check the most recent version of the API by using the FYD site.
  */
 public class VersionCheckThread extends Thread 
 {
