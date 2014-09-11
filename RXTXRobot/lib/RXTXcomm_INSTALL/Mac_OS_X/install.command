@@ -79,11 +79,13 @@ echo -n "Determining 32-bit or 64-bit....."
 if [ $(uname -m) == 'x86_64' ]; then
 	echo "done"
 	echo "You are running a 64-bit machine"
-	XFILE="$SCRIPTDIR/libs/ftdi_x64.dmg"
+	# XFILE="$SCRIPTDIR/libs/ftdi_x64.dmg"
+	XFILE="$SCRIPTDIR/libs/ch34xInstall.pkg"
 else
 	echo "done"
 	echo "You are running a 32-bit machine"
-	XFILE="$SCRIPTDIR/libs/ftdi_x86.dmg"
+	# XFILE="$SCRIPTDIR/libs/ftdi_x86.dmg"
+	XFILE="$SCRIPTDIR/libs/ch34xInstall.pkg"
 fi
 if [ ! -f "$XFILE" ]; then
 	echo "FATAL ERROR: Could not find \"$XFILE\".  Make sure the folder \"libs\" is in this directory."
@@ -91,11 +93,17 @@ if [ ! -f "$XFILE" ]; then
 fi
 
 echo ""
-echo "Follow the instructions to install the FTDI drivers for the XBee."
-hdiutil attach -quiet -noautoopen -nobrowse "$XFILE" 
-sleep 2
-open -W "/Volumes/FTDIUSBSerialDriver_v2_2_18/FTDIUSBSerialDriver_10_4_10_5_10_6_10_7.mpkg"
-hdiutil detach -quiet "/Volumes/FTDIUSBSerialDriver_v2_2_18"
+echo "Follow the instructions to install the FTDI drivers for the Nano."
+sudo installer -pkg "$XFILE" -target /
+# hdiutil detach -quiet "/Volumes/FTDIUSBSerialDriver_v2_2_18"
+
+
+# XBee...
+# echo "Follow the instructions to install the FTDI drivers for the XBee."
+# hdiutil attach -quiet -noautoopen -nobrowse "$XFILE" 
+# sleep 2
+# open -W "/Volumes/FTDIUSBSerialDriver_v2_2_18/FTDIUSBSerialDriver_10_4_10_5_10_6_10_7.mpkg"
+# hdiutil detach -quiet "/Volumes/FTDIUSBSerialDriver_v2_2_18"
 
 echo ""
 echo ""
