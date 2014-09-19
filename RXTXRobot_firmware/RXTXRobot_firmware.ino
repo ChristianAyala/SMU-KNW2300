@@ -122,8 +122,8 @@ Authors:
  * Subminor - no api update needed 
  */
 const int versionMajor = 4;
-const int versionMinor = 0;
-const int versionSubminor = 1; 
+const int versionMinor = 1;
+const int versionSubminor = 0; 
 
 Servo servo0, servo1, servo2;
 Servo servos[] = { servo0, servo1, servo2 };
