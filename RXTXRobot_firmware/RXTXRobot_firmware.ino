@@ -73,13 +73,13 @@
 		4 -  Free
 		5 -  Encoded DC Motor 1 (hardcoded)
 		6 -  Encoded DC Motor 2 (hardcoded)
-		7 -  DC Motor 3 or free
-		8 -  DC Motor 4 or free
-		9 -  Servo 1 or free
-		10 - Servo 2 or free
-		11 - Servo 3 or free
-		12 - Conductivity Digital Pin 1
-		13 - Free
+		7 -  Servo, DC Motor or free
+		8 -  Servo, DC Motor or free
+		9 -  Servo, DC Motor or free
+		10 - Servo, DC Motor or free
+		11 - Servo, DC Motor or free
+		12 - Conductivity Digital Pin 1, or free
+		13 - Conductivity Digital Pin 2, or free
 
 	Analog Pins:
 		0 - Free
@@ -88,6 +88,8 @@
 		3 - Free
 		4 - Conductivity Analog Pin 1
 		5 - Conductivity Analog Pin 2
+                6 - Free (Arduino Nano only)
+                7 - Free (Arduino Nano only)
 
 
  
@@ -144,7 +146,7 @@ long encoderTicks[] = {0L, 0L};
 long encoderDirections[] = {forward, forward};
 
                //Pins: 0     1     2     3     4      5     6     7      8      9      10     11     12    13
-bool pinsAttached[] = {true, true, true, true, false, true, true, false, false, false, false, false, true, false};
+bool pinsAttached[] = {true, true, true, true, false, true, true, false, false, false, false, false, false, false};
 
 void setup()
 {
@@ -155,9 +157,8 @@ void setup()
 
         attachInterrupt(0, incrementEncoder1, RISING);
         attachInterrupt(1, incrementEncoder2, RISING);
-        pinMode(12, OUTPUT);
         
-        initializeConductivityInterrupt();        
+        //initializeConductivityInterrupt();        
 }
 
 void initializeConductivityInterrupt()
@@ -592,45 +593,82 @@ void getPing()
         messageEnd();
 }
 
-void getConductivity()
-{
-        int reading1, reading2;
-        cli();
-        PORTB &= B11101111;
-        reading1 = analogRead(5);
-        //PORTB ^= (1<<4);
-        reading2 = analogRead(4);
-        sei();
-        messageSendChar('c');
-        //messageSendInt(reading1);
-        //messageSendInt(reading2);
-        messageSendInt(abs(reading1-reading2));
-        messageEnd();
-        
-}
-
 void attach()
 {
-        int pin;
-        switch(messageGetChar())
-        {
-                //Attaching a motor (which start on pin 5)
-                case 'm':
-                        pin = messageGetInt();
-                        dc_motors[pin].attach(pin+5);
-                        pinsAttached[pin+5] = true;
-                        messageSendChar('a');
-                        messageSendChar('m');
-                        break;
-                //Attaching a servo (which start on pin 9)
-                case 's':
-                        pin = messageGetInt();
-                        servos[pin].attach(pin+9);
-                        pinsAttached[pin+9] = true;
-                        messageSendChar('a');
-                        messageSendChar('s');
-                        break;
+        int num, pin;
+        char component;
+        
+        component = messageGetChar();
+        num = messageGetInt();
+        pin = messageGetInt();
+        
+        //Only do this if the pin hasn't already been attached
+        if (pinsAttached[pin] == false) {
+                switch(component)
+                {
+                        //Attaching a motor
+                        case 'm':
+                                dc_motors[num].attach(pin);
+                                break;
+                        //Attaching a servo
+                        case 's':
+                                servos[num].attach(pin);
+                                break;
+                }
+                pinsAttached[pin] = true;
         }
+        
+        messageSendChar(component);
+        messageSendInt(num);
         messageSendInt(pin);
         messageEnd();
 }
+
+void getConductivity()
+{
+        const int dPin1 = 12, dPin2 = 13;
+        const int aPin1 = 4,  aPin2 = 5;
+        const unsigned long seconds = 3;
+        int reading1, reading2;
+        
+        //One period of the wave is 10ms. So we want to repeat it numMilliseconds/10ms times
+        unsigned long loopCount = (seconds)*100ul;
+        
+        //In case something is already attached to one of the digital pins
+        if (pinsAttached[dPin1] || pinsAttached[dPin2]) {
+                messageSendChar('c');
+                messageSendInt(0);
+                messageEnd();
+                return;
+        }
+        
+        pinMode(dPin1, OUTPUT);
+        pinMode(dPin2, OUTPUT);
+        digitalWrite(dPin1, HIGH);
+        digitalWrite(dPin2, HIGH);
+        
+        //We make an alternating-phase square wave out of digital pins 12/13
+        //For this to work, we needed simultaneous digital pin writes. Refer to
+        //http://www.arduino.cc/en/Reference/PortManipulation
+        for (unsigned long i = 0; i < loopCount; ++i) 
+        {
+                //The AND turns off pin 13, OR turns on pin 12
+                PORTB = B00010000 | (PORTB & B11011111);
+                delay(5);
+                
+                //AND turns off pin 12, OR turns on pin 13
+                PORTB = B00100000 | (PORTB & B11101111);
+                delay(5);
+        }  
+      
+        reading1 = analogRead(aPin1);
+        reading2 = analogRead(aPin2);
+        digitalWrite(dPin1, LOW);
+        digitalWrite(dPin2, LOW);
+        
+        messageSendChar('c');
+        //messageSendInt(readingTime);
+        messageSendInt(abs(reading1 - reading2));
+        messageEnd();
+}
+

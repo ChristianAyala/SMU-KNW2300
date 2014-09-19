@@ -12,7 +12,7 @@ public class ArduinoNano extends RXTXRobot
     protected int[] getInitialFreeDigitalPins()
     {
         //These are the digital pins that are initially free
-        return new int[] {4, 7, 8, 9, 10, 11, 13};
+        return new int[] {4, 7, 8, 9, 10, 11, 12, 13};
         
     }
 

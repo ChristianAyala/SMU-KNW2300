@@ -70,15 +70,6 @@ public abstract class RXTXRobot extends SerialCommunication
      */
     final public static int MOTOR4 = 3;
 
-    /**
-     * The pin number that motors start being plugged into the Arduino
-     */
-    final private static int MOTOR_PIN_OFFSET = 5;
-    /**
-     * The pin number that servos start being plugged into the Arduino
-     */
-    final private static int SERVO_PIN_OFFSET = 9;
-
     /*
      * Private variables
      */
@@ -461,12 +452,23 @@ public abstract class RXTXRobot extends SerialCommunication
      * Attaches a motor to the Arduino by binding it to its appropriate pin.
      * Refer to the Arduino pinout guide for which pins to plug motors into.
      * Note that MOTOR1 and MOTOR2 are attached by default, and therefore do not
-     * need to be attached manually.
+     * need to be attached manually.<br><br>
+     * 
+     * An example function call to attach a motor to pin 7, and run it:
+     * <pre>
+     * robot.attachMotor(RXTXRobot.MOTOR3, 7);
+     * robot.runMotor(RXTXRobot.MOTOR3, 500, 3000); //Run motor for 3 seconds
+     * </pre>
      *
      * @param motor The DC motor you want to attach:
      * {@link #MOTOR3 RXTXRobot.MOTOR3} or {@link #MOTOR4 RXTXRobot.MOTOR4}
+     * @param pin The digital pin the motor will be attached to. Note that not
+     * all pins are immediately available, nor can you attach multiple things
+     * to the same digital pin.
+     * 
+     * 
      */
-    public void attachMotor(int motor)
+    public void attachMotor(int motor, int pin)
     {
         if (!isConnected())
         {
@@ -477,20 +479,23 @@ public abstract class RXTXRobot extends SerialCommunication
         } else if (motorsAttached[motor] == true)
         {
             error("This motor has already been attached", "RXTXRobot", "attachMotor");
+        } else if (!digitalPinsAvailable.contains(new Integer(pin))) 
+        {
+            error("Pin number " + pin + " has already been attached", "RXTXRobot", "attachMotor");
         } else
         {
             try
             {
                 this.attemptTryAgain = true;
-                String response = this.sendRaw("a m " + motor);
+                String response = this.sendRaw("a m " + motor + " " + pin);
                 this.attemptTryAgain = false;
-                if (!response.equals("a m " + motor))
+                if (!response.equals("a m " + motor + " " + pin))
                 {
                     error("Invalid response from the arduino: " + response, "RXTXRobot", "attachMotor");
                 } else
                 {
                     motorsAttached[motor] = true;
-                    digitalPinsAvailable.remove(new Integer(motor + MOTOR_PIN_OFFSET));
+                    digitalPinsAvailable.remove(new Integer(pin));
                     debug("Successfully attached motor " + motor);
                 }
             } catch (Exception e)
@@ -506,13 +511,22 @@ public abstract class RXTXRobot extends SerialCommunication
      * Attaches a servo to the Arduino by binding it to its appropriate pin.
      * Refer to the Arduino pinout guide for which pins to plug servos into. No
      * servos are attached by default, so call this method for every servo you
-     * plan to use.
+     * plan to use.<br><br>
+     * 
+     * An example function call to attach a servo to pin 9, and use it:
+     * <pre>
+     * robot.attachMotor(RXTXRobot.SERVO1, 9);
+     * robot.runMotor(RXTXRobot..SERVO1, 180); //Move servo 1 to 180 degrees
+     * </pre>
      *
      * @param servo The servo you want to attach:
      * {@link #SERVO1 RXTXRobot.SERVO1}, {@link #SERVO2 RXTXRobot.SERVO2}, or
      * {@link #SERVO3 RXTXRobot.SERVO3}
+     * @param pin The digital pin the servo will be attached to. Note that not
+     * all pins are immediately available, nor can you attach multiple things
+     * to the same digital pin.
      */
-    public void attachServo(int servo)
+    public void attachServo(int servo, int pin)
     {
         if (!isConnected())
         {
@@ -523,20 +537,24 @@ public abstract class RXTXRobot extends SerialCommunication
         } else if (servosAttached[servo] == true)
         {
             error("This servo has already been attached", "RXTXRobot", "attachServo");
+        } else if (!digitalPinsAvailable.contains(new Integer(pin))) 
+        {
+            error("Pin number " + pin + " has already been attached", "RXTXRobot", "attachServo");
         } else
         {
             try
             {
+                String command = "a s " + servo + " " + pin;
                 this.attemptTryAgain = true;
-                String response = this.sendRaw("a s " + servo, 500);
+                String response = this.sendRaw(command, 500);
                 this.attemptTryAgain = false;
-                if (!response.equals("a s " + servo))
+                if (!response.equals(command))
                 {
                     error("Invalid response from the arduino: " + response, "RXTXRobot", "attachServo");
                 } else
                 {
                     servosAttached[servo] = true;
-                    digitalPinsAvailable.remove(new Integer(servo + SERVO_PIN_OFFSET));
+                    digitalPinsAvailable.remove(new Integer(pin));
                     debug("Successfully attached servo " + servo);
                 }
             } catch (Exception e)
@@ -867,13 +885,13 @@ public abstract class RXTXRobot extends SerialCommunication
         }
 
         this.attemptTryAgain = true;
-        String response = this.sendRaw("c", 300);
+        String response = this.sendRaw("c", 3000);
         String[] arr = response.split("\\s+");
         this.attemptTryAgain = false;
 
         if (arr.length != 2)
         {
-            error("Incorrect response from Arduino (Invalid length)!", "RXTXRobot", "getConductivity");
+            error("Incorrect response from Arduino (Invalid length)!: " + response, "RXTXRobot", "getConductivity");
             debug("Conductivity Response: " + response);
             return -1;
         }
@@ -883,7 +901,7 @@ public abstract class RXTXRobot extends SerialCommunication
             return Integer.parseInt(arr[1]);
         } catch (Exception e)
         {
-            error("Incorrect response from Arduino (Invalid datatype)!", "RXTXRobot", "getConductivity");
+            error("Incorrect response from Arduino (Invalid datatype)!: " + response, "RXTXRobot", "getConductivity");
             debug("Conductivity Response: " + response);
         }
         return -1;
