@@ -34,7 +34,7 @@ elif [ $VERSION -eq 5 ] || [ $VERSION -eq 6 ]; then
 elif [ $VERSION -eq 7 ] || [ $VERSION -eq 8 ] || [ $VERSION -eq 9 ]; then
 	JFILE="$SCRIPTDIR/libs/mnt_lion.jnilib"
 else
-	echo "error\n\nFATAL ERROR: Your Mac OS is not supported.  You have $(sw_vers -productVersion) and this only supports 10.0.x - 10.8.x"
+	echo "error\n\nFATAL ERROR: Your Mac OS is not supported.  You have $(sw_vers -productVersion) and this only supports 10.0.x - 10.9.x"
 	exit
 fi
 

@@ -123,7 +123,7 @@ Authors:
  */
 const int versionMajor = 4;
 const int versionMinor = 1;
-const int versionSubminor = 0; 
+const int versionSubminor = 1; 
 
 Servo servo0, servo1, servo2;
 Servo servos[] = { servo0, servo1, servo2 };
@@ -618,6 +618,7 @@ void attach()
                 pinsAttached[pin] = true;
         }
         
+        messageSendChar('a');  //send attach confirmation
         messageSendChar(component);
         messageSendInt(num);
         messageSendInt(pin);
