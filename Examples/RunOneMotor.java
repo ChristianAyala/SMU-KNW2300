@@ -5,7 +5,7 @@ public class RunOneMotor
 {
 	public static void main(String[] args)
 	{
-		RXTXRobot r = new ArduinoUno(); // Create RXTXRobot object
+		RXTXRobot r = new ArduinoNano(); // Create RXTXRobot object
 		r.setPort("COM3"); // Set port to COM3
 		r.connect();
 		r.runMotor(RXTXRobot.MOTOR1, 125, 500); // Run motor 1 forward (speed of 125) for 5 seconds

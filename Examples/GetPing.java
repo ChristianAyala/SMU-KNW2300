@@ -7,7 +7,7 @@ public class GetPing
 
 	public static void main(String[] args)
 	{
-		RXTXRobot r = new ArduinoUno(); // Create RXTXRobot object
+		RXTXRobot r = new ArduinoNano(); // Create RXTXRobot object
 		r.setPort("COM3"); // Set the port to COM3
 		r.connect();
 		for (int x=0; x < 100; ++x)

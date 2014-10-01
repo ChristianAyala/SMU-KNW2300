@@ -5,7 +5,7 @@ public class RunEncodedMotor
 {
 	public static void main(String[] args)
 	{
-		RXTXRobot r = new ArduinoUno(); // Create RXTXRobot object
+		RXTXRobot r = new ArduinoNano(); // Create RXTXRobot object
 		r.setPort("COM3"); // Set port to COM3
 		r.connect();
 		r.runEncodedMotor(RXTXRobot.MOTOR1, 255, 100); // Run motor 1 forward (speed of 255) for 100,000 ticks

@@ -5,7 +5,7 @@ public class MoveServo
 {
 	public static void main(String[] args)
 	{
-		RXTXRobot r = new ArduinoUno(); // Create RXTXRobot object
+		RXTXRobot r = new ArduinoNano(); // Create RXTXRobot object
 		r.setPort("COM3"); // Set the port to COM3
 		r.setVerbose(true); // Turn on debugging messages
 		r.connect();
