@@ -31,13 +31,12 @@ if [ $VERSION -lt 5 ]; then
 	JFILE="$SCRIPTDIR/libs/less_leopard.jnilib"
 elif [ $VERSION -eq 5 ] || [ $VERSION -eq 6 ]; then
 	JFILE="$SCRIPTDIR/libs/leop_snow.jnilib"
-elif [ $VERSION -eq 7 ] || [ $VERSION -eq 8 ] || [ $VERSION -eq 9 ]; then
+elif [ $VERSION -gt 7 ]; then
 	JFILE="$SCRIPTDIR/libs/mnt_lion.jnilib"
 else
 	echo "error\n\nFATAL ERROR: Your Mac OS is not supported.  You have $(sw_vers -productVersion) and this only supports 10.0.x - 10.9.x"
 	exit
 fi
-
 
 if [ ! -f "$JFILE" ]; then
 	echo "error\n\nFATAL ERROR: The library file \"$JFILE\" could not be found.  Please make sure you kept the \"libs\" folder in this directory"
@@ -45,11 +44,11 @@ if [ ! -f "$JFILE" ]; then
 fi
 
 if [ -f "$SAVESPOT" ]; then
-	rm "$SAVESPOT"
+	sudo rm "$SAVESPOT"
 fi
 
 
-cp "$JFILE" "$SAVESPOT"
+sudo cp "$JFILE" "$SAVESPOT"
 
 echo "done"
 echo -n "Fixing permissions................"
@@ -95,6 +94,7 @@ fi
 echo ""
 echo "Follow the instructions to install the FTDI drivers for the Nano."
 sudo installer -pkg "$XFILE" -target /
+sudo nvram boot-args="kext-dev-mode=1"
 # hdiutil detach -quiet "/Volumes/FTDIUSBSerialDriver_v2_2_18"
 
 
