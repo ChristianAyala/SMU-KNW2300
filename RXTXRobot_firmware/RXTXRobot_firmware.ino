@@ -64,7 +64,6 @@
  ------------------------------
  Sensor Layout
  ------------------------------
- Rather than 
 
 	Digital Pins:
                 0/1 - RX/TX Pins, don't use
@@ -121,21 +120,19 @@ Authors:
  * Minor - suggest api update
  * Subminor - no api update needed 
  */
-const int versionMajor = 4;
-const int versionMinor = 2;
-const int versionSubminor = 0; 
+String versionNumber = "n 4 3 0";
 
+//Used to connect to servos (up to 3 per arduino)
 Servo servo0, servo1, servo2;
 Servo servos[] = { servo0, servo1, servo2 };
 int servos_length = 3;
 
-int conductivity1, conductivity2, finalConductivity;
-boolean toggle0 = 0;
-
+//Used to connect to motors (up to 4 per arduino)
 Servo motor0, motor1, encodedMotor0, encodedMotor1;
 Servo dc_motors[] = {encodedMotor0, encodedMotor1, motor0, motor1};
 int encoders_length = 2;
 
+//Used to track encoder position, distance traveled, direction, etc.
 const long forward = 1;
 const long backward = -1;
 int halt = 1500;
@@ -145,6 +142,7 @@ long encoderPositions[] = {0L, 0L};
 long encoderTicks[] = {0L, 0L};
 long encoderDirections[] = {forward, forward};
 
+//Used to contain the output string written to the serial port
 char output[255];
 
                //Pins: 0     1     2     3     4      5     6     7      8      9      10     11     12    13
@@ -489,8 +487,7 @@ void moveAllServo()
 
 void getVersionNumber()
 {
-        sprintf(output, "n %i %i %i", versionMajor, versionMinor, versionSubminor);
-        Serial.println(output);
+        Serial.println(versionNumber);
 }
 
 void readpin()
