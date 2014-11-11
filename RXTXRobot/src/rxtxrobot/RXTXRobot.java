@@ -644,7 +644,7 @@ public abstract class RXTXRobot extends SerialCommunication
                 }
                 return;
             }
-            for (int x = 1; x < split.length; ++x)
+            for (int x = 1; x <= analogPinCache.length; ++x)
             {
                 analogPinCache[x - 1] = Integer.parseInt(split[x]);
             }

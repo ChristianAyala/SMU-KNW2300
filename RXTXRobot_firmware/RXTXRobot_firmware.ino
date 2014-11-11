@@ -145,6 +145,8 @@ long encoderPositions[] = {0L, 0L};
 long encoderTicks[] = {0L, 0L};
 long encoderDirections[] = {forward, forward};
 
+char output[255];
+
                //Pins: 0     1     2     3     4      5     6     7      8      9      10     11     12    13
 bool pinsAttached[] = {true, true, true, true, false, true, true, false, false, false, false, false, false, false};
 
@@ -250,9 +252,8 @@ void setMotorRampUpTime()
         //The ramp-up time for the motors is the increments * delay between increments.
         //Hence the division by the delay to get the requested time. The delay is read-only for now.
         motorIncrements = messageGetInt();
-        messageSendChar('m');
-        messageSendInt(motorIncrements);
-        messageEnd();
+        sprintf(output, "m %i", motorIncrements);
+        Serial.println(output);
         motorIncrements /= incrementDelay;
 }
 
@@ -305,22 +306,15 @@ void moveDCmotor()
 	speed = messageGetInt();
 	time = messageGetInt();
 	
-        messageSendChar('d');
-        messageSendInt(pin);
-        messageSendInt(speed);
-        messageSendInt(time);
-	messageEnd();
+        sprintf(output, "d %i %i %i", pin, speed, time);
+        Serial.println(output);
 
-        speed += 1500;
+        speed = constrain(speed + 1500, 1000, 2000);
 
 	if (pin < 0)
 		return;
         if (pin < encoders_length)
                 encoderDirections[pin] = (speed > halt) ? forward : backward;
-        if(speed > 2000)
-                speed = 2000;
-        else if(speed < 1000)
-                speed = 1000;
         
         rampUpMotorSpeed(pin, speed);      
                 
@@ -343,18 +337,13 @@ void moveEncodedDCmotor()
 	tickInput = messageGetInt();
 	        
         long ticks = (long)tickInput;
-        speed += 1500;
+        speed = constrain(speed + 1500, 1000, 2000);
         
 	if (pin < 0)
 		return;
         
         encoderTicks[pin] = 0L;
-
         encoderDirections[pin] = (speed > halt) ? forward : backward;
-        if(speed > 2000)
-                speed = 2000;
-        else if(speed < 1000)
-                speed = 1000;
         
         rampUpMotorSpeed(pin, speed);
         
@@ -366,11 +355,8 @@ void moveEncodedDCmotor()
         dc_motors[pin].write(halt);
         encoderTicks[pin] = 0L;
         
-        messageSendChar('e');
-        messageSendInt(pin);
-        messageSendInt(speed-1500);
-        messageSendInt(tickInput);
-        messageEnd();
+        sprintf(output, "e %i %i %i", pin, speed-1500, tickInput);
+        Serial.println(output);
 }
 
 void move2DCmotor()
@@ -381,17 +367,12 @@ void move2DCmotor()
 	pin2 = messageGetInt();
 	speed2 = messageGetInt();	
 	time = messageGetInt();
-
-        messageSendChar('D');
-        messageSendInt(pin1);
-        messageSendInt(speed1);
-        messageSendInt(pin2);
-        messageSendInt(speed2);
-        messageSendInt(time);
-        messageEnd();
+        
+        sprintf(output, "D %i %i %i %i %i", pin1, speed1, pin2, speed2, time);
+        Serial.println(output);
 	
-        speed1 += 1500;
-        speed2 += 1500;
+        speed1 = constrain(speed1 + 1500, 1000, 2000);
+        speed2 = constrain(speed2 + 1500, 1000, 2000);
         
 	if (pin1 < 0 || pin2 < 0)
 		return;
@@ -400,20 +381,9 @@ void move2DCmotor()
                 encoderDirections[pin1] = (speed1 > halt) ? forward : backward;
         if (pin2 < encoders_length)
                 encoderDirections[pin2] = (speed2 > halt) ? forward : backward;
-        
-        if(speed1 > 2000)
-                speed1 = 2000;
-        else if(speed1 < 1000)
-                speed1 = 1000;
-
-        if(speed2 > 2000)
-                speed2 = 2000;
-        else if(speed2 < 1000)
-                speed2 = 1000;
                 
         rampUpMotorSpeed(pin1, speed1, pin2, speed2);
         
-                
 	if (time > 0)
 	{
                 time -= (motorIncrements * incrementDelay);
@@ -437,8 +407,9 @@ void move2EncodedDCmotor()
         long ticks1 = (long)tickInput1;
         long ticks2 = (long)tickInput2;
         
-        speed1 += 1500;
-        speed2 += 1500;
+        speed1 = constrain(speed1 + 1500, 1000, 2000);
+        speed2 = constrain(speed2 + 1500, 1000, 2000);
+        
 	if (pin1 < 0 || pin2 < 0)
 		return;
 
@@ -446,16 +417,6 @@ void move2EncodedDCmotor()
         encoderTicks[pin2] = 0L;
         encoderDirections[pin1] = (speed1 > halt) ? forward : backward;
         encoderDirections[pin2] = (speed2 > halt) ? forward : backward;
-        
-        if(speed1 > 2000)
-                speed1 = 2000;
-        else if(speed1 < 1000)
-                speed1 = 1000;
-
-        if(speed2 > 2000)
-                speed2 = 2000;
-        else if(speed2 < 1000)
-                speed2 = 1000;
         
         rampUpMotorSpeed(pin1, speed1, pin2, speed2);
                 
@@ -472,33 +433,27 @@ void move2EncodedDCmotor()
 	dc_motors[pin1].write(halt);
 	dc_motors[pin2].write(halt);
 
-        messageSendChar('E');
-        messageSendInt(pin1);
-        messageSendInt(speed1-1500);
-        messageSendInt(tickInput1);
-        messageSendInt(pin2);
-        messageSendInt(speed2-1500);
-        messageSendInt(tickInput2);
-        messageEnd();
+        sprintf(output, "E %i %i %i %i %i %i", pin1, speed1-1500, tickInput1, pin2, speed2-1500, tickInput2);
+        Serial.println(output);
 }
 
 void getEncoderPosition()
 {
-        int pin;
+        int pin, position;
         pin = messageGetInt();
-        messageSendChar('p');
-        messageSendInt(pin);
-        messageSendInt(int(encoderPositions[pin]));
-        messageEnd();
+        position = int(encoderPositions[pin]);
+        
+        sprintf(output, "p %i %i", pin, position);
+        Serial.println(output);
 }
 
 void zeroEncoderPosition()
 {
         int pin;
         pin = messageGetInt();
-        messageSendChar('z');
-        messageSendInt(pin);
-        messageEnd();
+        
+        sprintf(output, "z %i", pin);
+        Serial.println(output);
         encoderPositions[pin] = 0L;
 }
 
@@ -508,10 +463,8 @@ void moveservo()
 	pin = messageGetInt();
 	position = messageGetInt();
 
-        messageSendChar('v');
-        messageSendInt(pin);
-        messageSendInt(position);
-        messageEnd();
+        sprintf(output, "v %i %i", pin, position);
+        Serial.println(output);
         
 	if (pin < 0 || pin >= servos_length)
 		return;
@@ -525,11 +478,8 @@ void moveAllServo()
 	position2 = messageGetInt();
         position3 = messageGetInt();
 
-        messageSendChar('V');
-        messageSendInt(position1);
-        messageSendInt(position2);
-        messageSendInt(position3);
-        messageEnd();
+        sprintf(output, "V %i %i %i", position1, position2, position3);
+        Serial.println(output);
 
 	servos[0].write(position1);
 	servos[1].write(position2);
@@ -539,36 +489,38 @@ void moveAllServo()
 
 void getVersionNumber()
 {
-	messageSendChar('n');
-	messageSendInt(versionMajor);
-	messageSendInt(versionMinor);
-	messageSendInt(versionSubminor);
-	messageEnd();
+        sprintf(output, "n %i %i %i", versionMajor, versionMinor, versionSubminor);
+        Serial.println(output);
 }
 
 void readpin()
 {
+        String outputString;
 	switch (messageGetChar())
 	{
-		case 'd':
-			messageSendChar('d');
+ 	 	case 'd':
+                        outputString = "d";
                         for (char i=0; i < 14; ++i)
                         {
                                 if (pinsAttached[i] == false)
                                 {
                                         pinMode(i, INPUT);
-                                        messageSendInt(digitalRead(i));
+                                        outputString += " ";
+                                        outputString += digitalRead(i);
                                 }
                         }
-			messageEnd();
+                        
 			break;
 		case 'a':
-			messageSendChar('a');
+                        outputString = "a";
 			for (char i=0;i < 8; ++i)
-				messageSendInt(analogRead(i));
-			messageEnd();
+                        {
+                                outputString += " ";
+                                outputString += analogRead(i);
+                        }
 			break;
 	}
+        Serial.println(outputString);
 }
 
 //Check out this site for implementation details:
@@ -587,10 +539,9 @@ void getPing()
 	pinMode(pin, INPUT);
 	duration = pulseIn(pin, HIGH);
 	cm = duration / 29 / 2;
-        messageSendChar('q');
-        messageSendInt(pin);
-        messageSendInt(cm);
-        messageEnd();
+
+        sprintf(output, "q %i %i", pin, cm);
+        Serial.println(output);
 }
 
 void attach()
@@ -618,11 +569,8 @@ void attach()
                 pinsAttached[pin] = true;
         }
         
-        messageSendChar('a');  //send attach confirmation
-        messageSendChar(component);
-        messageSendInt(num);
-        messageSendInt(pin);
-        messageEnd();
+        sprintf(output, "a %c %i %i", component, num, pin);
+        Serial.println(output);
 }
 
 void getConductivity()
@@ -630,16 +578,14 @@ void getConductivity()
         const int dPin1 = 12, dPin2 = 13;
         const int aPin1 = 4,  aPin2 = 5;
         const unsigned long seconds = 3;
-        int reading1, reading2;
+        int reading1, reading2, result;
         
         //One period of the wave is 10ms. So we want to repeat it numMilliseconds/10ms times
         unsigned long loopCount = (seconds)*100ul;
         
         //In case something is already attached to one of the digital pins
         if (pinsAttached[dPin1] || pinsAttached[dPin2]) {
-                messageSendChar('c');
-                messageSendInt(0);
-                messageEnd();
+                Serial.println("c 0");
                 return;
         }
         
@@ -667,9 +613,8 @@ void getConductivity()
         digitalWrite(dPin1, LOW);
         digitalWrite(dPin2, LOW);
         
-        messageSendChar('c');
-        //messageSendInt(readingTime);
-        messageSendInt(abs(reading1 - reading2));
-        messageEnd();
+        result = abs(reading1 - reading2);
+        sprintf(output, "c %i", result);
+        Serial.println(output);
 }
 
