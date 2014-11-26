@@ -110,7 +110,6 @@ Authors:
 
 #define BAUD_RATE 9600
 
-#include <SimpleMessageSystem.h>
 #include <Servo.h>
 
 /*
@@ -120,7 +119,7 @@ Authors:
  * Minor - suggest api update
  * Subminor - no api update needed 
  */
-String versionNumber = "n 4 3 0";
+char* versionNumber = "n 4 3 0";
 
 //Used to connect to servos (up to 3 per arduino)
 Servo servo0, servo1, servo2;
@@ -143,7 +142,11 @@ long encoderTicks[] = {0L, 0L};
 long encoderDirections[] = {forward, forward};
 
 //Used to contain the output string written to the serial port
-char output[255];
+char messageBuffer[100];
+int messageIndex = 0;
+char output[100];
+String outputString;
+char command;
 
                //Pins: 0     1     2     3     4      5     6     7      8      9      10     11     12    13
 bool pinsAttached[] = {true, true, true, true, false, true, true, false, false, false, false, false, false, false};
@@ -157,6 +160,8 @@ void setup()
 
         attachInterrupt(0, incrementEncoder1, RISING);
         attachInterrupt(1, incrementEncoder2, RISING);
+        
+        outputString.reserve(100);
         
         //initializeConductivityInterrupt();        
 }
@@ -183,9 +188,10 @@ ISR(TIMER2_COMPA_vect)
 
 void loop()
 {
-	if (messageBuild() > 0)
+        if (Serial.available())
 	{
-		switch (messageGetChar())
+                command = getNextChar();
+		switch (command)
 		{
 			case 'n':
 				getVersionNumber();
@@ -233,6 +239,55 @@ void loop()
 	}
 }
 
+int getNextInt() 
+{
+        int nextInt = 0;
+        byte nextByte;
+        boolean intFound = false;
+        int sign = 1;
+        
+        while(true)
+        {
+                while(!Serial.available());
+                nextByte = Serial.read();
+                
+                if (nextByte == '-') sign = -1; //This is a negative number
+                else if (nextByte >= '0' && nextByte <= '9') //Found a digit
+                {
+                        nextInt *= 10;
+                        nextInt += (nextByte - '0');
+                        intFound = true;
+                }
+                else if (nextByte == 10) //carriage return
+                {
+                        Serial.read(); //Discard line feed
+                        break;
+                }
+                else if (nextByte == ' ' && !intFound) continue; //Ignore leading spaces
+                else break; //Done parsing for int
+        }
+        return (sign * nextInt); //Apply the sign
+}
+
+char getNextChar()
+{
+        byte nextByte = 0;
+        while(true)
+        {
+                while(!Serial.available()); //wait until something is available
+                nextByte = Serial.read();
+                
+                if (nextByte == 10) //carriage return
+                {
+                        Serial.read(); //Discard line feed
+                        break;
+                } 
+                else if (nextByte == ' ') continue; //ignore leading spaces
+                else break; //Found a character
+        }
+        return nextByte;
+}
+
 void incrementEncoder1()
 {
         ++(encoderTicks[0]);
@@ -249,7 +304,7 @@ void setMotorRampUpTime()
 {
         //The ramp-up time for the motors is the increments * delay between increments.
         //Hence the division by the delay to get the requested time. The delay is read-only for now.
-        motorIncrements = messageGetInt();
+        motorIncrements = getNextInt();
         sprintf(output, "m %i", motorIncrements);
         Serial.println(output);
         motorIncrements /= incrementDelay;
@@ -300,9 +355,9 @@ void rampUpMotorSpeed(int pin1, int speed1, int pin2, int speed2)
 void moveDCmotor()
 {
 	int pin, speed, time;
-	pin = messageGetInt();
-	speed = messageGetInt();
-	time = messageGetInt();
+        pin = getNextInt();
+        speed = getNextInt();
+        time = getNextInt();
 	
         sprintf(output, "d %i %i %i", pin, speed, time);
         Serial.println(output);
@@ -330,9 +385,9 @@ void moveEncodedDCmotor()
 {
 	int pin, speed, tickInput;
 	
-	pin = messageGetInt();
-	speed = messageGetInt();
-	tickInput = messageGetInt();
+        pin = getNextInt();
+        speed = getNextInt();
+        tickInput = getNextInt();
 	        
         long ticks = (long)tickInput;
         speed = constrain(speed + 1500, 1000, 2000);
@@ -360,11 +415,11 @@ void moveEncodedDCmotor()
 void move2DCmotor()
 {
 	int pin1, speed1, pin2, speed2, time;
-	pin1 = messageGetInt();
-	speed1 = messageGetInt();
-	pin2 = messageGetInt();
-	speed2 = messageGetInt();	
-	time = messageGetInt();
+        pin1 = getNextInt();
+        speed1 = getNextInt();
+        pin2 = getNextInt();
+        speed2 = getNextInt();
+        time = getNextInt();
         
         sprintf(output, "D %i %i %i %i %i", pin1, speed1, pin2, speed2, time);
         Serial.println(output);
@@ -395,12 +450,13 @@ void move2DCmotor()
 void move2EncodedDCmotor()
 {
 	int pin1, speed1, tickInput1, pin2, speed2, tickInput2;
-	pin1 = messageGetInt();
-	speed1 = messageGetInt();
-	tickInput1 = messageGetInt();
-	pin2 = messageGetInt();
-	speed2 = messageGetInt();
-	tickInput2 = messageGetInt();
+
+        pin1 = getNextInt();
+        speed1 = getNextInt();
+        tickInput1 = getNextInt();
+        pin2 = getNextInt();
+        speed2 = getNextInt();
+        tickInput2 = getNextInt();
 
         long ticks1 = (long)tickInput1;
         long ticks2 = (long)tickInput2;
@@ -438,17 +494,16 @@ void move2EncodedDCmotor()
 void getEncoderPosition()
 {
         int pin, position;
-        pin = messageGetInt();
+        pin = getNextInt();
         position = int(encoderPositions[pin]);
         
-        sprintf(output, "p %i %i", pin, position);
+        sprintf(output, "p %d %ld", pin, position);
         Serial.println(output);
 }
 
 void zeroEncoderPosition()
 {
-        int pin;
-        pin = messageGetInt();
+        int pin = getNextInt();
         
         sprintf(output, "z %i", pin);
         Serial.println(output);
@@ -458,8 +513,9 @@ void zeroEncoderPosition()
 void moveservo()
 {
 	int pin, position;
-	pin = messageGetInt();
-	position = messageGetInt();
+
+        pin = getNextInt();
+        position = getNextInt();
 
         sprintf(output, "v %i %i", pin, position);
         Serial.println(output);
@@ -472,9 +528,9 @@ void moveservo()
 void moveAllServo()
 {
 	int position1, position2, position3;
-	position1 = messageGetInt();
-	position2 = messageGetInt();
-        position3 = messageGetInt();
+        position1 = getNextInt();
+        position2 = getNextInt();
+        position3 = getNextInt();
 
         sprintf(output, "V %i %i %i", position1, position2, position3);
         Serial.println(output);
@@ -492,8 +548,9 @@ void getVersionNumber()
 
 void readpin()
 {
-        String outputString;
-	switch (messageGetChar())
+        char pinType = getNextChar(); //Ignoring the space here
+        //pinType = (char)Serial.read();
+	switch (pinType)
 	{
  	 	case 'd':
                         outputString = "d";
@@ -526,7 +583,7 @@ void getPing()
 {
         long duration;
         int cm;
-        int pin = messageGetInt();
+        int pin = getNextInt();
         pinMode(pin, OUTPUT);
 	digitalWrite(pin, LOW);
 	delayMicroseconds(2);
@@ -546,9 +603,9 @@ void attach()
         int num, pin;
         char component;
         
-        component = messageGetChar();
-        num = messageGetInt();
-        pin = messageGetInt();
+        component = getNextChar();
+        num = getNextInt();
+        pin = getNextInt();
         
         //Only do this if the pin hasn't already been attached
         if (pinsAttached[pin] == false) {
@@ -612,6 +669,7 @@ void getConductivity()
         
         result = abs(reading1 - reading2);
         sprintf(output, "c %i", result);
+        //sprintf(output, "c %i %i %i", result, reading1, reading2);
         Serial.println(output);
 }
 
