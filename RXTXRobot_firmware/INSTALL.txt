@@ -1,26 +1,24 @@
-To flash an Arduino, follow these steps. Steps 1-4 should only be done once:
+To flash an Arduino, follow these steps.
 
 1) Get the Arduino IDE, found at http://arduino.cc/en/main/software. 
    Download the version for your OS, and install it appropriately.
-2) Copy the library folders that were extracted from this archive.
-3) Go to your Arduino IDE installation, and find the libraries folder.
-   As an example, on OSX it is found in /Applications/Arduino.app/Contents/Resources/Java/libraries
-   Paste the library folders from step 2 here.
-4) Open the Arduino IDE (or restart it). You can make sure the libraries
-   were added correctly by going to File > Examples, and checking that
-   there are examples for the libraries added.
-
-
-5) Open the RXTXRobot_firmware.pde file. Click the checkmark at the top left 
+2) Open the RXTXRobot_firmware.ino file. Click the checkmark at the top left 
    of the IDE (Verify). This will compile the firmware. Fix errors as needed.
-6) Plug in an Arduino.
-7) Go to Tools > Serial Port. Make sure the port corresponding to your Arduino
+3) Plug in an Arduino.
+4) Go to Tools > Serial Port. Make sure the port corresponding to your Arduino
    is checked. On Linux, it will be something like /dev/tty.ACM#. On Mac, it
-   will be /dev/tty.usbmodem####. On Windows, it will be something like COM# (check
+   will be /dev/tty.usbmodem#### or /dev/tty.wch* . On Windows, it will be something like COM# (check
    the Device Manager to make sure you connect to the right COM port).
-8) Click the right-facing arrow at the top left of the IDE (Upload). This will
+5) Click the right-facing arrow at the top left of the IDE (Upload). This will
    compile and upload the firmware to the Arduino. You are done!
 
+To setup a Raspberry Pi for flashing:
+1) Make sure the Pi is connected to the internet.
+2) [Do this only once] Run the raspberry_setup.sh script in the Raspberry_Flasher folder.
+   It will take a time and likely require some input and reboot, so be patient.
+3) Plug in an Arduino
+4) Run the raspberry_flash.sh script in the Raspberry_Flasher folder. Observe output.
+   You are done!
 
 Not working?:
 - If you try to upload and the IDE says "programmer not responding", try unplugging
