@@ -2,6 +2,7 @@
 
 BASEDIR=$(dirname $0)
 sudo apt-get update && sudo apt-get install arduino arduino-core screen
-sudo $BASEDIR/alamode-setup/setup
+cd $BASEDIR/alamode-setup
+sudo ./setup
 sudo reboot
 
