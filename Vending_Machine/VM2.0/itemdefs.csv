@@ -1,0 +1,32 @@
+ItemName,Cost,Location,Stock
+Linear Motion,100,22,4
+Arduino (soldered),100,54,6
+DC Vex Motor,60,50,14
+IR Sensor- Md,50,23,4
+IR Sensor- Sh,50,24,6
+Cont Servo,50,51,9
+180? Servo Motor,50,52,12
+Encoder,40,0,11
+Motor Mounts,20,1,11
+Rubber treads,20,2,11
+Ping sensor,20,21,15
+Nutplate,20,48,15
+Nutplate,20,49,15
+5V Reg,20,53,7
+Protoboard,18,30,8
+BreadBoard,18,31,15
+Servo Brackets,15,10,12
+Allen Wrench,15,33,11
+Glue Sticks,10,3,11
+Cuvettes,10,34,8
+Collars- Axl,10,40,13
+Collars- Shafts,10,41,14
+Copper Plates,6,32,10
+Servo Accoutrements,5,4,11
+Metal Brackets,5,46,13
+Bump Sensor,4,20,11
+Phototransistor,4,43,15
+M3 Screws,4,47,14
+LEDs,2,42,16
+4A Fuse,2,44,15
+3A Fuse,2,45,15
