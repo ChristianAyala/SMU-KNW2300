@@ -9,9 +9,8 @@ choiceNum = ""
 rawCardData = ""
 myModel = None
 shift = False
+storeData = False
 
-	
-	
 	
 #a function to toggle fullscreen in an X Session
 #NOTE: if loaing before X Session full screen is required rendering this function useless
@@ -51,8 +50,9 @@ def getChar(key):
 	
 	if shift:
 		shift = False
-		if key == 47:return "?"
-		else if key < 256:return chr(key - 16)
+		if key == 47: return "?"
+		if key == 61: return "+"
+		elif key < 256: return chr(key)
 		else:return "_"
 	else:
 		if key == 304:
@@ -118,11 +118,15 @@ def mainScreen(key):
 	#if key is a valid character keep it, other wise
 	if key:
 		keyVal = getChar(key)
+		print keyVal
+		print str(key)
 		if not key == 271:
-			if keyVal: rawCardData += keyVal
+			if keyVal: 
+				if keyVal == "%": rawCardData = ""
+				rawCardData += keyVal
 		else:
 			print rawCardData
-			
+			#%0023616111102264785125876?;01543764206658850=08435277636?+35277636=MARTIN=RAYMOND=STUDENT?
 			#%0023616111102264785125876?;01543764206658850=08435277636?+35277636=MARTIN=RAYMOND=STUDENT?
 			
 			
