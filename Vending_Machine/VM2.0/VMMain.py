@@ -1,7 +1,5 @@
-import sys
-sys.path.insert(0, '/home/bananapi/Documents/TBO/python/')
-
-from VMDataModel import VMDataModel
+#import sys
+#sys.path.insert(0, '/home/bananapi/Documents/TBO/python/')
 import pygame, time
 from pygame.locals import *
 
@@ -9,14 +7,15 @@ curWindow = None
 loadingFrames = "..."
 choiceNum = ""
 rawCardData = ""
-myModel = VMDataModel()
+myModel = None
 shift = False
-#%0023616111102264785125876?;01543764206658850=08435277636?+35277636=MARTIN=RAYMOND=STUDENT?
 
 	
 	
 	
-
+#a function to toggle fullscreen in an X Session
+#NOTE: if loaing before X Session full screen is required rendering this function useless
+#good for debugging
 def toggle_fullscreen():
 	screen = pygame.display.get_surface()
 	tmp = screen.convert()
@@ -37,7 +36,8 @@ def toggle_fullscreen():
 	pygame.mouse.set_visible(False)
     
 	return screen
-		
+
+#resets the database to clear data from a previous user		
 def resetForNewUser():
 	global rawCardData
 	global choiceNum
@@ -45,15 +45,15 @@ def resetForNewUser():
 	choiceNum = ""
 	rawCardData = ""
 
+#translates ascii code to our character and handle shifted character codes
 def getChar(key):
 	global shift
 	
 	if shift:
 		shift = False
-		if key == 47:
-			return "?"
-		else:
-			return chr(key - 16)
+		if key == 47:return "?"
+		else if key < 256:return chr(key - 16)
+		else:return "_"
 	else:
 		if key == 304:
 			shift = True
@@ -71,7 +71,25 @@ def getChar(key):
 		print str(key) + " : " + pygame.key.name(key)
 		return pygame.key.name(key)'''
 
+#Loading splash screen as datebase is loaded
+def loadingScreen(key):
+	# Fill background with orange
+	screen = pygame.display.get_surface()
+	screen.fill((255, 165, 0), (0, 0, 800, 480))
+		
+	# Display some text
+	pygame.font.init()
+	titleFont = pygame.font.Font(None, 60)
+	text = titleFont.render("LOADING...PLEASE STAND BY", 1, (10, 10, 10))
+	textpos = text.get_rect()
+	textpos.centerx = screen.get_rect().centerx
+	textpos.centery = screen.get_rect().centery - 200
+	screen.blit(text, textpos)
+	
+	pygame.display.flip()
 
+
+#Main screen prompting user for swipe and acceping card reader input
 def mainScreen(key):
 	global rawCardData
 	global choiceNum
@@ -132,7 +150,9 @@ def mainScreen(key):
 			
 	
 	pygame.display.flip()
-	
+
+#Selection Screen for user to sleect which part they may want
+#uses numpad for this process
 def selectionScreen(userNum):
 	# Fill background with orange
 	screen = pygame.display.get_surface()
@@ -206,7 +226,8 @@ def selectionScreen(userNum):
 		if(myModel.setItem(choiceNum)):
 			curWindow = verifyScreen
 			verifyScreen(None)
-	
+
+#allows user to verify the item they with a binary indicator (1 - YES, 2 - NO)
 def verifyScreen(key):
 	# Fill background with orange
 	screen = pygame.display.get_surface()
@@ -269,6 +290,7 @@ def verifyScreen(key):
 		curWindow = selectionScreen
 		selectionScreen(None)
 	
+#A short splash screen to be displayed when an item is dispensing
 def dispenseScreen(inputKey):
 	# Fill background with orange
 	screen = pygame.display.get_surface()
@@ -284,52 +306,33 @@ def dispenseScreen(inputKey):
 	screen.blit(text, textpos)
 	
 	pygame.display.flip()
-	
-
-#IN PROGRESS LOADING SCREEN
-'''def loadingScreen(time):
-	global loadingFrames
-	# Fill background with orange
-	screen = pygame.display.get_surface()
-	screen.fill((255, 165, 0), (0, 0, 800, 480))
-		
-	# Display some text
-	pygame.font.init()
-	titleFont = pygame.font.Font(None, 200)
-	if len(loadingFrames) > 5: loadingFrames = ""
-	else: loadingFrames += "."
-	print loadingFrames
-	text = titleFont.render(loadingFrames, 1, (10, 10, 10))
-	textpos = text.get_rect()
-	textpos.centerx = screen.get_rect().centerx
-	textpos.centery = screen.get_rect().centery
-	screen.blit(text, textpos)
-	
-	pygame.display.flip()
-	time.sleep(.1)
-	if(time > 0):
-		loadingScreen(time - 1)'''
  
+ 
+ #our main function which handles some variable declarations and debugging features
 if __name__ == '__main__':
+	#setting up our X enviorment and loading screen
 	SW,SH = 800, 480
 	screen = pygame.display.set_mode((SW,SH))
 	pygame.display.set_caption('KNW Vending Machine Software - 2015')
+	loadingScreen(None)
 	
-	'''sampleCard = "%0023616111102264785125876?;01543764206658850=08435277636?+35277636=MARTIN=RAYMOND=STUDENT?"
-	for i in sampleCard:
-		print getChar(ord(i)) + " : " + str(ord(i))'''
-	#print str(ord('a') - ord('A'))
+	#important and declaring heavy variables
+	from VMDataModel import VMDataModel
+	myModel = VMDataModel()
 
+	#setting up the lifecycle for the GUI and some debuggin features
 	curWindow = mainScreen
 	curWindow(None)
 	_quit = False
 	while not _quit:
 		#If 'f' is ever pressed we toggle fullscreen
+		#if "esc" is ever pressed, we quit the program
 		for e in pygame.event.get():
 			if(e.type is KEYDOWN):
 				#these functions are for debugging purposes only 
 				if e.key == K_f:	toggle_fullscreen()
 				elif e.key == K_ESCAPE: _quit = True
+				#some other key listeners usefull for debugging
 				'''elif e.key == K_n: 	curWindow = selectionScreen
 				elif e.key == K_b: 	curWindow = mainScreen
 				elif e.key == K_m:	curWindow = verifyScreen
@@ -340,3 +343,4 @@ if __name__ == '__main__':
 			elif e.type is QUIT: _quit = True
 
 	
+#END OF FILE
