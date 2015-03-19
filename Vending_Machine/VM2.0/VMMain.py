@@ -9,7 +9,7 @@ choiceNum = ""
 rawCardData = ""
 myModel = None
 shift = False
-storeData = False
+rendered = False
 
 	
 #a function to toggle fullscreen in an X Session
@@ -87,73 +87,58 @@ def loadingScreen(key):
 	screen.blit(text, textpos)
 	
 	pygame.display.flip()
-
-
-#Main screen prompting user for swipe and acceping card reader input
+	
 def mainScreen(key):
-	global rawCardData
-	global choiceNum
-	choiceNum = ""
+	global rendered
 	
-	# Fill background with orange
-	screen = pygame.display.get_surface()
-	screen.fill((255, 165, 0), (0, 0, 800, 480))
+	#we only want to render the main screen once to enable fast communication the the card reader
+	if not rendered:
+		global rawCardData
+		global choiceNum
+		choiceNum = ""
 		
-	# Display some text
-	pygame.font.init()
-	titleFont = pygame.font.Font(None, 60)
-	text = titleFont.render("Welcome to the KNW Vending Machine", 1, (10, 10, 10))
-	textpos = text.get_rect()
-	textpos.centerx = screen.get_rect().centerx
-	textpos.centery = screen.get_rect().centery - 200
-	screen.blit(text, textpos)
+		# Fill background with orange
+		screen = pygame.display.get_surface()
+		screen.fill((255, 165, 0), (0, 0, 800, 480))
+			
+		# Display some text
+		pygame.font.init()
+		titleFont = pygame.font.Font(None, 60)
+		text = titleFont.render("Welcome to the KNW Vending Machine", 1, (10, 10, 10))
+		textpos = text.get_rect()
+		textpos.centerx = screen.get_rect().centerx
+		textpos.centery = screen.get_rect().centery - 200
+		screen.blit(text, textpos)
+			
+		swipeFont = pygame.font.Font(None, 175)
+		text = swipeFont.render("Swipe Below", 1, (10, 10, 10))
+		textpos = text.get_rect()
+		textpos.centerx = screen.get_rect().centerx
+		textpos.centery = screen.get_rect().centery
+		screen.blit(text, textpos)
 		
-	swipeFont = pygame.font.Font(None, 175)
-	text = swipeFont.render("Swipe Below", 1, (10, 10, 10))
-	textpos = text.get_rect()
-	textpos.centerx = screen.get_rect().centerx
-	textpos.centery = screen.get_rect().centery
-	screen.blit(text, textpos)
-	
-	#if key is a valid character keep it, other wise
-	if key:
+		pygame.display.flip()
+		
+		rendered = True
+		
+	elif key:
+		#if key is a valid character keep it, other wise
 		keyVal = getChar(key)
-		print keyVal
-		print str(key)
-		if not key == 271:
-			if keyVal: 
-				if keyVal == "%": rawCardData = ""
-				rawCardData += keyVal
-		else:
-			print rawCardData
-			#%0023616111102264785125876?;01543764206658850=08435277636?+35277636=MARTIN=RAYMOND=STUDENT?
-			#%0023616111102264785125876?;01543764206658850=08435277636?+35277636=MARTIN=RAYMOND=STUDENT?
-			
-			
-			
-			'''print rawCardData + "\n"
-			#user = VMUser(self.rawCardData)
-			#this function is for debugging purposes
-			if (myModel.setUserWithID("35277636")):
-				rawCardData = ""
-				print("User Data: " + myModel.toString())
-
+		if keyVal == "=":
+			print "Evauluated Data: " + rawCardData
+			if (myModel.setUserWithID(rawCardData)):
+				print("Loaded User Data: " + myModel.toString())
+				print("*****************************************")
 				global curWindow 
 				curWindow = selectionScreen
-				selectionScreen(None)
-				#switch to the new window'''
-			
-			if (myModel.setUser(rawCardData)):
-				print("User Data: " + myModel.toString())
-				print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-				global curWindow 
-				curWindow = selectionScreen
+				rendered = False
 				selectionScreen(None)
 				
 			rawCardData = ""
-			
-	
-	pygame.display.flip()
+		else:
+			if keyVal == "+": rawCardData = ""
+			elif keyVal: rawCardData += keyVal
+				
 
 #Selection Screen for user to sleect which part they may want
 #uses numpad for this process
@@ -289,7 +274,7 @@ def verifyScreen(key):
 		curWindow = mainScreen
 		mainScreen(None)
 	elif key == K_2 or key == K_KP2:
-		global choiceNum
+		global cho/iceNum
 		choiceNum = ""
 		curWindow = selectionScreen
 		selectionScreen(None)
@@ -318,6 +303,9 @@ if __name__ == '__main__':
 	SW,SH = 800, 480
 	screen = pygame.display.set_mode((SW,SH))
 	pygame.display.set_caption('KNW Vending Machine Software - 2015')
+	
+	loadingScreen(None)
+	toggle_fullscreen()
 	loadingScreen(None)
 	
 	#important and declaring heavy variables
@@ -325,6 +313,7 @@ if __name__ == '__main__':
 	myModel = VMDataModel()
 
 	#setting up the lifecycle for the GUI and some debuggin features
+	#I uses curWindow to hold my lambda expressions in order to generate 
 	curWindow = mainScreen
 	curWindow(None)
 	_quit = False
@@ -334,10 +323,11 @@ if __name__ == '__main__':
 		for e in pygame.event.get():
 			if(e.type is KEYDOWN):
 				#these functions are for debugging purposes only 
-				if e.key == K_f:	toggle_fullscreen()
+				if e.key == K_ESCAPE: _quit = True
+				'''if e.key == K_f:	toggle_fullscreen()
 				elif e.key == K_ESCAPE: _quit = True
 				#some other key listeners usefull for debugging
-				'''elif e.key == K_n: 	curWindow = selectionScreen
+				elif e.key == K_n: 	curWindow = selectionScreen
 				elif e.key == K_b: 	curWindow = mainScreen
 				elif e.key == K_m:	curWindow = verifyScreen
 				elif e.key == K_v:	curWindow = dispenseScreen

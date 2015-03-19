@@ -17,8 +17,7 @@ class VMDataModel(object):
 	return self.currentUser.readCard(cardData)
     
     def setUserWithID(self, ID):
-	self.currentUser.VMUserWithID(ID)
-	return self.currentUser
+	return self.currentUser.VMUserWithID(ID)
 	
     def getUserName(self):
 	if self.currentUser: return self.currentUser.name

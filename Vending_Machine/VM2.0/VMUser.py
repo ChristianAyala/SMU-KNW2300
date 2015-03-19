@@ -11,6 +11,47 @@ class VMUser(object):
 	userDB.reloadItemCSV('itemdefs.csv')
 	userDB.reloadUserCSV('users.csv', 'credit.csv')
 		
+
+	def VMUserWithID(self, userID):
+		userData = None
+		if(len(userID) is 8):
+			userData = self.userDB.getUserData(int(userID));
+		
+		if userData == None:
+			print("USER NOT FOUND")
+			self.verified = False
+			return False
+			
+			
+		self.verified = True
+		self.iden = userData[0]
+		self.name = userData[1]
+		if(userData[2] == 1): 
+			self.admin = True
+			self.team = "ADMIN"
+			self.balance = "00"
+		else:
+			self.team = userData[3]
+			self.balance = userData[4]
+			
+		return True
+		
+	def toString(self):
+		if self.iden:
+			returnString = str(self.iden) + ", " + self.name + ", " + self.team + ", " + str(self.balance) 
+			if self.admin: returnString += ", is Admin"
+		else: returnString = "INVALID"
+		return returnString
+		
+	def dispenseItem(self, item):
+		self.userDB.removeCredit(self.iden, item)
+		self.userDB.printAll()
+		
+	def getItem(self, location):
+		return self.userDB.getItem(int(location))
+		
+
+
 	def readCard(self, swipe):
 		track1begin = 0
 		track1end   = 0
@@ -84,43 +125,5 @@ class VMUser(object):
 			self.team = userData[3]
 			self.balance = userData[4]
 		return True
-
-	def VMUserWithID(self, userID):
-		if(len(userID) is 8):
-			userData = self.userDB.getUserData(int(userID));
-		
-		if userData == None:
-			print("USER NOT FOUND")
-			self.verified = False
-			return None
-			
-			
-		self.verified = True
-		self.iden = userData[0]
-		self.name = userData[1]
-		if(userData[2] == 1): 
-			self.admin = True
-			self.team = "ADMIN"
-			self.balance = "00"
-		else:
-			self.team = userData[3]
-			self.balance = userData[4]
-		return True
-		
-	def toString(self):
-		if self.iden:
-			returnString = str(self.iden) + ", " + self.name + ", " + self.team + ", " + str(self.balance) 
-			if self.admin: returnString += ", is Admin"
-		else: returnString = "INVALID"
-		return returnString
-		
-	def dispenseItem(self, item):
-		self.userDB.removeCredit(self.iden, item)
-		self.userDB.printAll()
-		
-	def getItem(self, location):
-		return self.userDB.getItem(int(location))
-		
-			
 		
 		
