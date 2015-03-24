@@ -1,4 +1,5 @@
 from VMUser import VMUser
+#import serial
 
 class VMDataModel(object):
     def __init__(self):
@@ -17,6 +18,7 @@ class VMDataModel(object):
 	return self.currentUser.readCard(cardData)
     
     def setUserWithID(self, ID):
+	print "user set attempted with: " + str(ID)
 	return self.currentUser.VMUserWithID(ID)
 	
     def getUserName(self):
@@ -50,7 +52,7 @@ class VMDataModel(object):
 	    itemLocation = str(self.currentItem[2])
 	    #padding location number for serial output
 	    while not len(itemLocation) == 2:
-		itemLocation += "0" 
+		itemLocation = "0" + itemLocation 
 	    #self.ser.write("*" + itemLocation[0] + "*" + itemLocation[1] + "*")
 	    return True
 	else: return False

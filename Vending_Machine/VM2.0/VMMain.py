@@ -155,6 +155,12 @@ def selectionScreen(userNum):
 	textpos.centerx = screen.get_rect().centerx
 	textpos.centery = screen.get_rect().centery - 200
 	screen.blit(text, textpos)
+	
+	text = titleFont.render("Team: " + myModel.getTeam() + " Points: " + str(myModel.getTeamCredit()), 1, (10, 10, 10))
+	textpos = text.get_rect()
+	textpos.centerx = screen.get_rect().centerx
+	textpos.centery = screen.get_rect().centery  + 150
+	screen.blit(text, textpos)
 		
 	swipeFont = pygame.font.Font(None, 100)
 	text = swipeFont.render("Enter An Item Number", 1, (10, 10, 10))
@@ -201,11 +207,11 @@ def selectionScreen(userNum):
 		textpos.centery = screen.get_rect().centery
 		screen.blit(text, textpos)
 		
-		swipeFont = pygame.font.Font(None, 20)
+		swipeFont = pygame.font.Font(None, 50)
 		text = swipeFont.render("press the back button to exit", 1, (10, 10, 10))
 		textpos = text.get_rect()
 		textpos.centerx = screen.get_rect().centerx 
-		textpos.centery = screen.get_rect().centery + 220
+		textpos.centery = screen.get_rect().centery + 210
 		screen.blit(text, textpos)
 		
 	
@@ -274,7 +280,7 @@ def verifyScreen(key):
 		curWindow = mainScreen
 		mainScreen(None)
 	elif key == K_2 or key == K_KP2:
-		global cho/iceNum
+		global choiceNum
 		choiceNum = ""
 		curWindow = selectionScreen
 		selectionScreen(None)

@@ -98,6 +98,7 @@ class VMBase(object):
 		
 	def getUserData(self, iden):
 		dat = self.c.execute("SELECT * FROM users WHERE id=%d" % iden).fetchone()
+		if not dat: return None
 		if dat[2] == 1:	return dat
 		else: return dat + (self.c.execute(("SELECT credits FROM credit WHERE team_name='%s'" % dat[3])).fetchone()[0],)
 		
