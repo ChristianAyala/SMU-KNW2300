@@ -112,6 +112,8 @@ Authors:
 
 #include <SimpleMessageSystem.h>
 #include <Servo.h>
+#include <Wire.h>
+#include <MPU6050.h>
 
 /*
  * firmware version numbers, split into major, minor subminor.
@@ -120,7 +122,7 @@ Authors:
  * Minor - suggest api update
  * Subminor - no api update needed 
  */
-String versionNumber = "n 4 3 0";
+String versionNumber = "n 4 4 0";
 
 //Used to connect to servos (up to 3 per arduino)
 Servo servo0, servo1, servo2;
@@ -145,6 +147,10 @@ long encoderDirections[] = {forward, forward};
 //Used to contain the output string written to the serial port
 char output[255];
 
+MPU6050 accelgyro;
+int16_t ax, ay, az;
+int16_t gx, gy, gz;
+
                //Pins: 0     1     2     3     4      5     6     7      8      9      10     11     12    13
 bool pinsAttached[] = {true, true, true, true, false, true, true, false, false, false, false, false, false, false};
 
@@ -157,6 +163,9 @@ void setup()
 
         attachInterrupt(0, incrementEncoder1, RISING);
         attachInterrupt(1, incrementEncoder2, RISING);
+        
+        accelgyro.initialize();
+        accelgyro.testConnection();
         
         //initializeConductivityInterrupt();        
 }
@@ -228,6 +237,9 @@ void loop()
                                 break;
                         case 'a':
                                 attach();
+                                break;
+                        case 'g':
+                                getGyro();
                                 break;
 		}
 	}
@@ -615,3 +627,8 @@ void getConductivity()
         Serial.println(output);
 }
 
+void getGyro() {
+    accelgyro.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+    sprintf(output, "g %i %i %i", ax, ay, az);
+    Serial.println(output);
+}

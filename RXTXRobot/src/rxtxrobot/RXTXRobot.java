@@ -906,6 +906,58 @@ public abstract class RXTXRobot extends SerialCommunication
         }
         return -1;
     }
+    
+    /**
+     * Gets the result from the gyroscope sensor.
+     *
+     * The gyroscope measures its orientation relative to gravity, so it is best
+     * if the gyroscope is mounted parallel to the floor. It requires 4 pins:
+     * 
+     * 5 volts going into VCC.
+     * Ground going into GND.
+     * Analog pin 4 going to SDA.
+     * Analog pin 5 going to SCL.
+     * 
+     * The remaining pins are unused.
+     *
+     * @return An array of three integers containing the three axes of orientation.
+     * The first element of the array (array[0]) contains the orientation in the
+     * x direction. Array[1] contains the orientation in the y direction, and
+     * array[2] contains the orientation in the z direction.
+     */
+    public int[] getGyroscope() {
+        
+        if (!isConnected())
+        {
+            error("Robot isn't connected!", "RXTXRobot", "getGyroscope");
+            return new int[] {-1,-1,-1};
+        }
+        
+        this.attemptTryAgain = true;
+        String response = this.sendRaw("g", 100);
+        String[] arr = response.split("\\s+");
+        this.attemptTryAgain = false;
+        
+        if (arr.length != 4) 
+        {
+            error("Incorrect response from Arduino (Invalid length)!: " + response, "RXTXRobot", "getGyroscope");
+            debug("Gyroscope Response: " + response);
+        }
+        
+        int[] gyroValues = new int[3];
+        try 
+        {
+            gyroValues[0] = Integer.parseInt(arr[1]);
+            gyroValues[1] = Integer.parseInt(arr[2]);
+            gyroValues[2] = Integer.parseInt(arr[3]);
+        } catch (Exception e)
+        {
+            error("Incorrect response from Arduino (Invalid datatype)!: " + response, "RXTXRobot", "getGyroscope");
+            debug("Conductivity Response: " + response);
+        }
+        
+        return gyroValues;
+    }
 
     /**
      * Moves the specified servo to the specified angular position.
