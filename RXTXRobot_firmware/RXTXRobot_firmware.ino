@@ -2,14 +2,12 @@
 ----------------------------------------
 |          RXTXRobot Firmware          |
 ----------------------------------------
-
  To connect to the Arduino without using an external API, you
  can do one of the following:
  
  -- Go to Tools > Serial Monitor. Change the "No Line Ending"
     option to "Both NL & CR", and make sure to use 9600 baud rate,
     if not already set that way. Then type the commands below.
-
  -- On Mac: In terminal, use the command:
  
     ls /dev/ | grep usb
@@ -23,7 +21,6 @@
     Then type the commands below, hitting enter for each command.
     To exit, type ctrl-a, ctrl-\, y. (ctrl, not command). This method
     is particularly useful when debugging on a student's laptop.
-
  
  
  
@@ -44,7 +41,6 @@
  r t -> read temperature sensor from pin 4
  q [pin] -> Gets a ping result on pin [pin], in centimeters
  c -> Gets a conductivity reading
-
  ------------------------------
  Controlling motors and servos
  ------------------------------
@@ -64,7 +60,6 @@
  ------------------------------
  Sensor Layout
  ------------------------------
-
 	Digital Pins:
                 0/1 - RX/TX Pins, don't use
 		2 -  Motor 1 Encoder (hardcoded)
@@ -79,7 +74,6 @@
 		11 - Servo, DC Motor or free
 		12 - Conductivity Digital Pin 1, or free
 		13 - Conductivity Digital Pin 2, or free
-
 	Analog Pins:
 		0 - Free
 		1 - Free
@@ -89,8 +83,6 @@
 		5 - Conductivity Analog Pin 2
                 6 - Free (Arduino Nano only)
                 7 - Free (Arduino Nano only)
-
-
  
 Authors:
  
@@ -112,8 +104,6 @@ Authors:
 
 #include <SimpleMessageSystem.h>
 #include <Servo.h>
-#include <Wire.h>
-#include <MPU6050.h>
 
 /*
  * firmware version numbers, split into major, minor subminor.
@@ -147,10 +137,6 @@ long encoderDirections[] = {forward, forward};
 //Used to contain the output string written to the serial port
 char output[255];
 
-MPU6050 accelgyro;
-int16_t ax, ay, az;
-int16_t gx, gy, gz;
-
                //Pins: 0     1     2     3     4      5     6     7      8      9      10     11     12    13
 bool pinsAttached[] = {true, true, true, true, false, true, true, false, false, false, false, false, false, false};
 
@@ -163,9 +149,6 @@ void setup()
 
         attachInterrupt(0, incrementEncoder1, RISING);
         attachInterrupt(1, incrementEncoder2, RISING);
-        
-        accelgyro.initialize();
-        accelgyro.testConnection();
         
         //initializeConductivityInterrupt();        
 }
@@ -237,9 +220,6 @@ void loop()
                                 break;
                         case 'a':
                                 attach();
-                                break;
-                        case 'g':
-                                getGyro();
                                 break;
 		}
 	}
@@ -627,8 +607,3 @@ void getConductivity()
         Serial.println(output);
 }
 
-void getGyro() {
-    accelgyro.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
-    sprintf(output, "g %i %i %i", ax, ay, az);
-    Serial.println(output);
-}
