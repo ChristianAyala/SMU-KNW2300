@@ -31,6 +31,7 @@
  ------------------------------
  a m [num] -> attaches motor number [num] as dictated by the layout below
  a s [num] -> attaches servo number [num] as dictated by the layout below
+ a g -> attaches the GPS sensor as dictated by the layout below
  
  ------------------------------
  Reading sensor values
@@ -39,6 +40,7 @@
  r a -> read analog pins
  r d -> read digital pins
  r t -> read temperature sensor from pin 4
+ g -> read GPS coordinates
  q [pin] -> Gets a ping result on pin [pin], in centimeters
  c -> Gets a conductivity reading
  ------------------------------
@@ -70,8 +72,8 @@
 		7 -  Servo, DC Motor or free
 		8 -  Servo, DC Motor or free
 		9 -  Servo, DC Motor or free
-		10 - Servo, DC Motor or free
-		11 - Servo, DC Motor or free
+		10 - GPS TX pin, Servo, DC Motor or free
+		11 - GPS RX pin, Servo, DC Motor or free
 		12 - Conductivity Digital Pin 1, or free
 		13 - Conductivity Digital Pin 2, or free
 	Analog Pins:
@@ -104,6 +106,7 @@ Authors:
 
 #include <SimpleMessageSystem.h>
 #include <Servo.h>
+#include <SoftwareSerial.h>
 
 /*
  * firmware version numbers, split into major, minor subminor.
@@ -112,7 +115,7 @@ Authors:
  * Minor - suggest api update
  * Subminor - no api update needed 
  */
-String versionNumber = "n 4 4 0";
+String versionNumber = "n 4 5 0";
 
 //Used to connect to servos (up to 3 per arduino)
 Servo servo0, servo1, servo2;
@@ -133,6 +136,14 @@ int incrementDelay = 100;
 long encoderPositions[] = {0L, 0L};
 long encoderTicks[] = {0L, 0L};
 long encoderDirections[] = {forward, forward};
+
+int rxPin = 11, txPin = 10;
+int byteGPS = -1;
+char cmd[7] = "$GPRMC";
+int counter1 = 0;
+char buf[300] = "";
+
+SoftwareSerial GPSSerial(rxPin, txPin);
 
 //Used to contain the output string written to the serial port
 char output[255];
@@ -220,6 +231,9 @@ void loop()
                                 break;
                         case 'a':
                                 attach();
+                                break;
+                        case 'g':
+                                readGPS();
                                 break;
 		}
 	}
@@ -539,6 +553,11 @@ void attach()
         char component;
         
         component = messageGetChar();
+        
+        if (component == 'g') {
+            attachGPS();
+            return;
+        }
         num = messageGetInt();
         pin = messageGetInt();
         
@@ -607,3 +626,106 @@ void getConductivity()
         Serial.println(output);
 }
 
+void attachGPS() {
+        pinMode(rxPin, INPUT);
+        pinMode(txPin, OUTPUT);
+        GPSSerial.begin(BAUD_RATE);
+  
+        sprintf(output, "a g");
+        Serial.println(output);
+}
+
+void resetGPS() {
+        counter1 = 0;
+}
+
+bool validateStart() {
+  for (int i = 0; i < 6; ++i) {
+    if (buf[i] != cmd[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool processGPSReading() {
+//  for (int i = 0; i < counter1; ++i) {
+//    Serial.print(buf[i]);
+//  }
+  if (!validateStart()) {
+    //Serial.println("Incorrect GPS message");
+    return false;
+  }
+  if (buf[17] == 'V') {
+    //Serial.println("Data Invalid. Connecting to satellite...");
+    return false;
+  }
+  
+  int currentByte = 0;
+  output[currentByte++] = 'g';
+  output[currentByte++] = ' ';
+  output[currentByte++] = buf[19];
+  output[currentByte++] = buf[20];
+  output[currentByte++] = ' ';
+  
+  
+  for (int i = 5, j = 21; j <= 28; ++i, ++j) {
+          output[i] = buf[j];
+  }
+  
+  output[13] = ' ';
+  for (int i = 14, j = 32; j <= 34; ++i, ++j) {
+          output[i] = buf[j];
+  }
+  output[17] = ' ';
+  for (int i = 18, j = 35; j <= 42; ++i, ++j) {
+          output[i] = buf[j];
+  }
+  
+  output[26] = '\0';
+  Serial.println(output);
+  
+//  Serial.print("Lat Degree: ");
+//  Serial.print(buf[19]);
+//  Serial.println(buf[20]);
+//  Serial.print("Lat Minute: ");
+//  for (int i = 21; i <= 28; ++i) {
+//    Serial.print(buf[i]);
+//  }
+//  Serial.println();
+//  Serial.print("Long Degree: ");
+//  Serial.print(buf[32]);
+//  Serial.print(buf[33]);
+//  Serial.println(buf[34]);
+//  Serial.print("Long Minute: ");
+//  for (int i = 35; i <= 42; ++i) {
+//    Serial.print(buf[i]);
+//  }
+//  Serial.println("\n------------------");
+  
+  resetGPS();
+  return true;
+}
+
+void readGPS() {
+        bool successfulReading = false;
+        for (int i = 0; i < 20; ++i) {
+                while(true) {
+                        byteGPS = GPSSerial.read();
+                        if (byteGPS == -1) {
+                                successfulReading = processGPSReading();
+                                if (successfulReading) {
+                                        return;
+                                }
+                                delay(500);
+                                resetGPS();
+                                break;
+                        } else {
+                                buf[counter1] = byteGPS;
+                                ++counter1;
+                        }
+                }
+        }
+        sprintf(output, "g -1");
+        Serial.println(output);
+}
