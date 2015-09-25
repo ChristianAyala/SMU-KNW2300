@@ -63,7 +63,7 @@ void loop()
     col = Serial.parseInt();
     switchRow(row);
     switchCol(col);
-    delay(5000);
+    delay(7700);
     rowsOff();
     colsOff();
     Serial.print("*");

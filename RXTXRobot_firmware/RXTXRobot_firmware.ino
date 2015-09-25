@@ -1,4 +1,4 @@
-/* 
+ /* 
 ----------------------------------------
 |          RXTXRobot Firmware          |
 ----------------------------------------
@@ -93,13 +93,14 @@ Authors:
    -- Alexandre Quessy
    -- Marc Christensen
    -- Chris King
- Current Maintainers
-   -- Mark Fontenot
-   -- Chris Ayala
    -- Charlie Albright
    -- Austin Wells
    -- Luke Oglesbee
    -- Candie Solis
+   -- Mark Fontenot
+ Current Maintainers
+   -- Chris Ayala
+   -- Raymond Martin
  */
 
 #define BAUD_RATE 9600
