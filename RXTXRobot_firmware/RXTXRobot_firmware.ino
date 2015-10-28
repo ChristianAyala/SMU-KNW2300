@@ -116,7 +116,7 @@ Authors:
  * Minor - suggest api update
  * Subminor - no api update needed 
  */
-String versionNumber = "n 4 5 0";
+String versionNumber = "n 4 5 1";
 
 //Used to connect to servos (up to 3 per arduino)
 Servo servo0, servo1, servo2;
@@ -156,8 +156,8 @@ void setup()
 {
 	Serial.begin(BAUD_RATE);
 
-	dc_motors[0].attach(5);
-	dc_motors[1].attach(6);
+	//dc_motors[0].attach(5);
+	//dc_motors[1].attach(6);
 
         attachInterrupt(0, incrementEncoder1, RISING);
         attachInterrupt(1, incrementEncoder2, RISING);
@@ -657,7 +657,7 @@ bool processGPSReading() {
     //Serial.println("Incorrect GPS message");
     return false;
   }
-  if (buf[17] == 'V') {
+  if (buf[17] == 'V' || buf[8] == 'V') {
     //Serial.println("Data Invalid. Connecting to satellite...");
     return false;
   }

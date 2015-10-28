@@ -26,7 +26,7 @@ public class Global {
          * If this is behind the minor version of the firmware, then new hardware
          * functionality will not be accessible from this API.
          */
-        final protected static int VERSION_MINOR = 4;
+        final protected static int VERSION_MINOR = 5;
         
         /**
          * Global subminor version.
@@ -36,7 +36,7 @@ public class Global {
          * functionality of the API if this does not match the firmware subminor
          * version.
          */
-        final protected static int VERSION_SUBMINOR = 0;
+        final protected static int VERSION_SUBMINOR = 1;
         private static PrintStream out_stream;
         private static PrintStream err_stream;
         

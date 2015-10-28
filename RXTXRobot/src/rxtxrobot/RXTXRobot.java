@@ -22,8 +22,9 @@ import java.util.List;
  * <br>
  * 
  * <pre>
- * RXTXRobot robot = new ArduinoUno();
- * robot.setPort("...");
+ * RXTXRobot robot = new {@link rxtxrobot.ArduinoUno#ArduinoUno() ArduinoUno()};
+ * robot.{@link #setPort(java.lang.String) setPort("...")};
+ * robot.{@link #connect() connect()};
  * //Continue using methods associated with this class
  * </pre>
  * 
@@ -90,6 +91,7 @@ public abstract class RXTXRobot extends SerialCommunication
     {
         false, false, false
     };
+    private boolean GPSAttached = false;
     private boolean resetOnClose;
     private boolean overrideValidation;
     private int mixerSpeed;
@@ -105,7 +107,19 @@ public abstract class RXTXRobot extends SerialCommunication
     /**
      * Creates a new RXTXRobot object.
      *
-     * This constructor creates a new RXTXRobot object.
+     * This constructor creates a new RXTXRobot object. On its own, this does
+     * not do much other than initialize variables. This <strong>DOES NOT</strong>
+     * actually connect to the robot. To do that, use the following sequence of
+     * function calls:<br>
+     * <pre>
+     * RXTXRobot robot = new {@link rxtxrobot.ArduinoNano#ArduinoNano() ArduinoNano()};
+     * robot.{@link #setPort(java.lang.String) setPort("...")};
+     * robot.{@link #connect() connect()};
+     * <br>... //Any and all implementation<br>
+     * robot.{@link #close() close()}; //ALWAYS call close()
+     * </pre>
+     * At this point, if the port is set correctly, the Arduino will be connected
+     * properly, and you can use any methods associated with this class.
      */
     public RXTXRobot()
     {
@@ -124,12 +138,12 @@ public abstract class RXTXRobot extends SerialCommunication
      * Abstract method to get the list of digital pins available for a
      * particular board.
      * 
-     * A new Arduino board can be used with this API by subclassing this class
+     * A new Arduino board can be used with this API by sub-classing this class
      * and implementing this method. The subclass can specify which digital pins
      * are available for that particular board.
      * 
      * @return An array of integers representing the set of digital pins
-     * that are initially free to use.
+     * that are <strong>initially</strong> free to use.
      */
     protected abstract int[] getInitialFreeDigitalPins();
     
@@ -142,7 +156,7 @@ public abstract class RXTXRobot extends SerialCommunication
      * are available for that particular board.
      * 
      * @return An array of integers representing the set of analog pins
-     * that are initially free to use.
+     * that are <strong>initially</strong> free to use.
      */
     protected abstract int[] getInitialFreeAnalogPins();
 
@@ -155,7 +169,10 @@ public abstract class RXTXRobot extends SerialCommunication
      * there is an error in connecting, then the appropriate error message will
      * be displayed, as well as a list of possible devices connected to your
      * computer that you can connect to. <br><br> This function will
-     * terminate runtime if an error is discovered.
+     * terminate runtime if an error is discovered.<br><br>
+     * 
+     * Look at the constructor function {@link #RXTXRobot() RXTXRobot()} for an
+     * example of how to use this function.
      */
     @Override
     public final void connect()
@@ -259,8 +276,9 @@ public abstract class RXTXRobot extends SerialCommunication
      * found in this API.
      *
      * It is assumed that the connection has already been established with the
-     * arduino at this point. If the versions do not match, then an error is
-     * generated, but execution continues.
+     * arduino at this point, as this is only ever called if the connect() function
+     * finishes successfully. If the versions do not match, then an error is
+     * generated and logged, but execution continues.
      */
     private void checkFirmwareVersion()
     {
@@ -329,7 +347,10 @@ public abstract class RXTXRobot extends SerialCommunication
      *
      * This method closes the serial connection to the Arduino/XBee. It deletes
      * the mutual exclusion lock file, which is important, so this should be
-     * done before the program is terminated.
+     * done before the program is terminated.<br><br>
+     * 
+     * To see an example of this function, refer to the constructor
+     * {@link #RXTXRobot() RXTXRobot()} to see more.
      */
     @Override
     public final void close()
@@ -373,12 +394,23 @@ public abstract class RXTXRobot extends SerialCommunication
      *
      * If a serial connection is present, then it sends the String to the
      * Arduino to be executed. If verbose is on, then the response from the
-     * Arduino is displayed.
+     * Arduino is displayed.<br><br>
+     * 
+     * <strong>NOTE: DO NOT use this function unless you get approval from a
+     * TA/Faculty member</strong><br><br>
+     * 
+     * An example of this function:
+     * 
+     * <pre>
+     * //Refreshes the analog pins on the arduino
+     * String arduinoResponse = robot.sendRaw("r a");
+     * </pre>
      *
-     * @param str The command to send to the Arduino
-     * @return The response given by the Arduino
+     * @param str The command to send to the Arduino. Refer to the firmware
+     * to see what commands do what actions.
+     * @return The response given by the Arduino.
      */
-    public String sendRaw(String str)
+    protected String sendRaw(String str)
     {
         return sendRaw(str, 100);
     }
@@ -386,6 +418,10 @@ public abstract class RXTXRobot extends SerialCommunication
     /**
      * Sends a string to the Arduino to be executed with a specified delay.
      *
+     * The command str is sent to the Arduino, then the sleep delay is waited
+     * (this is a millisecond unit), then the serial port is polled to see if
+     * anything comes back.<br>
+     * 
      * If a serial connection is present, then it sends the String to the
      * Arduino to be executed. If verbose is on, then the response from the
      * Arduino is displayed.
@@ -394,7 +430,7 @@ public abstract class RXTXRobot extends SerialCommunication
      * @param sleep The number of milliseconds to wait for a response
      * @return The response given by the Arduino
      */
-    public String sendRaw(String str, int sleep)
+    protected String sendRaw(String str, int sleep)
     {
         debug("Sending command: " + str);
         if (!isConnected())
@@ -451,21 +487,22 @@ public abstract class RXTXRobot extends SerialCommunication
      *
      * Attaches a motor to the Arduino by binding it to its appropriate pin.
      * Refer to the Arduino pinout guide for which pins to plug motors into.
-     * Note that MOTOR1 and MOTOR2 are attached by default, and therefore do not
-     * need to be attached manually.<br><br>
+     * Note that {@link #MOTOR1 MOTOR1} and {@link #MOTOR2 MOTOR2}
+     * are attached by default, and therefore do not need to be attached manually.
+     * <br><br>
      * 
      * An example function call to attach a motor to pin 7, and run it:
      * <pre>
      * robot.attachMotor(RXTXRobot.MOTOR3, 7);
-     * robot.runMotor(RXTXRobot.MOTOR3, 500, 3000); //Run motor for 3 seconds
+     * robot.runMotor(RXTXRobot.MOTOR3, 500, 3000); //Run motor for 3 seconds, at max speed
      * </pre>
      *
      * @param motor The DC motor you want to attach:
      * {@link #MOTOR3 RXTXRobot.MOTOR3} or {@link #MOTOR4 RXTXRobot.MOTOR4}
      * @param pin The digital pin the motor will be attached to. Note that not
      * all pins are immediately available, nor can you attach multiple things
-     * to the same digital pin.
-     * 
+     * to the same digital pin. Refer to the Arduino pinout guide to see what pins
+     * are available for you to use.
      * 
      */
     public void attachMotor(int motor, int pin)
@@ -515,9 +552,12 @@ public abstract class RXTXRobot extends SerialCommunication
      * 
      * An example function call to attach a servo to pin 9, and use it:
      * <pre>
-     * robot.attachMotor(RXTXRobot.SERVO1, 9);
-     * robot.runMotor(RXTXRobot..SERVO1, 180); //Move servo 1 to 180 degrees
+     * robot.attachServo({@link #SERVO1 RXTXRobot.SERVO1}, 9);
+     * robot.moveServo({@link #SERVO1 RXTXRobot.SERVO1}, 180); //Move servo 1 to 180 degrees
      * </pre>
+     * 
+     * For more information, refer to the {@link #moveServo(int, int) moveServo()}
+     * function.
      *
      * @param servo The servo you want to attach:
      * {@link #SERVO1 RXTXRobot.SERVO1}, {@link #SERVO2 RXTXRobot.SERVO2}, or
@@ -557,6 +597,53 @@ public abstract class RXTXRobot extends SerialCommunication
                     digitalPinsAvailable.remove(new Integer(pin));
                     debug("Successfully attached servo " + servo);
                 }
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+                error("A generic error occured", "RXTXRobot", "attachServo");
+            }
+        }
+    }
+    
+    /**
+     * Attaches a GPS module to the Arduino.
+     *
+     * Attaches the GP-735T GPS module to the arduino.<br><br>
+     *
+     * To view an example of how this function is used, refer to the
+     * {@link #getGPSCoordinates() getGPSCoordinates()} function.<br><br>
+     *
+     * Without calling this method, the GPS module will not work, and calls to
+     * {@link #getGPSCoordinates() getGPSCoordinates()} will return an error array.
+     * Refer to the {@link #getGPSCoordinates() getGPSCoordinates()} function
+     * for details on how the GPS module works, and what cables go into what
+     * pins on the Arduino.
+     */
+    public void attachGPS() {
+        int rxPin = 10, txPin = 11;
+        if (!digitalPinsAvailable.contains(new Integer(rxPin))) 
+        {
+            error("Pin number " + rxPin + " has already been attached", "RXTXRobot", "attachGPS");
+        } else if (!digitalPinsAvailable.contains(new Integer(11))) 
+        {
+            error("Pin number " + txPin + " has already been attached", "RXTXRobot", "attachGPS");
+        } else {
+            try
+            {
+                String command = "a g";
+                this.attemptTryAgain = true;
+                String response = this.sendRaw(command, 500);
+                this.attemptTryAgain = false;
+                if (!response.equals(command))
+                {
+                    error("Invalid response from the arduino: " + response, "RXTXRobot", "attachServo");
+                } else
+                {
+                    digitalPinsAvailable.remove(new Integer(rxPin));
+                    digitalPinsAvailable.remove(new Integer(txPin));
+                    debug("Successfully attached GPS sensor");
+                }
+                GPSAttached = true;
             } catch (Exception e)
             {
                 e.printStackTrace();
@@ -608,7 +695,18 @@ public abstract class RXTXRobot extends SerialCommunication
     /**
      * Refreshes the Analog pin cache from the robot.
      *
-     * This must be called to refresh the data of the pins.
+     * This function actually sends the command to the Arduino to read the values
+     * on <strong>ALL</strong> of the analog pins. Whenever you want to get the
+     * value of an analog sensor (IR sensor, temperature sensor, or anything
+     * that simply returns a voltage), you should call this function first. As an example:
+     * <pre>
+     * robot.{@link #refreshAnalogPins() refreshAnalogPins()};
+     * int reading = robot.{@link #getAnalogPin(int) getAnalogPin(3)}.{@link rxtxrobot.AnalogPin#getValue() getValue()};
+     * System.out.println("The analog reading on pin 3 was: " + reading);
+     * </pre>
+     * 
+     * Refer to {@link rxtxrobot.AnalogPin#getValue() AnalogPin.getValue()}
+     * to see what the reading values actually mean
      */
     public void refreshAnalogPins()
     {
@@ -663,9 +761,19 @@ public abstract class RXTXRobot extends SerialCommunication
     }
 
     /**
-     * Refreshes the digital pin cache from the robot.
+     * Refreshes the Digital pin cache from the robot.
      *
-     * This must be called to refresh the data of the pins.
+     * This function actually sends the command to the Arduino to read the values
+     * on all of the free digital pins. Whenever you want to get the
+     * value of a digital sensor, you should call this function first. As an example:
+     * <pre>
+     * robot.{@link #refreshDigitalPins() refreshDigitalPins()};
+     * int reading = robot.{@link #getDigitalPin(int) getDigitalPin(3)}.{@link rxtxrobot.DigitalPin#getValue() getValue()};
+     * System.out.println("The digital reading on pin 3 was: " + reading);
+     * </pre>
+     * 
+     * Refer to {@link rxtxrobot.DigitalPin#getValue() DigitalPin.getValue()}
+     * to see what the reading values actually mean
      */
     public void refreshDigitalPins()
     {
@@ -723,9 +831,13 @@ public abstract class RXTXRobot extends SerialCommunication
      * Returns an AnalogPin object for the specified pin.
      *
      * This will get the value of the pin since the last time
-     * {@link #refreshAnalogPins() refreshAnalogPins()} was called.
+     * {@link #refreshAnalogPins() refreshAnalogPins()} was called. The returned
+     * value is an <strong>{@link rxtxrobot.AnalogPin AnalogPin} object</strong>,
+     * meaning you should call {@link rxtxrobot.AnalogPin#getValue() getValue()}
+     * on the returned object to get an actual integer value. Refer to those
+     * functions for more details.
      *
-     * @param x The number of the pin: 0 &lt; x &lt;
+     * @param x The number of the pin: 0 &lt;= x &lt;
      * (# of analog pins on Arduino)
      * @return AnalogPin object of the specified pin, or null if error.
      */
@@ -748,7 +860,11 @@ public abstract class RXTXRobot extends SerialCommunication
      * Returns a DigitalPin object for the specified pin.
      *
      * This will get the value of the pin since the last time
-     * {@link #refreshDigitalPins() refreshDigitalPins()} was called.
+     * {@link #refreshDigitalPins() refreshDigitalPins()} was called. The returned
+     * value is a <strong>{@link rxtxrobot.DigitalPin DigitalPin} object</strong>,
+     * meaning you should call {@link rxtxrobot.DigitalPin#getValue() getValue()}
+     * on the returned object to get an actual integer value. Refer to those
+     * functions for more details.
      *
      * @param x The number of the pin: Must be a digital pin that has not
      * already been attached to a piece of hardware (such as a servo , motor,
@@ -775,9 +891,10 @@ public abstract class RXTXRobot extends SerialCommunication
      * Return the value of the temperature sensor on digital pin 2.
      *
      * An error is displayed if something goes wrong, but verbose is required
-     * for more in-depth errors.
+     * for more in-depth errors. The value returned is in units Celsius.
      *
      * @return Integer representing the temperature of the water in Celsius.
+     * @deprecated The temperature sensor is no longer being used
      */
     public int getTemperature()
     {
@@ -828,7 +945,11 @@ public abstract class RXTXRobot extends SerialCommunication
      * Gets the result from the Ping sensor (must be on a free Digital pin).
      *
      * The Ping sensor must be on a free digital pin and this method returns the
-     * distance in centimeters.
+     * distance in centimeters. As an example:
+     * <pre>
+     * int distance = robot.getPing(6);
+     * System.out.println("The distance to the object in cm is " + distance);
+     * </pre>
      *
      * @param pin The pin number the ping sensor is on. Note that you do not
      * have to call an attach() method for the ping sensors. However, if the pin
@@ -871,8 +992,8 @@ public abstract class RXTXRobot extends SerialCommunication
     /**
      * Gets the result from the conductivity sensor.
      *
-     * The conductivity sensor requires a total of 3 pins: 1 digital pins on
-     * digital pin 12, and 2 analog pins on analog pins 4 and 5.
+     * The conductivity sensor requires a total of 4 pins: 2 digital pins on
+     * digital pins 12 and 13, and 2 analog pins on analog pins 4 and 5.
      *
      * @return The conductivity measurement
      */
@@ -958,6 +1079,96 @@ public abstract class RXTXRobot extends SerialCommunication
         
         return gyroValues;
     }
+    
+    /**
+     * Gets the result from the GPS sensor.
+     *
+     * <br><br>
+     * <strong>
+     * NOTE: The GPS sensor requires about 30 seconds from a cold boot
+     * to connect to the satellites. Upon giving it power, wait for 30 seconds
+     * before running your program, so as to give time to connect.<br><br>
+     * NOTE: The GPS sensor works best outdoors, or at the very least near windows.<br><br>
+     * </strong>
+     * 
+     * Before using this function, be sure to call {@link #attachGPS robot.attachGPS()}.
+     * Otherwise, this will give undefined behavior.<br><br>
+     * 
+     * The GPS sensor requires 4 pins, but has 6 cables. Starting from the <strong>
+     * right-most white cable</strong>, plug the following cables into the following
+     * pins:<br><br>
+     * 1. Ground<br>
+     * 2. 5V power (coming from the 5V regulator)<br>
+     * 3. Digital Pin 11<br>
+     * 4. Digital Pin 10<br>
+     * 5. Do not use<br>
+     * 6. Do not use (this should be the black cable)<br>
+     * <br><br>
+     *
+     * An example function call to attach the GPS module, and use it to get values:
+     * <pre>
+     * //This has to be done before using the GPS sensor
+     * robot.attachGPS();
+     * 
+     * double[] coordinates = robot.getGPSCoordinates();
+     * 
+     * System.out.println("Degrees latitude: " + coordinates[0]);
+     * System.out.println("Minutes latitude: " + coordinates[1]);
+     * System.out.println("Degrees longitude: " + coordinates[2]);
+     * System.out.println("Minutes longitude: " + coordinates[3]);
+     * </pre>
+     * 
+     * @return An array of four doubles. The array has the following contents:<br><br>
+     * Array index 0: Degrees latitude. This should never change from 32 degrees.<br>
+     * Array index 1: Minutes latitude. This is a precise number, with 5 decimal
+     * places.<br>
+     * Array index 2: Degrees longitude. This should never change from 96 degrees.<br>
+     * Array index 3: Minutes longitude. Also a precise number, with 5 decimal places.<br><br>
+     * 
+     * The GPS sensors are accurate to within +/- 2 meters, according to their data sheet.
+     */
+    public double[] getGPSCoordinates() {
+        
+        if (!isConnected())
+        {
+            error("Robot isn't connected!", "RXTXRobot", "getGPSCoordinates");
+            return new double[] {-1,-1,-1, -1};
+        }
+        
+        if (!GPSAttached) 
+        {
+            error("GPS not attached. Be sure to call attachGPS() first", "RXTXRobot", "getGPSCoordinates");
+            return new double[] {-1,-1,-1, -1};
+        }
+        
+        this.attemptTryAgain = true;
+        String response = this.sendRaw("g", 500);
+        String[] arr = response.split("\\s+");
+        this.attemptTryAgain = false;
+        
+        if (arr.length != 5) 
+        {
+            error("Incorrect response from Arduino (Invalid length)!: " + response, "RXTXRobot", "getGPSCoordinates");
+            debug("Arduino Response: " + response);
+            return new double[] {-1,-1,-1, -1};
+        }
+        
+        double[] GPSValues = new double[4];
+        try 
+        {
+            for (int i = 1; i < arr.length; ++i) 
+            {
+                GPSValues[i-1] = Double.parseDouble(arr[i]);
+            }
+        } catch (Exception e)
+        {
+            error("Incorrect response from Arduino (Invalid datatype)!: " + response, "RXTXRobot", "getGPSCoordinates");
+            debug("Arduino Response: " + response);
+            return new double[] {-1,-1,-1, -1};
+        }
+        
+        return GPSValues;
+    }
 
     /**
      * Moves the specified servo to the specified angular position.
@@ -965,8 +1176,20 @@ public abstract class RXTXRobot extends SerialCommunication
      * Accepts either {@link #SERVO1 RXTXRobot.SERVO1} or
      * {@link #SERVO2 RXTXRobot.SERVO2} and an angular position between 0 and
      * 180 inclusive. <br><br> The servo starts at 90 degrees, so a number
-     * &lt;90 will turn it one way, and a number &gt;90 will turn it the other
+     * &lt; 90 will turn it one way, and a number &gt; 90 will turn it the other
      * way. <br><br> An error message will be displayed on error.
+     * 
+     * This is a <strong>non-blocking call</strong>. This means that when you call
+     * this function, the command is sent to the Arduino to move the servo to the
+     * given position, and your program will not wait for it to finish. So calling
+     * multiple {@link #moveServo(int, int) moveServo()} functions sequentially
+     * means that you may not see the first few calls actually execute. As an example:
+     * <pre>
+     * robot.moveServo({@link #SERVO1 RXTXRobot.SERVO1}, 180);
+     * robot.moveServo({@link #SERVO1 RXTXRobot.SERVO1}, 0);
+     * </pre>
+     * What will likely happen is that the servo is moved to 0 degrees, without
+     * appearing to have moved to 180 degrees.
      *
      * @param servo The servo motor that you would like to move:
      * {@link #SERVO1 RXTXRobot.SERVO1}, {@link #SERVO2 RXTXRobot.SERVO2}, or
@@ -1011,6 +1234,9 @@ public abstract class RXTXRobot extends SerialCommunication
      * degrees. <br><br> The servos start at 90 degrees, so a number &lt; 90
      * will turn it one way, and a number &gt; 90 will turn it the other way.
      * <br><br> An error message will be displayed on error.
+     * 
+     * Similar to {@link #moveServo(int, int) moveServo()}, this is a non-blocking
+     * call. Refer to that function for what that means.
      *
      * @param pos1 The angular position of RXTXRobot.SERVO1
      * @param pos2 The angular position of RXTXRobot.SERVO2
