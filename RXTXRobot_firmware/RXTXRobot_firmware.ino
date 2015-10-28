@@ -116,7 +116,7 @@ Authors:
  * Minor - suggest api update
  * Subminor - no api update needed 
  */
-String versionNumber = "n 4 5 1";
+String versionNumber = "n 4 5 2";
 
 //Used to connect to servos (up to 3 per arduino)
 Servo servo0, servo1, servo2;
@@ -150,7 +150,7 @@ SoftwareSerial GPSSerial(rxPin, txPin);
 char output[255];
 
                //Pins: 0     1     2     3     4      5     6     7      8      9      10     11     12    13
-bool pinsAttached[] = {true, true, true, true, false, true, true, false, false, false, false, false, false, false};
+bool pinsAttached[] = {true, true, true, true, false, false, false, false, false, false, false, false, false, false};
 
 void setup()
 {
