@@ -85,7 +85,7 @@ public abstract class RXTXRobot extends SerialCommunication
     };
     private boolean[] motorsAttached =
     {
-        true, true, false, false
+        false, false, false, false
     };
     private boolean[] servosAttached =
     {
