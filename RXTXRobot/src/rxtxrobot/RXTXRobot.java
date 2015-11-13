@@ -272,7 +272,7 @@ public abstract class RXTXRobot extends SerialCommunication
     }
 
     /**
-     * Checks to make sure that the version in the firmware matches what is
+     * Checks to make sure that the version in the Arduino firmware matches what is
      * found in this API.
      *
      * It is assumed that the connection has already been established with the
@@ -487,8 +487,17 @@ public abstract class RXTXRobot extends SerialCommunication
      *
      * Attaches a motor to the Arduino by binding it to its appropriate pin.
      * Refer to the Arduino pinout guide for which pins to plug motors into.
-     * Note that {@link #MOTOR1 MOTOR1} and {@link #MOTOR2 MOTOR2}
-     * are attached by default, and therefore do not need to be attached manually.
+     * None of the motors are attached by default. Any motors that are connected
+     * physically <strong>MUST</strong> be attached through this function before
+     * calling {@link #runMotor(int, int, int) runMotor} or 
+     * {@link #runEncodedMotor(int, int, int) runEncodedMotor}. Otherwise, those
+     * methods will output an error message.
+     * 
+     * <br><br>
+     * 
+     * A single Arduino can only support up to 4 DC motors and up to 3 servos.
+     * If more are required, then use a second Arduino.
+     * 
      * <br><br>
      * 
      * An example function call to attach a motor to pin 7, and run it:
@@ -496,9 +505,14 @@ public abstract class RXTXRobot extends SerialCommunication
      * robot.attachMotor(RXTXRobot.MOTOR3, 7);
      * robot.runMotor(RXTXRobot.MOTOR3, 500, 3000); //Run motor for 3 seconds, at max speed
      * </pre>
+     * 
+     * For more information, refer to the {@link #runMotor(int, int, int) runMotor}
+     * function.
      *
-     * @param motor The DC motor you want to attach:
-     * {@link #MOTOR3 RXTXRobot.MOTOR3} or {@link #MOTOR4 RXTXRobot.MOTOR4}
+     * @param motor The DC motor you want to attach. This can be one of the following
+     * values: <br>
+     * {@link #MOTOR1 RXTXRobot.MOTOR1} <br> {@link #MOTOR2 RXTXRobot.MOTOR2} <br>
+     * {@link #MOTOR3 RXTXRobot.MOTOR3} <br> {@link #MOTOR4 RXTXRobot.MOTOR4} <br>
      * @param pin The digital pin the motor will be attached to. Note that not
      * all pins are immediately available, nor can you attach multiple things
      * to the same digital pin. Refer to the Arduino pinout guide to see what pins
@@ -548,7 +562,15 @@ public abstract class RXTXRobot extends SerialCommunication
      * Attaches a servo to the Arduino by binding it to its appropriate pin.
      * Refer to the Arduino pinout guide for which pins to plug servos into. No
      * servos are attached by default, so call this method for every servo you
-     * plan to use.<br><br>
+     * plan to use. If you do not do this, then any subsequent calls to
+     * {@link #moveServo(int, int) moveServo} will give an error message.
+     * 
+     * <br><br>
+     * 
+     * A single Arduino can only support up to 4 DC motors and up to 3 servos.
+     * If more are required, then use a second Arduino.
+     * 
+     * <br><br>
      * 
      * An example function call to attach a servo to pin 9, and use it:
      * <pre>
@@ -564,7 +586,8 @@ public abstract class RXTXRobot extends SerialCommunication
      * {@link #SERVO3 RXTXRobot.SERVO3}
      * @param pin The digital pin the servo will be attached to. Note that not
      * all pins are immediately available, nor can you attach multiple things
-     * to the same digital pin.
+     * to the same digital pin. Refer to the Arduino pinout guide to see what
+     * digital pins are available for servos.
      */
     public void attachServo(int servo, int pin)
     {
@@ -705,8 +728,9 @@ public abstract class RXTXRobot extends SerialCommunication
      * System.out.println("The analog reading on pin 3 was: " + reading);
      * </pre>
      * 
-     * Refer to {@link rxtxrobot.AnalogPin#getValue() AnalogPin.getValue()}
-     * to see what the reading values actually mean
+     * Refer to {@link rxtxrobot.AnalogPin#getValue() AnalogPin.getValue()} or 
+     * {@link #getAnalogPin(int) getAnalogPin()} to see what the reading values 
+     * actually mean.
      */
     public void refreshAnalogPins()
     {
@@ -836,7 +860,28 @@ public abstract class RXTXRobot extends SerialCommunication
      * meaning you should call {@link rxtxrobot.AnalogPin#getValue() getValue()}
      * on the returned object to get an actual integer value. Refer to those
      * functions for more details.
-     *
+     * 
+     * <br><br>
+     * 
+     * The value of these analog pins will be a number between 0 and 1023. This
+     * maps linearly to a range of 0 to 5V. The code snippet below shows how
+     * to convert between the raw ADC code to voltage.
+     * 
+     * <br><br>
+     * 
+     * Here is an example of how to get 20 pin readings from analog pin 2:
+     * <pre>
+     * 
+     * for (int i = 0; i &lt; 20; ++i) {
+     *     //Refresh the pins before <strong>every</strong> analog pin reading
+     *     robot.{@link #refreshAnalogPins() refreshAnalogPins()};
+     *     {@link rxtxrobot.AnalogPin AnalogPin} a2 = robot.getAnalogPin(2);
+     *     int pinValue = a2.{@link rxtxrobot.AnalogPin#getValue() getValue()};
+     *     System.out.println("Analog pin 2 had value: " + pinValue);
+     *     Sytemm.out.println("In voltage: " + (pinValue * (5.0/1023.0));
+     * }
+     * </pre>
+     * 
      * @param x The number of the pin: 0 &lt;= x &lt;
      * (# of analog pins on Arduino)
      * @return AnalogPin object of the specified pin, or null if error.
@@ -865,10 +910,34 @@ public abstract class RXTXRobot extends SerialCommunication
      * meaning you should call {@link rxtxrobot.DigitalPin#getValue() getValue()}
      * on the returned object to get an actual integer value. Refer to those
      * functions for more details.
+     * 
+     * <br><br>
+     * 
+     * The value of these digital pins will either be 0 or 1, referring to LOW
+     * or HIGH voltage, respectively. You typically do not use this function
+     * directly, as most digital components (motors, servos, ping, conductivity,
+     * and more) have a corresponding handler method.
+     * 
+     * <br><br>
+     * 
+     * Here is an example of how to get 20 pin readings from digital pin 5:
+     * <pre>
+     * 
+     * for (int i = 0; i &lt; 20; ++i) {
+     *     //Refresh the pins before <strong>every</strong> digital pin reading
+     *     robot.{@link #refreshDigitalPins() refreshDigitalPins()};
+     *     {@link rxtxrobot.DigitalPin DigitalPin} d5 = robot.getDigitalPin(5);
+     *     int pinValue = d5.{@link rxtxrobot.DigitalPin#getValue() getValue()};
+     *     System.out.println("Digital pin 5 had value: " + pinValue);
+     * }
+     * </pre>
+     * 
      *
      * @param x The number of the pin: Must be a digital pin that has not
      * already been attached to a piece of hardware (such as a servo , motor,
-     * etc.).
+     * etc.). Refer to {@link #getAvailableDigitalPins() getAvailableDigitalPins()}
+     * to see what digital pins are available.
+     * 
      * @return DigitalPin object of the specified pin, or null if error.
      */
     public DigitalPin getDigitalPin(int x)
@@ -945,7 +1014,7 @@ public abstract class RXTXRobot extends SerialCommunication
      * Gets the result from the Ping sensor (must be on a free Digital pin).
      *
      * The Ping sensor must be on a free digital pin and this method returns the
-     * distance in centimeters. As an example:
+     * distance from the ping sensor in centimeters. As an example:
      * <pre>
      * int distance = robot.getPing(6);
      * System.out.println("The distance to the object in cm is " + distance);
@@ -993,9 +1062,13 @@ public abstract class RXTXRobot extends SerialCommunication
      * Gets the result from the conductivity sensor.
      *
      * The conductivity sensor requires a total of 4 pins: 2 digital pins on
-     * digital pins 12 and 13, and 2 analog pins on analog pins 4 and 5.
+     * digital pins 12 and 13, and 2 analog pins on analog pins 4 and 5. The circuit
+     * for this probe is found elsewhere.
      *
-     * @return The conductivity measurement
+     * @return The conductivity measurement. This is the difference in voltage
+     * between the two conductivity probe plates. It is in ADC units, which can
+     * easily be converted to volts (refer to {@link #getAnalogPin(int) getAnalogPin()}
+     * for this conversion).
      */
     public int getConductivity()
     {
@@ -1045,6 +1118,7 @@ public abstract class RXTXRobot extends SerialCommunication
      * The first element of the array (array[0]) contains the orientation in the
      * x direction. Array[1] contains the orientation in the y direction, and
      * array[2] contains the orientation in the z direction.
+     * @deprecated Gyroscope not currently used in the class
      */
     public int[] getGyroscope() {
         
@@ -1173,11 +1247,19 @@ public abstract class RXTXRobot extends SerialCommunication
     /**
      * Moves the specified servo to the specified angular position.
      *
-     * Accepts either {@link #SERVO1 RXTXRobot.SERVO1} or
-     * {@link #SERVO2 RXTXRobot.SERVO2} and an angular position between 0 and
+     * Accepts either {@link #SERVO1 RXTXRobot.SERVO1},
+     * {@link #SERVO2 RXTXRobot.SERVO2}, or {@link #SERVO3 RXTXRobot.SERVO3}
+     * and an angular position between 0 and
      * 180 inclusive. <br><br> The servo starts at 90 degrees, so a number
      * &lt; 90 will turn it one way, and a number &gt; 90 will turn it the other
-     * way. <br><br> An error message will be displayed on error.
+     * way. In the case of a 180 degree servo, the servo will move to that angle
+     * and stay there. In the case of a continuous rotation servo, the servo
+     * will move in a given direction at a speed relative to the magnitude 
+     * <strong>away</strong> from 90 degrees. So an angle of 120 degrees will
+     * move slowly in one direction, while an angle of 180 degrees will move
+     * rapidly in that same direction. An error message will be displayed on error.
+     * 
+     * <br><br>
      * 
      * This is a <strong>non-blocking call</strong>. This means that when you call
      * this function, the command is sent to the Arduino to move the servo to the
@@ -1275,17 +1357,27 @@ public abstract class RXTXRobot extends SerialCommunication
      * Accepts a DC motor, either {@link #MOTOR1 RXTXRobot.MOTOR1},
      * {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or
      * {@link #MOTOR4 RXTXRobot.MOTOR4}, the speed that the motor should run at
-     * (-500 - 500), and the time with which the motor should run (in
-     * milliseconds). <br><br> If speed is negative, the motor will run in
-     * reverse. <br><br> If time is 0, the motor will run infinitely until
+     * [-500 to 500], and the time with which the motor should run (in
+     * milliseconds). 
+     * <br><br> 
+     * If speed is negative, the motor will run in
+     * reverse. 
+     * <br><br> 
+     * If time is 0, the motor will run infinitely until
      * another call to that motor is made, even if the Java program terminates.
-     * <br><br> An error message will display on error. <br><br> Note:
+     * <br><br>
+     * To stop a motor from turning, use the following method call:
+     * <pre>
+     * robot.runMotor({@link #MOTOR1 RXTXRobot.MOTOR1}, 0, 0);
+     * </pre>
+     * 
+     * An error message will display on error. <br><br> Note:
      * This method is a blocking method unless time = 0
      *
      * @param motor The DC motor you want to run:
      * {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3},
      * or {@link #MOTOR4 RXTXRobot.MOTOR4}
-     * @param speed The speed that the motor should run at (-500 - 500)
+     * @param speed The speed that the motor should run at [-500 to 500]
      * @param time The number of milliseconds the motor should run (0 for
      * infinite) (may not be above 30,000 (30 seconds))
      */
@@ -1350,14 +1442,14 @@ public abstract class RXTXRobot extends SerialCommunication
      * Accepts a DC motor, either {@link #MOTOR1 RXTXRobot.MOTOR1},
      * {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3}, or
      * {@link #MOTOR4 RXTXRobot.MOTOR4}, the speed in which that motor should
-     * run (-500 - 500), accepts another DC motor, the speed in which that motor
+     * run [-500 to 500], accepts another DC motor, the speed in which that motor
      * should run, and the time with which both motors should run (in
      * milliseconds). <br><br> If speed is negative for either motor, that
      * motor will run in reverse. <br><br> If time is 0, the motors will run
      * infinitely until another call to both specific motors is made, even if
      * the Java program terminates. <br><br> An error message will display
      * on error. <br><br> Note: This method is a blocking method unless time
-     * = 0
+     * = 0. Refer to {@link #runMotor(int, int, int) runMotor} for more info.
      *
      * @param motor1 The first DC motor:
      * {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3},
@@ -1466,6 +1558,7 @@ public abstract class RXTXRobot extends SerialCommunication
      * or {@link #MOTOR4 RXTXRobot.MOTOR4}
      * @param speed4 The speed that the fourth DC motor should run at
      * @param time The amount of time that the DC motors should run
+     * @deprecated The arduino should only run two motors at a time
      */
     protected void runMotor(int motor1, int speed1, int motor2, int speed2, int motor3, int speed3, int motor4, int speed4, int time)
     {
@@ -1512,13 +1605,16 @@ public abstract class RXTXRobot extends SerialCommunication
      *
      * Accepts a DC motor, either {@link #MOTOR1 RXTXRobot.MOTOR1} or
      * {@link #MOTOR2 RXTXRobot.MOTOR2}, the speed that the motor should run at
-     * (-500 - 500), and the tick to move to. <br><br> If speed is negative,
+     * [-500 to 500], and the number of ticks to move. <br><br> If speed is negative,
      * the motor will run in reverse. <br><br> An error message will display
-     * on error. <br><br> Note: This method is a blocking method
+     * on error. <br><br> Note: This method is a blocking method, meaning your
+     * code will stop at this method call until the motor has finished moving
+     * the required number of ticks. If the motor never stops turning, then
+     * the encoder is likely not working or wired correctly.
      *
      * @param motor The DC motor you want to run:
      * {@link #MOTOR1 RXTXRobot.MOTOR1} or {@link #MOTOR2 RXTXRobot.MOTOR2}
-     * @param speed The speed that the motor should run at (-500 - 500)
+     * @param speed The speed that the motor should run at [-500 to 500]
      * @param ticks The tick that the motor should move
      */
     public void runEncodedMotor(int motor, int speed, int ticks)
@@ -1577,20 +1673,20 @@ public abstract class RXTXRobot extends SerialCommunication
      * Accepts a DC motor, either {@link #MOTOR1 RXTXRobot.MOTOR1} or
      * {@link #MOTOR2 RXTXRobot.MOTOR2}, the speed in which that motor should
      * run (-500 - 500), accepts another DC motor, the speed in which that motor
-     * should run, and the time with which both motors should run (in
-     * milliseconds). <br><br> If speed is negative for either motor, that
+     * should run, and the number of ticks each motor should run for. 
+     * <br><br> If speed is negative for either motor, that
      * motor will run in reverse. <br><br> An error message will display on
-     * error. <br><br> Note: This method is a blocking method unless time =
-     * 0
+     * error. Refer to {@link #runEncodedMotor(int, int, int) runEncodedMotor}
+     * for more information.
      *
      * @param motor1 The first DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1} or
      * {@link #MOTOR2 RXTXRobot.MOTOR2}
      * @param speed1 The speed that the first DC motor should run at
-     * @param tick1 The tick that the first DC motor should move to
+     * @param tick1 The ticks that the first DC motor should move
      * @param motor2 The second DC motor: {@link #MOTOR1 RXTXRobot.MOTOR1} or
      * {@link #MOTOR2 RXTXRobot.MOTOR2}
      * @param speed2 The speed that the second DC motor should run at
-     * @param tick2 The tick that the second DC motor should move
+     * @param tick2 The ticks that the second DC motor should move
      */
     public void runEncodedMotor(int motor1, int speed1, int tick1, int motor2, int speed2, int tick2)
     {
@@ -1696,10 +1792,10 @@ public abstract class RXTXRobot extends SerialCommunication
     }
 
     /**
-     * Resets the position of a motor to 0.
+     * Resets the position of an encoded motor to 0.
      *
-     * This method resets the position of a motor back to 0 so distances can
-     * begin to be measured.
+     * This method resets the position of an encoded motor back to 0 so distances 
+     * can begin to be measured.
      *
      * @param motor The motor number to reset the ticks of. Can be either
      * {@link #MOTOR1 RXTXRobot.MOTOR1} or {@link #MOTOR2 RXTXRobot.MOTOR2}
@@ -1809,6 +1905,7 @@ public abstract class RXTXRobot extends SerialCommunication
      * or {@link #MOTOR4 RXTXRobot.MOTOR4}
      * @param time The number of milliseconds the motor should run (0 for
      * infinite)
+     * @deprecated Mixer not currently being used in the course
      */
     public void runMixer(int motor, int time)
     {
@@ -1843,6 +1940,7 @@ public abstract class RXTXRobot extends SerialCommunication
      * @param motor The motor that the mixer is on:
      * {@link #MOTOR1 RXTXRobot.MOTOR1}, {@link #MOTOR2 RXTXRobot.MOTOR2}, {@link #MOTOR3 RXTXRobot.MOTOR3},
      * or {@link #MOTOR4 RXTXRobot.MOTOR4}
+     * @deprecated Mixer no longer being used in this course
      */
     public void stopMixer(int motor)
     {
@@ -1867,6 +1965,7 @@ public abstract class RXTXRobot extends SerialCommunication
      * must be between 0 and 255.
      *
      * @param speed Integer representing the speed (0 - 255)
+     * @deprecated No longer using the mixer in the course
      */
     public void setMixerSpeed(int speed)
     {
@@ -1887,6 +1986,7 @@ public abstract class RXTXRobot extends SerialCommunication
      * Gets the speed for the mixer.
      *
      * @return Integer representing the speed.
+     * @deprecated Mixer no longer used in the class
      */
     public int getMixerSpeed()
     {
@@ -1955,7 +2055,10 @@ public abstract class RXTXRobot extends SerialCommunication
      * default
      *
      * @return List of Integers representing the pins that can still be polled
-     * using {@link #getDigitalPin(int) getDigitalPin()}.
+     * using {@link #getDigitalPin(int) getDigitalPin()}. These pins can also
+     * have motors or servos attached to them using the 
+     * {@link #attachMotor(int, int) attachMotor()} or
+     * {@link #attachServo(int, int) attachServo()} methods.
      */
     public List<Integer> getAvailableDigitalPins()
     {
@@ -1969,6 +2072,7 @@ public abstract class RXTXRobot extends SerialCommunication
      * for more in-depth errors.
      *
      * @return Integer representing the heading of the compass in degrees.
+     * @deprecated Compass is extremely unreliable anywhere remotely close to a motor
      */
     public int readCompass()
     {

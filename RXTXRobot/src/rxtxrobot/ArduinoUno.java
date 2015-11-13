@@ -3,6 +3,15 @@ package rxtxrobot;
 /**
  * This class is used to control a robot running on the Arduino Uno board.
  * 
+ * This is a subclass of {@link rxtxrobot.RXTXRobot RXTXRobot}. This class
+ * has no exposed functionality of its own; instead refer to the
+ * {@link rxtxrobot.RXTXRobot RXTXRobot} class for an exhaustive list of
+ * available methods.<br><br>
+ * 
+ * In particular, refer to the constructor 
+ * {@link rxtxrobot.RXTXRobot#RXTXRobot() RXTXRobot()} for a code sample on how
+ * to use this class.
+ * 
  * Details for the Arduino Uno board can be found at 
  * <a href="http://arduino.cc/en/Main/arduinoBoardUno">this Arduino page</a>.
  */
