@@ -60,6 +60,12 @@
  m [t] -> sets the ramp-up time for the motors to be [t] milliseconds (rounds down to nearest hundred)
  
  ------------------------------
+ Set Digital Pin
+ ------------------------------
+ L [pin] -> set the digital pin to LOW
+ H [pin] -> set the digital pin to HIGH
+ 
+ ------------------------------
  Sensor Layout
  ------------------------------
 	Digital Pins:
@@ -236,6 +242,12 @@ void loop()
                         case 'g':
                                 readGPS();
                                 break;
+      case 'H':
+        goHigh();
+        break;
+      case 'L':
+        goLow();
+        break;
 		}
 	}
 }
@@ -525,6 +537,20 @@ void readpin()
 			break;
 	}
         Serial.println(outputString);
+}
+
+void goHigh(){
+  int pin = messageGetInt();
+  digitalWrite(pin, HIGH);
+  sprintf(output, "gh %i HIGH", pin);
+  Serial.println(output);
+}
+
+void goLow(){
+  int pin = messageGetInt();
+  digitalWrite(pin, LOW);
+  sprintf(output, "gh %i LOW", pin);
+  Serial.println(output);
 }
 
 //Check out this site for implementation details:
