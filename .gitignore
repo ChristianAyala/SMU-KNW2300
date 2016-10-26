@@ -9,5 +9,7 @@
 /RXTXRobot/lib/RXTXcomm_INSTALL/Linux/libs/libphidget/*.lo
 /RXTXRobot/lib/RXTXcomm_INSTALL/Linux/libs/libphidget/*.o
 /RXTXRobot/lib/RXTXcomm_INSTALL/Linux/libs/libphidget/.libs/
+/Vending_Machine/VM2.0/users.csv
+/Vending_Machine/VM1.0/users.csv
 .DS_Store
 
