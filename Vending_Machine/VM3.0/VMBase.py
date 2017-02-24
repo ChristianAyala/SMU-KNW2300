@@ -99,10 +99,13 @@ class VMBase(object):
 				for change in response.get('changes'):
 					if change.get('fileId') == self.usersFileId:
 						changeUsers = True
+						print('change made to users file\n')
 					elif change.get('fileId') == self.itemsFileId:
 						changeItems = True
+						print('change made to items file\n')
 					elif change.get('fileId') == self.creditFileId and not changesWereMade:
 						changeCredit = True
+						print('change made to credit file\n')
 
 				if changeCredit and not changeUsers:
 					self.pullCreditFromDrive()
@@ -251,33 +254,61 @@ class VMBase(object):
 		return ''.join( chr for chr in data if chr.isalnum() or chr == ' ')
 
 	def addItem(self, name, cost, location, stock):
+		while self.itemsMutex:
+			pass
+		self.itemsMutex = True
 		self.c.execute("INSERT INTO items VALUES (\'%s\',%d,%d,%d)" % (self.scrub(name), cost, location, stock))
 		self.conn.commit()
+		self.itemsMutex = False
 		
 	def getItem(self, location):
-		return self.c.execute("SELECT * FROM items WHERE location=%d" % int(location)).fetchone()
+		while self.itemsMutex:
+			pass
+		self.itemsMutex = True
+		val = self.c.execute("SELECT * FROM items WHERE location=%d" % int(location)).fetchone()
+		self.itemsMutex = False
+		return val
 		
 	def addUser(self, iden, name, admin, group):
 		adminNum = 0
 		if admin:adminNum = 1
+		while self.usersMutex:
+			pass
+		self.usersMutex = True
 		self.c.execute("INSERT INTO users VALUES (%d,\'%s\',%d,\'%s\')" % (iden, self.scrub(name), adminNum, self.scrub(group)))
 		self.conn.commit()
+		self.usersMutex = False
 		
 			
 	def addTeam(self, name, credit):
+		while self.creditMutex:
+			pass
+		self.creditMutex = True
 		self.c.execute("INSERT INTO credits VALUES (%s, \'%d\')" % (self.scrub(name), credit))
 		self.conn.commit()
+		self.creditMutex = False
 		
 	def getUserData(self, iden):
+		while self.usersMutex:
+			pass
+		self.usersMutex = True
 		dat = self.c.execute("SELECT * FROM users WHERE id=%d" % iden).fetchone()
 		if not dat: return None
-		if dat[2] == 1:	return dat
-		else: return dat + (self.c.execute(("SELECT credits FROM credit WHERE team_name=\'%s\'" % self.scrub(dat[3]))).fetchone()[0],)
+		val = None
+		if dat[2] == 1:	val = dat
+		else: val = dat + (self.c.execute(("SELECT credits FROM credit WHERE team_name=\'%s\'" % self.scrub(dat[3]))).fetchone()[0],)
+
+		self.usersMutex = False
+		return val
 		
 				
 	def addTeam(self, teamName, credit):
+		while self.creditMutex:
+			pass
+		self.creditMutex = True
 		self.c.execute("INSERT INTO credit VALUES (\'%s\', %d)" % (self.scrub(teamName), credit))
 		self.conn.commit()
+		self.creditMutex = False
 		
 	def removeCredit(self, iden, item):
 		removeCredit = 10
