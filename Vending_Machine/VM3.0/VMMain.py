@@ -275,6 +275,7 @@ def verifyScreen(key):
 	global curWindow 
 	
 	if key == K_1 or key == K_KP1:	
+		dispenseScreen()
 		myModel.dispenseItem()
 		resetForNewUser()
 		curWindow = mainScreen
@@ -294,7 +295,7 @@ def dispenseScreen(inputKey):
 	# Display some text
 	pygame.font.init()
 	titleFont = pygame.font.Font(None, 60)
-	text = titleFont.render("Dispense Screen", 1, (10, 10, 10))
+	text = titleFont.render("Processing Payment:\n Please Wait for item to dispense", 1, (10, 10, 10))
 	textpos = text.get_rect()
 	textpos.centerx = screen.get_rect().centerx
 	textpos.centery = screen.get_rect().centery - 200
