@@ -306,12 +306,12 @@ def dispenseScreen(inputKey):
  #our main function which handles some variable declarations and debugging features
 if __name__ == '__main__':
 	#setting up our X enviorment and loading screen
-	SW,SH = 800, 480
+	SW,SH = 400, 240
 	screen = pygame.display.set_mode((SW,SH))
 	pygame.display.set_caption('KNW Vending Machine Software - 2015')
 	
 	loadingScreen(None)
-	toggle_fullscreen()
+	#toggle_fullscreen()
 	loadingScreen(None)
 	
 	#important and declaring heavy variables

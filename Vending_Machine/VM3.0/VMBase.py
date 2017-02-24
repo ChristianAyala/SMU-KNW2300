@@ -254,12 +254,8 @@ class VMBase(object):
 		return ''.join( chr for chr in data if chr.isalnum() or chr == ' ')
 
 	def addItem(self, name, cost, location, stock):
-		while self.itemsMutex:
-			pass
-		self.itemsMutex = True
 		self.c.execute("INSERT INTO items VALUES (\'%s\',%d,%d,%d)" % (self.scrub(name), cost, location, stock))
 		self.conn.commit()
-		self.itemsMutex = False
 		
 	def getItem(self, location):
 		while self.itemsMutex:
@@ -272,21 +268,13 @@ class VMBase(object):
 	def addUser(self, iden, name, admin, group):
 		adminNum = 0
 		if admin:adminNum = 1
-		while self.usersMutex:
-			pass
-		self.usersMutex = True
 		self.c.execute("INSERT INTO users VALUES (%d,\'%s\',%d,\'%s\')" % (iden, self.scrub(name), adminNum, self.scrub(group)))
 		self.conn.commit()
-		self.usersMutex = False
 		
 			
 	def addTeam(self, name, credit):
-		while self.creditMutex:
-			pass
-		self.creditMutex = True
 		self.c.execute("INSERT INTO credits VALUES (%s, \'%d\')" % (self.scrub(name), credit))
 		self.conn.commit()
-		self.creditMutex = False
 		
 	def getUserData(self, iden):
 		while self.usersMutex:
@@ -301,21 +289,12 @@ class VMBase(object):
 		self.usersMutex = False
 		return val
 		
-				
-	def addTeam(self, teamName, credit):
-		while self.creditMutex:
-			pass
-		self.creditMutex = True
-		self.c.execute("INSERT INTO credit VALUES (\'%s\', %d)" % (self.scrub(teamName), credit))
-		self.conn.commit()
-		self.creditMutex = False
-		
 	def removeCredit(self, iden, item):
-		removeCredit = 10
 		while self.creditMutex:
 			pass
 		self.creditMutex = True
 		if int(self.c.execute("SELECT admin FROM users WHERE id=%d" % iden).fetchone()[0]) == 1:
+			self.creditMutex = False
 			return True #the user is an admin therefore there is no need to remove credit
 		else:
 			teamName = self.c.execute("SELECT team FROM users WHERE id=%d" % iden).fetchone()[0]
