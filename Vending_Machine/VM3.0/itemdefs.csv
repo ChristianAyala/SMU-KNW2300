@@ -1,0 +1,32 @@
+ItemName,Cost,Location,Stock
+Motor Encoder,40,0,5
+Motor Mount,20,1,6
+Rubber Tread,20,2,0
+Glue Sticks,10,3,0
+Servo Accoutrements,5,4,0
+Servo Bracket,15,10,2
+Bump Sensor,4,20,5
+Ping Sensor,20,21,0
+Linear Motion Kit,100,22,0
+Mid-range IR Sensor,50,23,9
+Short-range IR Sensor,50,24,10
+Protoboard,18,30,0
+Breadboard,18,31,0
+Copper Plates,,32,0
+Allen Wrenches,15,33,6
+Motor Controllers,30,34,0
+Collar- Axl,10,40,0
+Collar- Shaft,10,41,0
+LED,0,42,0
+Phototransistor,,43,0
+4 Amp Fuses,2,44,2
+3 Amp Fuses,2,45,8
+Metal L Bracket,5,46,0
+M3 Screws,4,47,7
+Nut Plates,20,48,0
+Nut Plates,20,49,12
+DC Motors,60,50,7
+Continuous Servo,50,51,0
+180 Servo,50,52,7
+5V Regulator,20,53,0
+Arduinos,100,54,0

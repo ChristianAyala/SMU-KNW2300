@@ -231,7 +231,7 @@ void loop()
 				move2EncodedDCmotor();
 				break;
                         case 'q':
-                                getPing();
+                              getPing();
             	                break;
                         case 'c':
                                 getConductivity();
@@ -558,18 +558,19 @@ void goLow(){
 void getPing()
 {
         long duration;
+        int sum = 0;
         int cm;
         int pin = messageGetInt();
-        pinMode(pin, OUTPUT);
-	digitalWrite(pin, LOW);
-	delayMicroseconds(2);
-	digitalWrite(pin, HIGH);
-	delayMicroseconds(5);
-	digitalWrite(pin, LOW);
-	pinMode(pin, INPUT);
-	duration = pulseIn(pin, HIGH);
-	cm = duration / 29 / 2;
-
+          pinMode(pin, OUTPUT);
+          digitalWrite(pin, LOW);
+          delayMicroseconds(2);
+          digitalWrite(pin, HIGH);
+          delayMicroseconds(5);
+          digitalWrite(pin, LOW);
+          pinMode(pin, INPUT);
+          duration = pulseIn(pin, HIGH);
+          cm = duration / 29 / 2;
+          sum += cm;
         sprintf(output, "q %i %i", pin, cm);
         Serial.println(output);
 }
