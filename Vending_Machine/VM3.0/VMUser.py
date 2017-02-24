@@ -8,12 +8,11 @@ class VMUser(object):
 	admin = False
 	userDB = VMBase()
 	balance = None
-    userDB.pullCreditFromDrive()
-    userDB.pullUsersFromDrive()
-    userDB.pullItemsFromDrive()
-    userDB.reloadUserCSV()
-    userDB.reloadItemCSV()
-    userDB.startBackgroundThread()
+	userDB.pullCreditFromDrive()
+	userDB.pullUsersFromDrive()
+	userDB.pullItemsFromDrive()
+	userDB.reloadUserCSV()
+	userDB.reloadItemCSV()
 		
 
 	def VMUserWithID(self, userID):
