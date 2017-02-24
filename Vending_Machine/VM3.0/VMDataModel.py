@@ -1,5 +1,5 @@
 from VMUser import VMUser
-#import serial
+import serial
 
 class VMDataModel(object):
     def __init__(self):
