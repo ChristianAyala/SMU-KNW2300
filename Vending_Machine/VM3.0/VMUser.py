@@ -48,8 +48,7 @@ class VMUser(object):
 		return returnString
 		
 	def dispenseItem(self, item):
-		self.userDB.removeCredit(self.iden, item)
-		self.userDB.printAll()
+		return self.userDB.removeCredit(self.iden, item)
 		
 	def getItem(self, location):
 		return self.userDB.getItem(int(location))

@@ -34,27 +34,14 @@ class VMBase(object):
 	conn = None
 	c = None
 	driveService = None
-	changesMade = False
-	savedPageToken = None
-	usersFileId = None
-	itemsFileId = None
-	creditFileId = None
-	creditMutex = False
-	usersMutex = False
-	itemsMutex = False
 
     # The class "constructor" - It's actually an initializer 
 	def __init__(self):
-		self.conn = sqlite3.connect('fyd_user_base.db' , check_same_thread=False)
+		self.conn = sqlite3.connect('fyd_user_base.db' )
 		self.c = self.conn.cursor()
-		self.creditMutex = False
-		self.usersMutex = False
-		self.itemsMutex = False
-		self.changesMade = False
 		credentials = self.get_credentials()
 		http = credentials.authorize(httplib2.Http())
 		self.driveService = discovery.build('drive', 'v3', http=http)
-		self.savedPageToken = self.driveService.changes().getStartPageToken().execute().get('startPageToken')
 
 	def get_credentials(self):
 	    home_dir = os.path.expanduser('~')
@@ -73,56 +60,6 @@ class VMBase(object):
 	        else:
 	            credentials = tools.run(flow, store)
 	    return credentials
-
-	def startBackgroundThread(self):
-		thread = threading.Thread(target=self.driveUpdate)
-		thread.daemon = True
-		thread.start()
-
-
-	def driveUpdate(self):
-		while(True):
-			changesWereMade = False
-			if self.changesMade:
-				self.writeCreditToDrive()
-				self.changesMade = False
-				changesWereMade = True
-			print("here")
-			pagTok = self.savedPageToken;
-			while pagTok is not None:
-				print("in here")
-				response = self.driveService.changes().list(pageToken=pagTok,
-															spaces='drive').execute()
-				changeUsers = False
-				changeItems = False
-				changeCredit = False
-				for change in response.get('changes'):
-					if change.get('fileId') == self.usersFileId:
-						changeUsers = True
-						print('change made to users file\n')
-					elif change.get('fileId') == self.itemsFileId:
-						changeItems = True
-						print('change made to items file\n')
-					elif change.get('fileId') == self.creditFileId and not changesWereMade:
-						changeCredit = True
-						print('change made to credit file\n')
-
-				if changeCredit and not changeUsers:
-					self.pullCreditFromDrive()
-					self.reloadUserCSV()
-				elif changeCredit:
-					self.pullCreditFromDrive()
-				if changeUsers:
-					self.pullUsersFromDrive()
-					self.reloadUserCSV()
-				if changeItems:
-					self.pullItemsFromDrive()
-					self.reloadItemCSV()
-
-				if 'newStartPageToken' in response:
-					self.savedPageToken = response.get('newStartPageToken')
-				pagTok = response.get('nextPageToken')
-			time.sleep(THREAD_DELAY)
 
 	def findSheet(self, sheetName):
 		page_token = None
@@ -146,17 +83,12 @@ class VMBase(object):
 		self.usersFileId = usersFile.get('id')
 		if usersFile == None:
 			return
-		while self.usersMutex:
-			pass
-		self.usersMutex = True
 		request = self.driveService.files().export_media(fileId=usersFile.get('id'), mimeType='text/csv')
 		fh = io.FileIO(USERS_FILENAME, 'wb')
 		downloader = MediaIoBaseDownload(fh, request)
 		done = False
 		while done is False:
 			status, done = downloader.next_chunk()
-		self.usersMutex = False
-		return
 
 	def pullItemsFromDrive(self):
 		filePrefix = ITEMS_FILENAME.rsplit(".", 1)[0]
@@ -164,44 +96,27 @@ class VMBase(object):
 		self.itemsFileId = itemsFile.get('id')
 		if itemsFile == None:
 			return
-		while self.itemsMutex:
-			pass
-		self.itemsMutex = True
 		request = self.driveService.files().export_media(fileId=itemsFile.get('id'), mimeType='text/csv')
 		fh = io.FileIO(ITEMS_FILENAME, 'wb')
 		downloader = MediaIoBaseDownload(fh, request)
 		done = False
 		while done is False:
 			status, done = downloader.next_chunk()
-		self.itemsMutex = False
-		return
 
 	def pullCreditFromDrive(self):
 		filePrefix = CREDIT_FILENAME.rsplit(".", 1)[0]
 		creditFile = self.findSheet(filePrefix)
 		self.creditFileId = creditFile.get('id')
 		if creditFile == None:
-			# maybe we should do something here like create the file?
 			return
-		while self.creditMutex:
-			pass
-		self.creditMutex = True
 		request = self.driveService.files().export_media(fileId=creditFile.get('id'), mimeType='text/csv')
 		fh = io.FileIO(CREDIT_FILENAME, 'wb')
 		downloader = MediaIoBaseDownload(fh, request)
 		done = False
 		while done is False:
 			status, done = downloader.next_chunk()
-		self.creditMutex = False
-		return
 
 	def reloadUserCSV(self):
-		while self.usersMutex:
-			pass
-		self.usersMutex = True
-		while self.creditMutex:
-			pass
-		self.creditMutex = True
 		#first we must remove all data from the table
 		self.c.execute("DELETE FROM users")
 		self.c.execute("DELETE FROM credit")
@@ -215,13 +130,8 @@ class VMBase(object):
 			data = list(csv.reader(csvfile, delimiter=',', quotechar='\''))
 			for row in data[1:]:
 				self.addTeam(row[0].strip(), int(row[1].strip()))
-		self.creditMutex = False
-		self.usersMutex = False
 		
 	def reloadItemCSV(self):
-		while self.itemsMutex:
-			pass
-		self.itemsMutex = True
 		#first we must remove all data from the table
 		self.c.execute("DELETE FROM items")
 		self.conn.commit()
@@ -236,7 +146,6 @@ class VMBase(object):
 				stock = int(row[3].strip())
 				#print ", ".join(row) #quick way to print input for debugging
 				self.addItem(name, cost, loc, stock)
-		self.itemsMutex = False
 
 	def CREATE_TABLES(self):
 		self.c.execute("CREATE TABLE users (id integer, name text, admin integer, team text)")
@@ -258,12 +167,7 @@ class VMBase(object):
 		self.conn.commit()
 		
 	def getItem(self, location):
-		while self.itemsMutex:
-			pass
-		self.itemsMutex = True
-		val = self.c.execute("SELECT * FROM items WHERE location=%d" % int(location)).fetchone()
-		self.itemsMutex = False
-		return val
+		return self.c.execute("SELECT * FROM items WHERE location=%d" % int(location)).fetchone()
 		
 	def addUser(self, iden, name, admin, group):
 		adminNum = 0
@@ -273,28 +177,23 @@ class VMBase(object):
 		
 			
 	def addTeam(self, name, credit):
-		self.c.execute("INSERT INTO credits VALUES (%s, \'%d\')" % (self.scrub(name), credit))
+		self.c.execute("INSERT INTO credit VALUES (%s, \'%d\')" % (self.scrub(name), credit))
 		self.conn.commit()
 		
 	def getUserData(self, iden):
-		while self.usersMutex:
-			pass
-		self.usersMutex = True
 		dat = self.c.execute("SELECT * FROM users WHERE id=%d" % iden).fetchone()
 		if not dat: return None
 		val = None
-		if dat[2] == 1:	val = dat
-		else: val = dat + (self.c.execute(("SELECT credits FROM credit WHERE team_name=\'%s\'" % self.scrub(dat[3]))).fetchone()[0],)
-
-		self.usersMutex = False
-		return val
+		if dat[2] == 1:	return dat
+		else: return dat + (self.c.execute(("SELECT credits FROM credit WHERE team_name=\'%s\'" % self.scrub(dat[3]))).fetchone()[0],)
 		
 	def removeCredit(self, iden, item):
-		while self.creditMutex:
-			pass
-		self.creditMutex = True
+		removeCredit = item[1]
+		stock = item[3]
+		if (stock - 1) < 0:
+			return False
+		self.c.execute("UPDATE items SET stock = stock - 1 WHERE location=%d" % (item[2]))
 		if int(self.c.execute("SELECT admin FROM users WHERE id=%d" % iden).fetchone()[0]) == 1:
-			self.creditMutex = False
 			return True #the user is an admin therefore there is no need to remove credit
 		else:
 			teamName = self.c.execute("SELECT team FROM users WHERE id=%d" % iden).fetchone()[0]
@@ -303,35 +202,30 @@ class VMBase(object):
 			newCredit = oldCredit - removeCredit
 			self.c.execute("UPDATE credit SET credits = %d WHERE team_name = \'%s\'" % (newCredit, self.scrub(teamName)))
 			self.conn.commit()
-			self.creditMutex = False
 			self.printToCSV()
-			self.changesMade = True
+			self.writeToDrive()
 			return True
 		
 	def printToCSV(self):
-		while self.creditMutex:
-			pass
-		self.creditMutex = True
 		with open(CREDIT_FILENAME, "w") as f:
 			print("Team,Credit", file=f)
 			self.c.execute("SELECT * FROM credit")
 			all_rows = self.c.fetchall()
 			for row in all_rows:
 				print("%s,%d" % (row[0], row[1]), file=f)
-		self.creditMutex = False
 
-	def writeCreditToDrive(self):
-		filePrefix = CREDIT_FILENAME.rsplit(".", 1)[0]
-		creditFile = self.findSheet(filePrefix)
+	def writeToDrive(self):
+		creditPrefix = CREDIT_FILENAME.rsplit(".", 1)[0]
+		creditFile = self.findSheet(creditPrefix)
+
+		itemsPrefix = ITEMS_FILENAME.rsplit(".", 1)[0]
+		itemsFile = self.findSheet(itemsPrefix)
 		# this needs to account for if there is no credit file on the drive
 		file_metadata = {
-			'name' : filePrefix,
+			'name' : creditPrefix,
 			'mimeType' : 'application/vnd.google-apps.spreadsheet'
 		}
 
-		while self.creditMutex:
-			pass
-		self.creditMutex = True
 		media = MediaFileUpload(CREDIT_FILENAME,
 								mimetype='text/csv',
 								resumable=True)
@@ -339,11 +233,19 @@ class VMBase(object):
 			self.driveService.files().update(fileId=creditFile.get('id'),
 											body=file_metadata,
 											media_body=media).execute()
-		else:
-			self.driveService.files().update(body=file_metadata,
+		file_metadata = {
+			'name' : itemsPrefix,
+			'mimeType' : 'application/vnd.google-apps.spreadsheet'
+		}
+
+		media = MediaFileUpload(ITEMS_FILENAME,
+								mimetype='text/csv',
+								resumable=True)
+		if itemsFile != None:
+			self.driveService.files().update(fileId=itemsFile.get('id'),
+											body=file_metadata,
 											media_body=media).execute()
-		self.creditMutex = False
-		
+
 	def printAll(self):
 		print("====================USERS========================")
 		self.c.execute("SELECT * FROM users")

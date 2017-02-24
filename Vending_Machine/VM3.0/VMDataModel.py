@@ -48,7 +48,8 @@ class VMDataModel(object):
 	
     def dispenseItem(self):
 	if self.currentItem:
-	    self.currentUser.dispenseItem(self.currentItem)
+	    if not self.currentUser.dispenseItem(self.currentItem):
+	    	return True
 	    itemLocation = str(self.currentItem[2])
 	    #padding location number for serial output
 	    while not len(itemLocation) == 2:
