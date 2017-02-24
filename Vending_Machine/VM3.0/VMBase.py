@@ -177,7 +177,7 @@ class VMBase(object):
 		
 			
 	def addTeam(self, name, credit):
-		self.c.execute("INSERT INTO credit VALUES (%s, \'%d\')" % (self.scrub(name), credit))
+		self.c.execute("INSERT INTO credit VALUES (\'%s\', %d)" % (self.scrub(name), credit))
 		self.conn.commit()
 		
 	def getUserData(self, iden):
