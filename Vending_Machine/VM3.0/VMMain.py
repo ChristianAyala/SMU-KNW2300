@@ -298,13 +298,13 @@ def dispenseScreen(inputKey):
 	text = titleFont.render("Processing Payment:", 1, (10, 10, 10))
 	textpos = text.get_rect()
 	textpos.centerx = screen.get_rect().centerx
-	textpos.centery = screen.get_rect().centery - 100
+	textpos.centery = screen.get_rect().centery - 60
 	screen.blit(text, textpos)
 
 	text = titleFont.render("Please Wait for item to dispense", 1, (10, 10, 10))
 	textpos = text.get_rect()
 	textpos.centerx = screen.get_rect().centerx
-	textpos.centery = screen.get_rect().centery - 100
+	textpos.centery = screen.get_rect().centery + 60
 	screen.blit(text, textpos)
 	
 	pygame.display.flip()
