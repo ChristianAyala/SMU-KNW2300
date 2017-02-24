@@ -9,9 +9,13 @@
 /RXTXRobot/lib/RXTXcomm_INSTALL/Linux/libs/libphidget/*.lo
 /RXTXRobot/lib/RXTXcomm_INSTALL/Linux/libs/libphidget/*.o
 /RXTXRobot/lib/RXTXcomm_INSTALL/Linux/libs/libphidget/.libs/
-/Vending_Machine/VM2.0/users.csv
-/Vending_Machine/VM2.0/fyd_user_base.db
-/Vending_Machine/VM1.0/fyd_user_base.db
-/Vending_Machine/VM1.0/users.csv
+/Vending_Machine/**/users.csv
+/Vending_Machine/**/fyd_user_base.db
+/Vending_Machine/**/vending_secret.json
+/Vending_Machine/**/VM_Users.csv
+/Vending_Machine/**/VM_Items.csv
+/Vending_Machine/**/VM_Credit.csv
+/Vending_Machine/**/itemdefs.csv
+/Vending_Machine/**/credit.csv
 .DS_Store
 
