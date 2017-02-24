@@ -275,7 +275,7 @@ def verifyScreen(key):
 	global curWindow 
 	
 	if key == K_1 or key == K_KP1:	
-		dispenseScreen()
+		dispenseScreen(None)
 		myModel.dispenseItem()
 		resetForNewUser()
 		curWindow = mainScreen
