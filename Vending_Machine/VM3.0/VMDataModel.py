@@ -5,7 +5,7 @@ class VMDataModel(object):
     def __init__(self):
 	self.currentUser = VMUser()
 	self.currentItem = None
-	#self.ser = serial.Serial(port='/dev/ttyUSB0', baudrate=9600, timeout=0)
+	self.ser = serial.Serial(port='/dev/ttyUSB0', baudrate=9600, timeout=0)
 	print "inited"
     
     def resetData(self):
@@ -54,7 +54,7 @@ class VMDataModel(object):
 	    #padding location number for serial output
 	    while not len(itemLocation) == 2:
 		itemLocation = "0" + itemLocation 
-	    #self.ser.write("*" + itemLocation[0] + "*" + itemLocation[1] + "*")
+	    self.ser.write("*" + itemLocation[0] + "*" + itemLocation[1] + "*")
 	    return True
 	else: return False
 	
