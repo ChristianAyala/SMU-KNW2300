@@ -306,12 +306,12 @@ def dispenseScreen(inputKey):
  #our main function which handles some variable declarations and debugging features
 if __name__ == '__main__':
 	#setting up our X enviorment and loading screen
-	SW,SH = 400, 240
+	SW,SH = 800, 480
 	screen = pygame.display.set_mode((SW,SH))
 	pygame.display.set_caption('KNW Vending Machine Software - 2015')
 	
 	loadingScreen(None)
-	#toggle_fullscreen()
+	toggle_fullscreen()
 	loadingScreen(None)
 	
 	#important and declaring heavy variables
@@ -330,12 +330,12 @@ if __name__ == '__main__':
 			if(e.type is KEYDOWN):
 				#these functions are for debugging purposes only 
 				if e.key == K_ESCAPE: _quit = True
-				'''if e.key == K_f:	toggle_fullscreen()
-				elif e.key == K_ESCAPE: _quit = True
+				#if e.key == K_f:	toggle_fullscreen()
+				#elif e.key == K_ESCAPE: _quit = True
 				#some other key listeners usefull for debugging
-				elif e.key == K_n: 	curWindow = selectionScreen
-				elif e.key == K_b: 	curWindow = mainScreen
-				elif e.key == K_m:	curWindow = verifyScreen
+				#elif e.key == K_n: 	curWindow = selectionScreen
+				#elif e.key == K_b: 	curWindow = mainScreen
+				#elif e.key == K_m:	curWindow = verifyScreen
 				elif e.key == K_v:	curWindow = dispenseScreen
 				####'''
 				
