@@ -193,7 +193,10 @@ class VMBase(object):
 		if (stock - 1) < 0:
 			return False
 		self.c.execute("UPDATE items SET stock = stock - 1 WHERE location=%d" % (item[2]))
+		print("just finished updating stock")
 		if int(self.c.execute("SELECT admin FROM users WHERE id=%d" % iden).fetchone()[0]) == 1:
+			self.printItemsToCSV()
+			self.writeItemsToDrive()
 			return True #the user is an admin therefore there is no need to remove credit
 		else:
 			teamName = self.c.execute("SELECT team FROM users WHERE id=%d" % iden).fetchone()[0]
@@ -203,7 +206,9 @@ class VMBase(object):
 			self.c.execute("UPDATE credit SET credits = %d WHERE team_name = \'%s\'" % (newCredit, self.scrub(teamName)))
 			self.conn.commit()
 			self.printToCSV()
+			self.printItemsToCSV
 			self.writeToDrive()
+			self.writeItemsToDrive()
 			return True
 		
 	def printToCSV(self):
@@ -214,25 +219,17 @@ class VMBase(object):
 			for row in all_rows:
 				print("%s,%d" % (row[0], row[1]), file=f)
 
-	def writeToDrive(self):
-		creditPrefix = CREDIT_FILENAME.rsplit(".", 1)[0]
-		creditFile = self.findSheet(creditPrefix)
+	def printItemsToCSV(self):
+		with open(ITEMS_FILENAME, "w") as f:
+			print("ItemName,Cost,Location,Stock",file=f)
+			self.c.execute("SELECT * FROM items")
+			all_rows = self.c.fetchall()
+			for row in all_rows:
+				print("%s,%d,%d,%d" % (row[0], row[1], row[2], row[3]), file=f)
 
+	def writeItemsToDrive(self):
 		itemsPrefix = ITEMS_FILENAME.rsplit(".", 1)[0]
 		itemsFile = self.findSheet(itemsPrefix)
-		# this needs to account for if there is no credit file on the drive
-		file_metadata = {
-			'name' : creditPrefix,
-			'mimeType' : 'application/vnd.google-apps.spreadsheet'
-		}
-
-		media = MediaFileUpload(CREDIT_FILENAME,
-								mimetype='text/csv',
-								resumable=True)
-		if creditFile != None:
-			self.driveService.files().update(fileId=creditFile.get('id'),
-											body=file_metadata,
-											media_body=media).execute()
 		file_metadata = {
 			'name' : itemsPrefix,
 			'mimeType' : 'application/vnd.google-apps.spreadsheet'
@@ -243,6 +240,23 @@ class VMBase(object):
 								resumable=True)
 		if itemsFile != None:
 			self.driveService.files().update(fileId=itemsFile.get('id'),
+											body=file_metadata,
+											media_body=media).execute()
+
+	def writeToDrive(self):
+		creditPrefix = CREDIT_FILENAME.rsplit(".", 1)[0]
+		creditFile = self.findSheet(creditPrefix)
+
+		file_metadata = {
+			'name' : creditPrefix,
+			'mimeType' : 'application/vnd.google-apps.spreadsheet'
+		}
+
+		media = MediaFileUpload(CREDIT_FILENAME,
+								mimetype='text/csv',
+								resumable=True)
+		if creditFile != None:
+			self.driveService.files().update(fileId=creditFile.get('id'),
 											body=file_metadata,
 											media_body=media).execute()
 
