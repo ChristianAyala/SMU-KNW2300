@@ -17,7 +17,7 @@ class VMUser(object):
 
 	def VMUserWithID(self, userID):
 		userData = None
-		if(len(userID) is 8):
+		if(len(userID) is 8 and userId.isdigit()):
 			userData = self.userDB.getUserData(int(userID));
 		
 		if userData == None:
