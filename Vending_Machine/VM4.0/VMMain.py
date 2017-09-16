@@ -1,7 +1,11 @@
+#!/usr/bin/env python
 #import sys
 #sys.path.insert(0, '/home/bananapi/Documents/TBO/python/')
-import pygame, time
+import pygame
+from time import sleep, time
 from pygame.locals import *
+import sys
+import os
 
 curWindow = None
 loadingFrames = "..."
@@ -11,7 +15,6 @@ myModel = None
 shift = False
 rendered = False
 
-	
 #a function to toggle fullscreen in an X Session
 #NOTE: if loaing before X Session full screen is required rendering this function useless
 #good for debugging
@@ -124,20 +127,32 @@ def mainScreen(key):
 	elif key:
 		#if key is a valid character keep it, other wise
 		keyVal = getChar(key)
-		if keyVal == "=":
-			print ("Evauluated Data: " + rawCardData)
-			if (myModel.setUserWithID(rawCardData)):
+		if keyVal == 'enter' or keyVal == 'return':
+			print("Evauluated Data: " + rawCardData[1:])
+			if(myModel.setUserWithSwipe(rawCardData[1:])):
 				print("Loaded User Data: " + myModel.toString())
 				print("*****************************************")
 				global curWindow 
 				curWindow = selectionScreen
 				rendered = False
 				selectionScreen(None)
-				
 			rawCardData = ""
-		else:
-			if keyVal == "+": rawCardData = ""
-			elif keyVal: rawCardData += keyVal
+		elif keyVal:
+			rawCardData+=keyVal
+		# if keyVal == "=":
+		# 	print ("Evauluated Data: " + rawCardData)
+		# 	if (myModel.setUserWithID(rawCardData)):%7062736734358261861826436?;00720384072506245=08440655554?+40655554=ANTONELLI=NICHOLAS=STUDENT?
+				# print("Loaded User Data: " + myModel.toString())
+				# print("*****************************************")
+				# global curWindow 
+				# curWindow = selectionScreen
+				# rendered = False
+				# selectionScreen(None)
+				
+		# 	rawCardData = ""
+		# else:
+		# 	if keyVal == "+": rawCardData = ""
+		# 	elif keyVal: rawCardData += keyVal
 				
 
 #Selection Screen for user to sleect which part they may want
@@ -171,10 +186,13 @@ def selectionScreen(userNum):
 	
 	global choiceNum
 	global curWindow 
+	global rendered
 	
 	update = True
 	
-	if userNum == K_DELETE or userNum == K_KP_PERIOD:
+	if userNum == K_u and myModel.isUserAdmin():
+		os.execv(sys.executable, ['python'] + sys.argv)
+	elif userNum == K_DELETE or userNum == K_KP_PERIOD or userNum == K_PERIOD:
 		if len(choiceNum) == 0:
 			curWindow = mainScreen
 			resetForNewUser()
@@ -184,12 +202,13 @@ def selectionScreen(userNum):
 		else: 	
 			choiceNum = choiceNum[0:(len(choiceNum) - 1)]
 	elif len(choiceNum) < 2:
-		
+		print('something here')
 		'''ONLY ENABLE THIS FOR DEBUGGING IF NEEDED
 		if userNum >= K_0 and userNum <= K_9:
-			choiceNum = choiceNum + pygame.key.name(userNum)'''
-		if (userNum >= K_KP0 and userNum <= K_KP9):
-			choiceNum = choiceNum + pygame.key.name(userNum - 208)
+			choiceNum = choiceNum + pygame.key.name(userNum)
+			# '''
+		# if (userNum >= K_KP0 and userNum <= K_KP9):
+		# 	choiceNum = choiceNum + pygame.key.name(userNum - 208)
 			
 	
 	if len(choiceNum) == 0: 
@@ -308,6 +327,7 @@ def dispenseScreen(inputKey):
 	screen.blit(text, textpos)
 	
 	pygame.display.flip()
+
  
  
  #our main function which handles some variable declarations and debugging features
@@ -318,7 +338,7 @@ if __name__ == '__main__':
 	pygame.display.set_caption('KNW Vending Machine Software - 2015')
 	
 	loadingScreen(None)
-	toggle_fullscreen()
+	# toggle_fullscreen()
 	loadingScreen(None)
 	
 	#important and declaring heavy variables
@@ -343,11 +363,12 @@ if __name__ == '__main__':
 				#elif e.key == K_n: 	curWindow = selectionScreen
 				#elif e.key == K_b: 	curWindow = mainScreen
 				#elif e.key == K_m:	curWindow = verifyScreen
-				elif e.key == K_v:	curWindow = dispenseScreen
+				# elif e.key == K_v:	curWindow = dispenseScreen
 				####'''
 				
 				curWindow(e.key)
 			elif e.type is QUIT: _quit = True
+	myModel.shutdown()
 
 	
 #END OF FILE

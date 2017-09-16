@@ -5,8 +5,17 @@ class VMDataModel(object):
 	def __init__(self):
 		self.currentUser = VMUser()
 		self.currentItem = None
-		self.ser = serial.Serial(port='/dev/ttyUSB0', baudrate=9600, timeout=0)
+		# self.ser = serial.Serial(port='/dev/ttyUSB0', baudrate=9600, timeout=0)
 		print ("inited")
+
+	def shutdown(self):
+		self.currentUser.shutdown()
+
+	def updateDB(self):
+		return self.currentUser.updateDB()
+
+	def isUserAdmin(self):
+		return self.currentUser.isAdmin()
     
 	def resetData(self):
 		self.currentUser = VMUser()
@@ -20,6 +29,10 @@ class VMDataModel(object):
 	def setUserWithID(self, ID):
 		print ("user set attempted with: " + str(ID))
 		return self.currentUser.VMUserWithID(ID)
+
+	def setUserWithSwipe(self, swipe):
+		print("user set attempted with: " + str(swipe))
+		return self.currentUser.VMUserWithSwipe(swipe)
 	
 	def getUserName(self):
 		if self.currentUser: return self.currentUser.name
@@ -54,7 +67,7 @@ class VMDataModel(object):
 		    #padding location number for serial output
 		    while not len(itemLocation) == 2:
 		    	itemLocation = "0" + itemLocation 
-		    self.ser.write("*" + itemLocation[0] + "*" + itemLocation[1] + "*")
+		    # self.ser.write("*" + itemLocation[0] + "*" + itemLocation[1] + "*")
 		    return True
 		else: return False
 	

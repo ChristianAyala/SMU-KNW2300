@@ -2,7 +2,7 @@ from __future__ import print_function
 import sqlite3
 import csv
 
-import threading
+from threading import Thread
 import time
 
 import httplib2
@@ -34,6 +34,10 @@ class VMBase(object):
 	conn = None
 	c = None
 	driveService = None
+	running = False
+	changeUsers = False
+	changeItems = False
+	changeCredit = False
 
     # The class "constructor" - It's actually an initializer 
 	def __init__(self):
@@ -42,6 +46,61 @@ class VMBase(object):
 		credentials = self.get_credentials()
 		http = credentials.authorize(httplib2.Http())
 		self.driveService = discovery.build('drive', 'v3', http=http)
+		# self.DELETE_TABLES()
+		# self.CREATE_TABLES()
+
+	def start(self):
+		self.saved_start_page_token = self.driveService.changes().getStartPageToken().execute().get('startPageToken')
+		self.running = True
+		Thread(target=self.run).start()
+
+	def terminate(self):
+		self.running=False
+
+	def run(self):
+		while self.running:
+			time.sleep(5)
+			page_token = self.saved_start_page_token;
+			while page_token is not None:
+				response = self.driveService.changes().list(pageToken=page_token, spaces='drive').execute()
+				for change in response.get('changes'):
+					if change.get('fileId') == self.usersFileId:
+						# self.changeUsers = True
+						print("change found for users file")
+						self.pullUsersFromDrive()
+						self.reloadUserCSV()
+					elif change.get('fileId') == self.itemsFileId:
+						# self.changeItems = True
+						print("change found for items file")
+						self.pullItemsFromDrive()
+						self.reloadItemCSV()
+					elif change.get('fileId') == self.creditFileId:
+						# self.changeCredit = True
+						print("change found for credit file")
+						self.pullCreditFromDrive()
+						self.reloadCreditCSV()
+				if 'newStartPageToken' in response:
+					self.saved_start_page_token = response.get('newStartPageToken')
+				page_token = response.get('nextPageToken')
+
+	def update(self):
+		# changed = False
+		# if self.changeCredit:
+		self.pullCreditFromDrive()
+		self.reloadCreditCSV()
+		# changed = True
+			# self.changeCredit = False
+		# if self.changeUsers:
+		self.pullUsersFromDrive()
+		self.reloadUserCSV()
+		# changed = True
+		# 	self.changeUsers = False
+		# if self.changeItems:
+		self.pullItemsFromDrive()
+		self.reloadItemCSV()
+		# changed = True
+			# self.changeItems = False
+		# return changed
 
 	def get_credentials(self):
 	    home_dir = os.path.expanduser('~')
@@ -119,13 +178,21 @@ class VMBase(object):
 	def reloadUserCSV(self):
 		#first we must remove all data from the table
 		self.c.execute("DELETE FROM users")
-		self.c.execute("DELETE FROM credit")
+		# self.c.execute("DELETE FROM credit")
 		self.conn.commit()
 		#CSV file should be defined as {ID,name,admin,group} with the first line being ignored
 		with open(USERS_FILENAME, 'rU') as csvfile:
 			data = list(csv.reader(csvfile, delimiter=',', quotechar='\''))
 			for row in data[1:]:
-				self.addUser(int(row[0].strip()), row[1].strip(), int(row[2].strip()), row[3].strip())
+				self.addUser(row[0].strip(), row[1].strip(), int(row[2].strip()), row[3].strip())
+		# with open(CREDIT_FILENAME, 'rU') as csvfile:
+		# 	data = list(csv.reader(csvfile, delimiter=',', quotechar='\''))
+		# 	for row in data[1:]:
+		# 		self.addTeam(row[0].strip(), int(row[1].strip()))
+
+	def reloadCreditCSV(self):
+		self.c.execute("DELETE FROM credit")
+		self.conn.commit()
 		with open(CREDIT_FILENAME, 'rU') as csvfile:
 			data = list(csv.reader(csvfile, delimiter=',', quotechar='\''))
 			for row in data[1:]:
@@ -136,7 +203,7 @@ class VMBase(object):
 		self.c.execute("DELETE FROM items")
 		self.conn.commit()
 		#CSV file should be defined as {name,cost,location,stock} with the first line being ignored
-		with open(ITEMS_FILENAME, 'rb') as csvfile:
+		with open(ITEMS_FILENAME, 'rU') as csvfile:
 			data = list(csv.reader(csvfile, delimiter=',', quotechar='\''))
 			for row in data[1:]:
 				#print(",".join(row))
@@ -148,15 +215,15 @@ class VMBase(object):
 				self.addItem(name, cost, loc, stock)
 
 	def CREATE_TABLES(self):
-		self.c.execute("CREATE TABLE users (id integer, name text, admin integer, team text)")
+		self.c.execute("CREATE TABLE users (id text, name text, admin integer, team text)")
 		self.c.execute("CREATE TABLE credit (team_name text, credits int)")
 		self.c.execute("CREATE TABLE items (name text, cost int, location int, stock int)")
 		self.conn.commit()
 		
 	def DELETE_TABLES(self):
-		self.c.execute("DELETE FROM users")
-		self.c.execute("DELETE FROM credit")
-		self.c.execute("DELETE FROM items")
+		self.c.execute("DROP TABLE users")
+		self.c.execute("DROP TABLE credit")
+		self.c.execute("DROP TABLE items")
 		self.conn.commit()
 
 	def scrub(self, data):
@@ -172,7 +239,7 @@ class VMBase(object):
 	def addUser(self, iden, name, admin, group):
 		adminNum = 0
 		if admin:adminNum = 1
-		self.c.execute("INSERT INTO users VALUES (%d,\'%s\',%d,\'%s\')" % (self.scrub(iden), self.scrub(name), adminNum, self.scrub(group)))
+		self.c.execute("INSERT INTO users VALUES (\'%s\',\'%s\',%d,\'%s\')" % (self.scrub(iden), self.scrub(name), adminNum, self.scrub(group)))
 		self.conn.commit()
 		
 			
@@ -181,7 +248,7 @@ class VMBase(object):
 		self.conn.commit()
 		
 	def getUserData(self, iden):
-		dat = self.c.execute("SELECT * FROM users WHERE id=%d" % self.scrub(iden)).fetchone()
+		dat = self.c.execute("SELECT * FROM users WHERE id=\'%s\'" % self.scrub(iden)).fetchone()
 		if not dat: return None
 		val = None
 		if dat[2] == 1:	return dat
@@ -194,12 +261,12 @@ class VMBase(object):
 			return False
 		self.c.execute("UPDATE items SET stock = stock - 1 WHERE location=%d" % (item[2]))
 		print("just finished updating stock")
-		if int(self.c.execute("SELECT admin FROM users WHERE id=%d" % self.scrub(iden)).fetchone()[0]) == 1:
+		if int(self.c.execute("SELECT admin FROM users WHERE id=\'%s\'" % self.scrub(iden)).fetchone()[0]) == 1:
 			self.printItemsToCSV()
 			self.writeItemsToDrive()
 			return True #the user is an admin therefore there is no need to remove credit
 		else:
-			teamName = self.c.execute("SELECT team FROM users WHERE id=%d" % self.scrub(iden)).fetchone()[0]
+			teamName = self.c.execute("SELECT team FROM users WHERE id=\'%s\'" % self.scrub(iden)).fetchone()[0]
 			oldCredit = self.c.execute("SELECT credits FROM credit WHERE team_name=\'%s\'" % self.scrub(teamName)).fetchone()[0]
 			if oldCredit < removeCredit:return False
 			newCredit = oldCredit - removeCredit
